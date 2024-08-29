@@ -19,17 +19,33 @@ enum WalletMode: String, Codable, CaseIterable {
     case peek
 }
 
+class WalletSyncScriptInspector: SyncScriptInspector {
+    private let updateProgress: (UInt64, UInt64) -> Void
+    private var inspectedCount: UInt64 = 0
+    private var totalCount: UInt64 = 0
+
+    init(updateProgress: @escaping (UInt64, UInt64) -> Void) {
+        self.updateProgress = updateProgress
+    }
+
+    func inspect(script: Script, total: UInt64) {
+        self.totalCount = total
+        self.inspectedCount += 1
+        self.updateProgress(self.inspectedCount, self.totalCount)
+    }
+}
+
 private class BDKService {
     static var shared: BDKService = .init()
 
     private var balance: Balance?
     var network: Network
     private var payWallet: Wallet?
-    private var payDB: SqliteStore?
+    private var payConn: Connection?
     private var payAddress: Address?
 
     private var ordiWallet: Wallet?
-    private var ordiDB: SqliteStore?
+    private var ordiConn: Connection?
     private var ordiAddress: Address?
     private let keyService: KeyClient
     private let esploraClient: EsploraClient
@@ -55,7 +71,7 @@ private class BDKService {
             throw WalletError.walletNotFound
         }
 
-        return try wallet.revealNextAddress(keychain: .external)
+        return wallet.revealNextAddress(keychain: .external)
     }
 
     func getPayAddress() -> Address {
@@ -66,7 +82,7 @@ private class BDKService {
         guard let wallet = self.ordiWallet else {
             throw WalletError.walletNotFound
         }
-        return try wallet.revealNextAddress(keychain: .external)
+        return wallet.revealNextAddress(keychain: .external)
     }
 
     func getOrdiAddress() -> Address {
@@ -170,31 +186,29 @@ private class BDKService {
         let payPersistenceBackendPath = payWalletDataDirectoryURL.path
         logger.info("PayDB URl:\(payPersistenceBackendPath)")
 
-        let payDb = try! SqliteStore(path: payPersistenceBackendPath)
-        let paySet = try! payDb.read()
+        let payDb = try Connection(path: payPersistenceBackendPath)
 
         logger.info("Read OK")
 
-        let payWallet = try Wallet.newOrLoad(
+        let payWallet = try Wallet(
             descriptor: payDescriptor,
             changeDescriptor: payChangeDescriptor,
-            changeSet: paySet,
-            network: self.network
+            network: self.network,
+            connection: payDb
         )
 
         let ordiWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("ordi_wallet_data.sqlite")
         let ordiPersistenceBackendPath = ordiWalletDataDirectoryURL.path
 
-        let ordiDb = try! SqliteStore(path: ordiPersistenceBackendPath)
-        let ordiSet = try! ordiDb.read()
+        let ordiDb = try! Connection(path: ordiPersistenceBackendPath)
 
         logger.info("OrdiDB URl:\(ordiPersistenceBackendPath)")
 
-        let ordiWallet = try Wallet.newOrLoad(
+        let ordiWallet = try Wallet(
             descriptor: ordiDescriptor,
             changeDescriptor: ordiChangeDescriptor,
-            changeSet: ordiSet,
-            network: self.network
+            network: self.network,
+            connection: ordiDb
         )
 
         logger.info("Peek Address")
@@ -207,20 +221,16 @@ private class BDKService {
             _ = ordiWallet.revealAddressesTo(keychain: .external, index: 1)
         }
 
-        if let change = payWallet.takeStaged() {
-            try payDb.write(changeSet: change)
-        }
+        _ = try payWallet.persist(connection: payDb)
 
-        if let change = ordiWallet.takeStaged() {
-            try ordiDb.write(changeSet: change)
-        }
+        _ = try ordiWallet.persist(connection: ordiDb)
 
         self.payWallet = payWallet
         self.ordiWallet = ordiWallet
         self.payAddress = payAddress
         self.ordiAddress = ordiAddress
-        self.payDB = payDb
-        self.ordiDB = ordiDb
+        self.payConn = payDb
+        self.ordiConn = ordiDb
 
         // store
         let backupInfo = BackupInfo(
@@ -245,33 +255,29 @@ private class BDKService {
         let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_wallet_data.sqlite")
         let payPersistenceBackendPath = payWalletDataDirectoryURL.path
 
-        let db = try SqliteStore(path: payPersistenceBackendPath)
-        let paySet = try! db.read()
+        let db = try Connection(path: payPersistenceBackendPath)
 
-        let payWallet = try Wallet.newOrLoad(
+        let payWallet = try Wallet.load(
             descriptor: payDescriptor,
             changeDescriptor: payChangeDesc,
-            changeSet: paySet,
-            network: self.network
+            connection: db
         )
 
         let ordiWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("ordi_wallet_data.sqlite")
         let ordiPersistenceBackendPath = ordiWalletDataDirectoryURL.path
-        let ordiDb = try SqliteStore(path: ordiPersistenceBackendPath)
-        let ordiSet = try! ordiDb.read()
+        let ordiDb = try Connection(path: ordiPersistenceBackendPath)
 
-        let ordiWallet = try Wallet.newOrLoad(
+        let ordiWallet = try Wallet.load(
             descriptor: ordiDescriptor,
             changeDescriptor: ordiChangeDesc,
-            changeSet: ordiSet,
-            network: self.network
+            connection: ordiDb
         )
         self.payWallet = payWallet
         self.ordiWallet = ordiWallet
         self.payAddress = payAddr
         self.ordiAddress = ordiAddr
-        self.payDB = db
-        self.ordiDB = ordiDb
+        self.payConn = db
+        self.ordiConn = ordiDb
     }
 
     func loadWalletFromBackup() throws {
@@ -348,7 +354,7 @@ private class BDKService {
         print(psbt.serializeHex())
 
         let transaction = try psbt.extractTx()
-        
+
 //        print(transaction.serialize().map { String(format: "%02x", $0) }.joined())
     }
 
@@ -361,19 +367,26 @@ private class BDKService {
 //        try client.broadcast(transaction: transaction)
     }
 
+    func inspector(inspectedCount: UInt64, total: UInt64) {
+        print(inspectedCount,total)
+    }
+
     func sync() async throws {
         guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
+        guard let payConn = self.payConn else { throw WalletError.walletNotFound }
+
         let esploraClient = self.esploraClient
-        let syncRequest = wallet.startSyncWithRevealedSpks()
+        let syncRequest = try wallet.startSyncWithRevealedSpks().inspectSpks(inspector: WalletSyncScriptInspector(updateProgress: self.inspector)).build()
 //        let update = try electurmClient.sync(syncRequest: syncRequest, batchSize: 10, fetchPrevTxouts: true)
         let update = try esploraClient.sync(
             syncRequest: syncRequest,
             parallelRequests: UInt64(5)
         )
+
         try wallet.applyUpdate(update: update)
-        if let change = self.payWallet?.takeStaged() {
-            try self.payDB?.write(changeSet: change)
-        }
+
+        _ = try wallet.persist(connection: payConn)
+
         // TODO: Do i need to do this next step of setting wallet to wallet again?
         // prob not
         self.payWallet = wallet
@@ -382,7 +395,7 @@ private class BDKService {
     func fullScan() async throws {
         guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
         let esploraClient = esploraClient
-        let fullScanRequest = wallet.startFullScan()
+        let fullScanRequest = try wallet.startFullScan().build()
         let update = try esploraClient.fullScan(
             fullScanRequest: fullScanRequest,
             stopGap: UInt64(150), // should we default value this for folks?

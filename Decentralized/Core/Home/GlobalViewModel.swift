@@ -46,10 +46,7 @@ class GlobalViewModel {
             logger.error("[loadWallet] \(error.localizedDescription)")
             self.error = .generic(message: error.localizedDescription)
             self.showAlert = true
-        } catch let error as WalletCreationError {
-            logger.error("[loadWallet] \(error.localizedDescription)")
-            self.error = .generic(message: error.localizedDescription)
-            self.showAlert = true
+        
         } catch {
             logger.error("[loadWallet] \(error.localizedDescription)")
             self.error = .generic(message: error.localizedDescription)
@@ -64,7 +61,6 @@ class GlobalViewModel {
             
             self.walletSyncState = .synced
         } catch {
-            
             logger.error("[sync] \(error)")
             self.walletSyncState = .error(error)
             self.showAlert = true

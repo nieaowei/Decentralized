@@ -138,22 +138,24 @@ extension SignerError {
             return errorMessage
         case .TxInputsIndexError(errorMessage: let errorMessage):
             return errorMessage
+        case .Psbt(errorMessage: let errorMessage):
+            return errorMessage
         }
     }
 }
 
-extension WalletCreationError {
-    var description: String {
-        switch self {
-        case .Descriptor:
-            return "descriptor"
-        case .LoadedGenesisDoesNotMatch:
-            return "loaded genesis does not match"
-        case .LoadedNetworkDoesNotMatch(let expected, let got):
-            return "got: \(String(describing: got)), expected \(expected)"
-
-        case .LoadedDescriptorDoesNotMatch(let got, let keychain):
-            return "got: \(String(describing: got)), keychain \(keychain)"
-        }
-    }
-}
+//extension WalletCreationError {
+//    var description: String {
+//        switch self {
+//        case .Descriptor:
+//            return "descriptor"
+//        case .LoadedGenesisDoesNotMatch:
+//            return "loaded genesis does not match"
+//        case .LoadedNetworkDoesNotMatch(let expected, let got):
+//            return "got: \(String(describing: got)), expected \(expected)"
+//
+//        case .LoadedDescriptorDoesNotMatch(let got, let keychain):
+//            return "got: \(String(describing: got)), keychain \(keychain)"
+//        }
+//    }
+//}

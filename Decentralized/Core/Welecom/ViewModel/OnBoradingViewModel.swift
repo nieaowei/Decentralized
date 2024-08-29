@@ -43,10 +43,6 @@ class OnBoradingViewModel {
             isLoading = true
             try bdkClient.createWallet(mnemonic, mode)
             isOnboarding = false
-        } catch let error as WalletCreationError {
-            DispatchQueue.main.async {
-                self.onboardingViewError = .generic(message: error.localizedDescription)
-            }
         } catch {
             DispatchQueue.main.async {
                 self.onboardingViewError = .generic(message: error.localizedDescription)
