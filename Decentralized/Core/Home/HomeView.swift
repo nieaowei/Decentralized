@@ -15,7 +15,7 @@ enum Sections: Hashable {
 enum WalletSec: String, Hashable, CaseIterable {
     case me, utxos, transactions, send, contacts
 
-    func icon() -> String {
+    var icon: String {
         switch self {
         case .me: "person"
         case .utxos: "bitcoinsign"
@@ -24,13 +24,23 @@ enum WalletSec: String, Hashable, CaseIterable {
         case .contacts: "person.2"
         }
     }
+
+    var title: String {
+        switch self {
+        case .me: "Me"
+        case .utxos: "Utxos"
+        case .transactions: "Transactions"
+        case .send: "Send"
+        case .contacts: "Contacts"
+        }
+    }
 }
 
 enum ToolsSec: String, Hashable, CaseIterable {
     case broadcast
     // speedUp, cancelTx, monitor
 
-    func icon() -> String {
+    var icon: String {
         switch self {
         case .broadcast: "person"
         }
@@ -60,19 +70,19 @@ struct HomeView: View {
                 switch dest {
                 case .me:
                     MeView(walletVm: walletVm)
-                        .navigationTitle("")
+                        .navigationTitle(dest.title)
                 case .utxos:
                     UtxosView(selected: .constant(Set<String>()), walletVm: walletVm)
-                        .navigationTitle("")
+                        .navigationTitle(dest.title)
                 case .transactions:
                     TransactionView(walletVm: walletVm)
-                        .navigationTitle("")
+                        .navigationTitle(dest.title)
                 case .send:
                     SendView(walletVm: walletVm)
-                        .navigationTitle("")
+                        .navigationTitle(dest.title)
                 case .contacts:
                     ContactView()
-                        .navigationTitle("")
+                        .navigationTitle(dest.title)
                 }
             case .tools(let dest):
                 switch dest {
@@ -181,14 +191,14 @@ struct SiderbarView: View {
             Section("Wallet") {
                 ForEach(WalletSec.allCases, id: \.self) { walletItem in
                     NavigationLink(value: Sections.wallet(dest: walletItem)) {
-                        Label(walletItem.rawValue.capitalized, systemImage: walletItem.icon())
+                        Label(walletItem.rawValue.capitalized, systemImage: walletItem.icon)
                     }
                 }
             }
             Section("Tools") {
                 ForEach(ToolsSec.allCases, id: \.self) { walletItem in
                     NavigationLink(value: Sections.tools(dest: walletItem)) {
-                        Label(walletItem.rawValue.capitalized, systemImage: walletItem.icon())
+                        Label(walletItem.rawValue.capitalized, systemImage: walletItem.icon)
                     }
                 }
             }
