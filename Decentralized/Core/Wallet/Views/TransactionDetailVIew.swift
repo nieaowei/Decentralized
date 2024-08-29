@@ -7,6 +7,7 @@
 
 import BitcoinDevKit
 import SwiftUI
+import AppKit
 
 struct TransactionDetailView: View {
     @State var tx: CanonicalTx
@@ -41,7 +42,14 @@ struct TransactionDetailView: View {
                         } rows: {
                             ForEach(esTx?.vin ?? []) { tx in
                                 TableRow(tx)
+                                    .contextMenu {
+                                        Button("Copy Address") {
+                                            NSPasteboard.general.clearContents()
+                                            NSPasteboard.general.setString(tx.prevout.scriptpubkeyAddress ?? "", forType: .string)
+                                        }
+                                    }
                             }
+                            
                         }
                         .truncationMode(.middle)
                         Table(of: Vout.self) {
@@ -55,6 +63,12 @@ struct TransactionDetailView: View {
                         } rows: {
                             ForEach(esTx?.vout ?? []) { tx in
                                 TableRow(tx)
+                                    .contextMenu {
+                                        Button("Copy Address") {
+                                            NSPasteboard.general.clearContents()
+                                            NSPasteboard.general.setString(tx.scriptpubkeyAddress ?? "", forType: .string)
+                                        }
+                                    }
                             }
                         }
                     }
