@@ -13,6 +13,7 @@ struct ContactView: View {
 
     @Environment(\.modelContext) private var modelCtx
 
+    @State var QRData: String? = nil
     var body: some View {
         VStack {
             Table(of: Contact.self) {
@@ -27,13 +28,21 @@ struct ContactView: View {
                 .width(200)
 
                 TableColumn("Address") { contact in
-                    TextField("Address", text: Binding(get: {
-                        contact.addr
-                    }, set: { newVal in
-                        contact.addr = newVal
-                    }))
-                    .textFieldStyle(.roundedBorder)
-                    .truncationMode(.middle)
+                    HStack {
+                        TextField("Address", text: Binding(get: {
+                            contact.addr
+                        }, set: { newVal in
+                            contact.addr = newVal
+                        }))
+                        .textFieldStyle(.roundedBorder)
+                        .truncationMode(.middle)
+                        Button {
+                            QRData = contact.addr
+                        } label: {
+                            Image(systemName: "qrcode")
+                                .controlSize(.large)
+                        }
+                    }
                 }
             } rows: {
                 ForEach(contacts) { contact in
@@ -56,6 +65,31 @@ struct ContactView: View {
                     Text(verbatim: "Add")
                 }
             }
+            .sheet(item: $QRData, content: { data in
+                VStack {
+                    QRCodeView(data: data)
+                    Button {
+                        QRData = nil
+                    } label: {
+                        Text(verbatim: "Close")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding(.all)
+            })
+//            .sheet(isPresented: $showQR, content: {
+//                VStack {
+//                    QRCodeView(data: QRData)
+//                    Button {
+//                        showQR = false
+//                    } label: {
+//                        Text(verbatim: "Close")
+//                    }
+//                    .buttonStyle(.borderedProminent)
+//                }
+//                .padding(.all)
+//
+//            })
             .controlSize(.large)
         }
     }

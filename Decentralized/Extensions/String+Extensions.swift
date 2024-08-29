@@ -17,3 +17,9 @@ extension String {
         return formatter.string(from: NSNumber(value: number)) ?? self
     }
 }
+
+extension String: @retroactive Identifiable {
+    public var id: String {
+        self
+    }
+}

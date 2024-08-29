@@ -10,6 +10,7 @@ import Foundation
 
 enum WalletError: Error {
     case walletNotFound
+    case storeNotFound
     case blockchainConfigNotFound
     case noOutput
 }
@@ -380,10 +381,11 @@ private class BDKService {
 //        let update = try electurmClient.sync(syncRequest: syncRequest, batchSize: 10, fetchPrevTxouts: true)
         let update = try esploraClient.sync(
             syncRequest: syncRequest,
-            parallelRequests: UInt64(5)
+            parallelRequests: UInt64(10)
         )
 
         try wallet.applyUpdate(update: update)
+        
 
         _ = try wallet.persist(connection: payConn)
 

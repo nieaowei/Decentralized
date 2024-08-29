@@ -114,7 +114,7 @@ struct HomeView: View {
         }
         .task(id: global.wss.status) {
             if global.wss.status == .disconnected {
-//                global.wss.connect()
+                global.wss.connect()
             }
         }
         .task(id: global.wss.status) {
