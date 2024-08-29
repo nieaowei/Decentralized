@@ -9,8 +9,9 @@ import BitcoinDevKit
 import SwiftUI
 
 struct UtxosView: View {
-    @Binding var selected: Set<String>
     @Bindable var walletVm: WalletViewModel
+
+    @State var selected: Set<String> = .init()
 
     var body: some View {
         VStack {
@@ -24,8 +25,7 @@ struct UtxosView: View {
             HStack {
                 Spacer()
                 Button(action: {
-                    print(selected)
-                    NotificationManager().sendNotification(title: "T1est", subtitle: "btcc", body: "1123234")
+                    walletVm.global.tabIndex = .wallet(.send(selected: selected))
                 }, label: {
                     Text("Send")
                         .padding(.horizontal)
@@ -38,6 +38,6 @@ struct UtxosView: View {
     }
 }
 
-#Preview {
-    UtxosView(selected: .constant(Set<String>()), walletVm: .init(global: .init()))
-}
+// #Preview {
+//    UtxosView(selected: .constant(Set<String>()), walletVm: .init(global: .init()))
+// }

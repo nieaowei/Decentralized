@@ -354,9 +354,6 @@ private class BDKService {
         let psbt = try tx.finish(wallet: wallet)
         print(psbt.serializeHex())
 
-        let transaction = try psbt.extractTx()
-
-//        print(transaction.serialize().map { String(format: "%02x", $0) }.joined())
     }
 
     private func signAndBroadcast(psbt: Psbt) throws {

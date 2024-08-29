@@ -1,6 +1,5 @@
 //
 //  HomeView.swift
-//  BTCt
 //
 //  Created by Nekilc on 2024/5/27.
 //
@@ -8,12 +7,31 @@
 import SwiftUI
 
 enum Sections: Hashable {
-    case wallet(dest: WalletSec)
-    case tools(dest: ToolsSec)
+    case wallet(_ dest: WalletSections)
+    case tools(_ dest: ToolSections)
+
+    var title: String {
+        switch self {
+        case .wallet:
+            "Wallet"
+        case .tools:
+            "Tools"
+        }
+    }
+
+    static var allCases: [Sections] {
+        [.wallet(.me), .tools(.broadcast)]
+    }
 }
 
-enum WalletSec: String, Hashable, CaseIterable {
-    case me, utxos, transactions, send, contacts
+enum WalletSections: Hashable {
+    case me, utxos, transactions, contacts
+
+    case send(selected: Set<String>)
+
+    static var allCases: [WalletSections] {
+        [.me, .utxos, .transactions, .send(selected: .init()), .contacts]
+    }
 
     var icon: String {
         switch self {
@@ -36,9 +54,20 @@ enum WalletSec: String, Hashable, CaseIterable {
     }
 }
 
-enum ToolsSec: String, Hashable, CaseIterable {
+enum ToolSections: String, Hashable, CaseIterable {
     case broadcast
     // speedUp, cancelTx, monitor
+
+    static var allCases: [ToolSections] {
+        [.broadcast]
+    }
+
+    var title: String {
+        switch self {
+        case .broadcast:
+            "Broadcast"
+        }
+    }
 
     var icon: String {
         switch self {
@@ -52,8 +81,6 @@ struct HomeView: View {
 
     @Bindable var global: GlobalViewModel
 
-    @State private var sidebarDestination: Sections = .wallet(dest: WalletSec.me)
-
     @State var isFirst: Bool = true
 
     @State var walletVm: WalletViewModel = .init(global: .live)
@@ -62,23 +89,23 @@ struct HomeView: View {
 
     var body: some View {
         NavigationSplitView {
-            SiderbarView(destination: $sidebarDestination)
+            SiderbarView(tabIndex: $global.tabIndex)
         }
         detail: {
-            switch sidebarDestination {
+            switch global.tabIndex {
             case .wallet(let dest):
                 switch dest {
                 case .me:
                     MeView(walletVm: walletVm)
                         .navigationTitle(dest.title)
                 case .utxos:
-                    UtxosView(selected: .constant(Set<String>()), walletVm: walletVm)
+                    UtxosView(walletVm: walletVm)
                         .navigationTitle(dest.title)
                 case .transactions:
                     TransactionView(walletVm: walletVm)
                         .navigationTitle(dest.title)
-                case .send:
-                    SendView(walletVm: walletVm)
+                case .send(let selected):
+                    SendView(walletVm: walletVm, selectedUtxos: selected)
                         .navigationTitle(dest.title)
                 case .contacts:
                     ContactView()
@@ -91,6 +118,7 @@ struct HomeView: View {
                 }
             }
         }
+
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Text(verbatim: "\(global.wss.fastfee) sats/vB")
@@ -184,21 +212,49 @@ struct HomeView: View {
 }
 
 struct SiderbarView: View {
-    @Binding var destination: Sections
+    @Binding var tabIndex: Sections
 
     var body: some View {
-        List(selection: $destination) {
-            Section("Wallet") {
-                ForEach(WalletSec.allCases, id: \.self) { walletItem in
-                    NavigationLink(value: Sections.wallet(dest: walletItem)) {
-                        Label(walletItem.rawValue.capitalized, systemImage: walletItem.icon)
-                    }
-                }
-            }
-            Section("Tools") {
-                ForEach(ToolsSec.allCases, id: \.self) { walletItem in
-                    NavigationLink(value: Sections.tools(dest: walletItem)) {
-                        Label(walletItem.rawValue.capitalized, systemImage: walletItem.icon)
+        List(selection: $tabIndex) {
+            ForEach(Sections.allCases, id: \.title) { sections in
+                Section(sections.title) {
+                    switch sections {
+                    case .wallet:
+                        ForEach(WalletSections.allCases, id: \.title) { walletItem in
+                            if case Sections.wallet(let dest) = tabIndex {
+                                if dest.title == walletItem.title {
+                                    NavigationLink(value: tabIndex) {
+                                        Label(walletItem.title, systemImage: walletItem.icon)
+                                    }
+                                } else {
+                                    NavigationLink(value: Sections.wallet(walletItem)) {
+                                        Label(walletItem.title, systemImage: walletItem.icon)
+                                    }
+                                }
+                            } else {
+                                NavigationLink(value: Sections.wallet(walletItem)) {
+                                    Label(walletItem.title, systemImage: walletItem.icon)
+                                }
+                            }
+                        }
+                    case .tools:
+                        ForEach(ToolSections.allCases, id: \.title) { walletItem in
+                            if case Sections.tools(let dest) = tabIndex {
+                                if dest.title == walletItem.title {
+                                    NavigationLink(value: tabIndex) {
+                                        Label(walletItem.title, systemImage: walletItem.icon)
+                                    }
+                                } else {
+                                    NavigationLink(value: Sections.tools(walletItem)) {
+                                        Label(walletItem.title, systemImage: walletItem.icon)
+                                    }
+                                }
+                            } else {
+                                NavigationLink(value: Sections.tools(walletItem)) {
+                                    Label(walletItem.title, systemImage: walletItem.icon)
+                                }
+                            }
+                        }
                     }
                 }
             }

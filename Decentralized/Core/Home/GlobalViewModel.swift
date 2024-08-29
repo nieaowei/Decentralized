@@ -29,6 +29,8 @@ class GlobalViewModel {
     @ObservationIgnored
     @AppStorage("isOnBoarding")
     var isOnboarding: Bool?
+    
+    var tabIndex: Sections = .wallet( .me)
 
     var walletSyncState: WalletSyncState = .notStarted
     

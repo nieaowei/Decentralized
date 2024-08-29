@@ -12,13 +12,6 @@ struct UtxoSelector: View {
 
     @State var utxos: [LocalOutput]
 
-//    init(selected: Binding<Set<String>>, utxos: [LocalOutput]) {
-//        self._selected = selected
-//        
-//        self.utxos =  utxos.filter({ lo in
-//            !selected.wrappedValue.contains(lo.id)
-//        })
-//    }
 
     var body: some View {
         VStack {

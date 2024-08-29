@@ -47,9 +47,8 @@ struct SendView: View {
     @State var showUtxosSelector: Bool = false
 
     @State var selectedUtxos = Set<String>()
-//    @State var utxos: [SendUtxo] = []
+
     var utxos: [SendUtxo] {
-       
         return walletVm.utxos.filter { lo in
             selectedUtxos.contains(lo.id)
         }.map { lo in
@@ -101,12 +100,6 @@ struct SendView: View {
                                 }
                             }
                             .truncationMode(.middle)
-//                            TextField("", text: $o.address)
-//                                .textFieldStyle(.roundedBorder)
-//                                .textInputSuggestions(contacts, id: \.id) { c in
-//                                    Text(c.addr)
-//                                        .textInputCompletion(c.addr)
-//                                }
                         }
                         TableColumn("Value") { $o in
                             HStack(spacing: 0) {
@@ -163,27 +156,12 @@ struct SendView: View {
             }
             .padding(.all)
         }
-        .sheet(isPresented: $showUtxosSelector, onDismiss: {
-            showUtxosSelector = false
-
-        }, content: {
+        .sheet(isPresented: $showUtxosSelector, content: {
             VStack {
                 UtxoSelector(selected: $selectedUtxos, utxos: walletVm.utxos)
                 HStack {
                     Button {
                         showUtxosSelector = false
-                        print(selectedUtxos)
-//                        for su in selectedUtxos {
-//                            if let f = walletVm.utxos.first(where: { u in
-//                                u.id == su
-//                            }) {
-//                                if !utxos.contains(where: { u in
-//                                    u.id == f.id
-//                                }) {
-//                                    utxos.append(SendUtxo(lo: f))
-//                                }
-//                            }
-//                        }
 
                     } label: {
                         Text(verbatim: "Ok")
