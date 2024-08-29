@@ -38,7 +38,8 @@ struct SendUtxo: Identifiable {
 struct SendView: View {
     @Bindable var walletVm: WalletViewModel
 
-    @State var output: [Output] = []
+    @State var outputs: [Output] = []
+    @State var selectedOutpoints = Set<String>()
 
     @Query var contacts: [Contact] = []
     @State var rate: Int = 0
@@ -46,11 +47,9 @@ struct SendView: View {
 
     @State var showUtxosSelector: Bool = false
 
-    @State var selectedUtxos = Set<String>()
-
-    var utxos: [SendUtxo] {
+    var inputs: [SendUtxo] {
         return walletVm.utxos.filter { lo in
-            selectedUtxos.contains(lo.id)
+            selectedOutpoints.contains(lo.id)
         }.map { lo in
             SendUtxo(lo: lo)
         }
@@ -66,26 +65,34 @@ struct SendView: View {
                         }
                         TableColumn("Value", value: \.displayBtcValue)
                     } rows: {
-                        ForEach(utxos) { o in
+                        ForEach(inputs) { o in
                             TableRow(o)
                                 .contextMenu {
                                     if o.deleteable {
-                                        Button(action: { onDeleteUtxo(o.id) }, label: {
+                                        Button {
+                                            onDeleteUtxo(o.id)
+                                        } label: {
                                             Image(systemName: "trash")
                                             Text(verbatim: "Delete")
-                                        })
+                                        }
                                     }
                                 }
                         }
                     }
-                    .contextMenu(menuItems: {
-                        Button(action: {
+                    .contextMenu {
+                        Button {
                             showUtxosSelector = true
-                        }, label: {
+                        } label: {
                             Image(systemName: "plus")
                             Text(verbatim: "Add")
-                        })
-                    })
+                        }
+                        Button {
+                            selectedOutpoints.removeAll()
+                        } label: {
+                            Image(systemName: "trash")
+                            Text(verbatim: "Delete All")
+                        }
+                    }
                     .truncationMode(.middle)
                 }
 
@@ -111,11 +118,11 @@ struct SendView: View {
                             }
                         }
                     } rows: {
-                        ForEach($output) { o in
+                        ForEach($outputs) { o in
                             TableRow(o)
                                 .contextMenu {
                                     Button(action: {
-                                        output.removeAll { o1 in
+                                        outputs.removeAll { o1 in
                                             o1.id == o.id
                                         }
                                     }, label: {
@@ -126,14 +133,14 @@ struct SendView: View {
                         }
                     }
                     .truncationMode(.middle)
-                    .contextMenu(menuItems: {
-                        Button(action: {
-                            output.append(Output(address: contacts.first?.addr ?? "", value: 0.0))
-                        }, label: {
+                    .contextMenu {
+                        Button {
+                            outputs.append(Output(address: contacts.first?.addr ?? "", value: 0.0))
+                        } label: {
                             Image(systemName: "plus")
                             Text(verbatim: "Add")
-                        })
-                    })
+                        }
+                    }
                 }
             }
             VStack {
@@ -147,10 +154,10 @@ struct SendView: View {
                         Text("sats/vB")
                     }
                     .frame(width: 150)
-                    Button(action: onSign, label: {
+                    Button(action: onSign) {
                         Text("Sign")
                             .padding(.horizontal)
-                    })
+                    }
                     .primary()
                 }
             }
@@ -158,7 +165,7 @@ struct SendView: View {
         }
         .sheet(isPresented: $showUtxosSelector, content: {
             VStack {
-                UtxoSelector(selected: $selectedUtxos, utxos: walletVm.utxos)
+                UtxoSelector(selected: $selectedOutpoints, utxos: walletVm.utxos)
                 HStack {
                     Button {
                         showUtxosSelector = false
@@ -185,14 +192,14 @@ struct SendView: View {
     func onSign() {
 //        BumpFeeTxBuilder(txid: "", feeRate: FeeRate.fromSatPerVb(satPerVb: 10))
         var tx = TxBuilder()
-        if !utxos.isEmpty {
-            for utxo in utxos {
+        if !inputs.isEmpty {
+            for utxo in inputs {
                 tx = tx.addUtxo(outpoint: utxo.outpoint)
             }
         }
 
-        if !output.isEmpty {
-            for o in output {
+        if !outputs.isEmpty {
+            for o in outputs {
                 do {
                     let script = try Address(address: o.address, network: .bitcoin)
                         .scriptPubkey()
@@ -220,7 +227,7 @@ struct SendView: View {
 //        utxos.removeAll { o1 in
 //            o1.id == id
 //        }
-        selectedUtxos.remove(id)
+        selectedOutpoints.remove(id)
     }
 }
 

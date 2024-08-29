@@ -13,6 +13,7 @@
 		151E97FD2C49FD62001DA0E2 /* BitcoinDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 151E97FC2C49FD62001DA0E2 /* BitcoinDevKit */; };
 		151E97FF2C49FED0001DA0E2 /* BitcoinDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 151E97FE2C49FED0001DA0E2 /* BitcoinDevKit */; };
 		1542476B2C80598500EA1376 /* BitcoinDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1542476A2C80598500EA1376 /* BitcoinDevKit */; };
+		1542476D2C81174700EA1376 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 1542476C2C81174700EA1376 /* README.md */; };
 		154579D02C4A158F00FE23DC /* BitcoinDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 154579CF2C4A158F00FE23DC /* BitcoinDevKit */; };
 		15BFEAE02C3EAE3700EDE0B4 /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 15BFEADF2C3EAE3700EDE0B4 /* KeychainAccess */; };
 /* End PBXBuildFile section */
@@ -53,6 +54,7 @@
 		151E97DD2C48E69D001DA0E2 /* AccountExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AccountExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		151E97DE2C48E69D001DA0E2 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		151E97E02C48E69D001DA0E2 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		1542476C2C81174700EA1376 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		15F857022C47223000495405 /* DecentralizedTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DecentralizedTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -114,6 +116,7 @@
 		15BFE9C32C3EACCE00EDE0B4 = {
 			isa = PBXGroup;
 			children = (
+				1542476C2C81174700EA1376 /* README.md */,
 				15BFE9CE2C3EACCE00EDE0B4 /* Decentralized */,
 				15F857032C47223000495405 /* DecentralizedTests */,
 				151E97E22C48E69D001DA0E2 /* Account */,
@@ -276,6 +279,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1542476D2C81174700EA1376 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

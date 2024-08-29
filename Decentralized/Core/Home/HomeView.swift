@@ -105,7 +105,7 @@ struct HomeView: View {
                     TransactionView(walletVm: walletVm)
                         .navigationTitle(dest.title)
                 case .send(let selected):
-                    SendView(walletVm: walletVm, selectedUtxos: selected)
+                    SendView(walletVm: walletVm, selectedOutpoints: selected)
                         .navigationTitle(dest.title)
                 case .contacts:
                     ContactView()
