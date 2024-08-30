@@ -55,23 +55,24 @@ enum WalletSections: Hashable {
 }
 
 enum ToolSections: String, Hashable, CaseIterable {
-    case broadcast
+    case broadcast, sign
     // speedUp, cancelTx, monitor
 
     static var allCases: [ToolSections] {
-        [.broadcast]
+        [.broadcast, .sign]
     }
 
     var title: String {
         switch self {
-        case .broadcast:
-            "Broadcast"
+        case .broadcast: "Broadcast"
+        case .sign: "Sign"
         }
     }
 
     var icon: String {
         switch self {
-        case .broadcast: "person"
+        case .broadcast: "dot.radiowaves.left.and.right"
+        case .sign: "square.and.pencil"
         }
     }
 }
@@ -115,6 +116,10 @@ struct HomeView: View {
                 switch dest {
                 case .broadcast:
                     BroadcastView()
+                        .navigationTitle(dest.title)
+                case .sign:
+                    SignView()
+                        .navigationTitle(dest.title)
                 }
             }
         }

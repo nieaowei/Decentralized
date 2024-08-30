@@ -309,23 +309,11 @@ private class BDKService {
         return backupInfo
     }
 
-    func send(
-        address: String,
-        amount: UInt64,
-        feeRate: UInt64
-    ) async throws {
-        let psbt = try buildTransaction(
-            address: address,
-            amount: amount,
-            feeRate: feeRate
-        )
-        try signAndBroadcast(psbt: psbt)
-    }
-
     func buildTransaction(address: String, amount: UInt64, feeRate: UInt64) throws
         -> Psbt
     {
         guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
+        
         let script = try Address(address: address, network: self.network)
             .scriptPubkey()
         let txBuilder = try TxBuilder()
@@ -349,24 +337,29 @@ private class BDKService {
         return Amount.fromSat(fromSat: o.value)
     }
 
-    func buildTxAndSign(_ tx: TxBuilder) throws {
+    func buildTx(_ tx: TxBuilder) throws -> Transaction {
         guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
-        let psbt = try tx.finish(wallet: wallet)
-        print(psbt.serializeHex())
 
+        let psbt = try tx.finish(wallet: wallet)
+        return try psbt.extractTx()
     }
 
-    private func signAndBroadcast(psbt: Psbt) throws {
+    func sign(_ tx: TxBuilder) throws -> (Bool, Psbt) {
         guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
-        _ = try wallet.sign(psbt: psbt)
-        let transaction = try psbt.extractTx()
-        print(transaction)
-//        let client = self.esploraClient
-//        try client.broadcast(transaction: transaction)
+
+        let psbt = try tx.finish(wallet: wallet)
+
+        let ok = try wallet.sign(psbt: psbt)
+        print(psbt.serializeHex())
+        return (ok, psbt)
+    }
+
+    func broadcast(_ psbt: Psbt) throws {
+        try self.esploraClient.broadcast(transaction: psbt.extractTx())
     }
 
     func inspector(inspectedCount: UInt64, total: UInt64) {
-        print(inspectedCount,total)
+        print(inspectedCount, total)
     }
 
     func sync() async throws {
@@ -382,7 +375,6 @@ private class BDKService {
         )
 
         try wallet.applyUpdate(update: update)
-        
 
         _ = try wallet.persist(connection: payConn)
 
@@ -443,13 +435,12 @@ struct BDKClient {
     let fullScan: () async throws -> Void
     let getPayAddress: () throws -> Address
     let getOrdiAddress: () throws -> Address
-    let send: (String, UInt64, UInt64) throws -> Void
     let calculateFee: (Transaction) throws -> UInt64
     let calculateFeeRate: (Transaction) throws -> UInt64
     let sentAndReceived: (Transaction) throws -> SentAndReceivedValues
-    let buildTransaction: (String, UInt64, UInt64) throws -> Psbt
     let getBackupInfo: () throws -> BackupInfo
-    let buildTxAndSign: (_ tx: TxBuilder) throws -> Void
+    let buildTx: (_ tx: TxBuilder) throws -> Transaction
+    let sign: (_ tx: TxBuilder) throws -> (Bool, Psbt)
     let getChangeAmount: (_ tx: TxBuilder) throws -> Amount
 }
 
@@ -467,23 +458,13 @@ extension BDKClient {
         getPayAddress: { BDKService.shared.getPayAddress() },
         getOrdiAddress: { BDKService.shared.getOrdiAddress() },
 
-        send: { address, amount, feeRate in
-            Task {
-                try await BDKService.shared.send(address: address, amount: amount, feeRate: feeRate)
-            }
-        },
         calculateFee: { tx in try BDKService.shared.calculateFee(tx: tx) },
         calculateFeeRate: { tx in try BDKService.shared.calculateFeeRate(tx: tx) },
         sentAndReceived: { tx in try BDKService.shared.sentAndReceived(tx: tx) },
-        buildTransaction: { address, amount, feeRate in
-            try BDKService.shared.buildTransaction(
-                address: address,
-                amount: amount,
-                feeRate: feeRate
-            )
-        },
+
         getBackupInfo: { try BDKService.shared.getBackupInfo() },
-        buildTxAndSign: { tx in try BDKService.shared.buildTxAndSign(tx) },
+        buildTx: { tx in try BDKService.shared.buildTx(tx) },
+        sign: { tx in try BDKService.shared.sign(tx) },
         getChangeAmount: { tx in try BDKService.shared.getChangeAmount(tx) }
     )
 }

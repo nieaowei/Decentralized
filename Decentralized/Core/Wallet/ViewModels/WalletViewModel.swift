@@ -12,7 +12,6 @@ import SwiftUI
 
 @Observable
 class WalletViewModel {
-
     var global: GlobalViewModel
 
     var transactions: [CanonicalTx] = []
@@ -36,8 +35,8 @@ class WalletViewModel {
         self.global.loadWallet()
         self.refresh()
     }
-    
-    func refresh(){
+
+    func refresh() {
         self.getTransactions()
         self.getUtxos()
         self.global.getBalance()
@@ -99,7 +98,7 @@ class WalletViewModel {
 
     func calcFee(tx: BitcoinDevKit.Transaction) -> UInt64 {
         do {
-            return try global.bdkClient.calculateFee(tx)
+            return try self.global.bdkClient.calculateFee(tx)
         } catch {
             return 0
         }
@@ -125,5 +124,9 @@ class WalletViewModel {
         let changeBtc = Amount.fromSat(fromSat: change).toBtc()
 
         return plus ? changeBtc : -changeBtc
+    }
+
+    func sign(_ tx: TxBuilder) throws -> (Bool, Psbt) {
+        return try self.global.bdkClient.sign(tx)
     }
 }

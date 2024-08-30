@@ -16,4 +16,8 @@ enum AppError: Error, LocalizedError {
             return message
         }
     }
+    
+    var errorDescription: String?{
+        description
+    }
 }

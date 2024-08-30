@@ -1,30 +1,27 @@
 //
-//  BoardcastView.swift
+//  SignView.swift
 //  Decentralized
 //
-//  Created by Nekilc on 2024/7/19.
+//  Created by Nekilc on 2024/8/30.
 //
 
 import BitcoinDevKit
 import SwiftUI
 
-
-
-struct BroadcastView: View {
-    @State var sigedHex: String = ""
+struct SignView: View {
+    @State var psbtHex: String = ""
     @State var showTxid: String? = nil
-    @State var tx: BitcoinDevKit.Transaction? = nil
-
+    @State var tx: Psbt? = nil
+    
     @State var errorMsg: String? = nil
     @State var showError: Bool = false
     var body: some View {
         NavigationStack {
             VStack {
-                
-                TextEditor(text: $sigedHex)
+                TextEditor(text: $psbtHex)
                     .textEditorStyle(.automatic)
                     .contentMargins(10, for: .scrollContent)
-                HStack{
+                HStack {
                     Spacer()
                     Button {
                         onExtract()
@@ -33,7 +30,7 @@ struct BroadcastView: View {
                     }
                     .primary()
                     .navigationDestination(item: $tx) { tx in
-                        SendDetailView(walletVm: .init(global: .live), tx: tx, txBuilder: .constant(.init()))
+                        SendDetailView(walletVm: .init(global: .live), tx: try! tx.extractTx(), txBuilder: .constant(.init()))
                     }
                 }
                 .padding(.all)
@@ -48,21 +45,16 @@ struct BroadcastView: View {
             
         })
         .sheet(item: $showTxid) { _ in
-            
         }
     }
-
+    
     func onExtract() {
         do {
-            tx = try BitcoinDevKit.Transaction(transactionBytes: sigedHex.hexStringToByteArray())
+            tx = try Psbt.fromHex(psbtHex: psbtHex)
         } catch {
             logger.error("\(error.localizedDescription)")
             errorMsg = "Invalid Transaction hex"
             showError.toggle()
         }
     }
-}
-
-#Preview {
-    BroadcastView()
 }

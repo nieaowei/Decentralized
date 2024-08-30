@@ -18,6 +18,16 @@ extension Transaction: @retroactive Identifiable {
     public var id: String { self.computeTxid() }
 }
 
+extension Transaction: @retroactive Equatable, @retroactive Hashable {
+    public static func == (lhs: BitcoinDevKit.Transaction, rhs: BitcoinDevKit.Transaction) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(self.id)
+    }
+}
+
 extension String {
     func hexStringToByteArray() -> [UInt8] {
         var startIndex = self.startIndex
@@ -52,13 +62,13 @@ extension BitcoinDevKit.Transaction {
 extension CanonicalTx {
     var timestamp: UInt64 {
         switch self.chainPosition {
-        case .confirmed( let ts): ts.confirmationTime
+        case .confirmed(let ts): ts.confirmationTime
         case .unconfirmed: UInt64(Date().timeIntervalSince1970)
         }
     }
 
     var date: Date {
-        return  Calendar.current.startOfDay(for: self.timestamp.toDate())
+        return Calendar.current.startOfDay(for: self.timestamp.toDate())
     }
 
     var isComfirmed: Bool {
@@ -66,5 +76,16 @@ extension CanonicalTx {
         case .confirmed: true
         case .unconfirmed: false
         }
+    }
+}
+
+
+extension Psbt: @retroactive Equatable, @retroactive Hashable {
+    public static func == (lhs: Psbt ,rhs: Psbt) -> Bool {
+        lhs.serializeHex() == rhs.serializeHex()
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(self.serializeHex())
     }
 }

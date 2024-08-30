@@ -47,10 +47,8 @@ struct TransactionView: View {
                         .contextMenu {
                             NavigationLink("Open Detail") {
                                 TransactionDetailView(tx: tx)
-                                    .navigationTitle("")
                             }
-                            if tx.isComfirmed {
-                                
+                            if !tx.isComfirmed {
                                 NavigationLink("Child Pay For Parent") {
                                     Button(action:  {}, label: {
                                         Text("Child Pay For Parent")
@@ -62,10 +60,6 @@ struct TransactionView: View {
                                             Text("Replace By Fee")
                                         })
                                     }
-                                }
-                                if tx.transaction.isExplicitlyRbf(){
-//                                    SendView(walletVm: walletVm, contacts: [])
-//                                    SendView(walletVm: walletVm )
                                 }
                                 
                             }
