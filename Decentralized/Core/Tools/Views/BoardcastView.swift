@@ -29,7 +29,7 @@ struct BroadcastView: View {
                     Button {
                         onExtract()
                     } label: {
-                        Text("Extract Hex")
+                        Text("extract_hex")
                     }
                     .primary()
                     .navigationDestination(item: $tx) { tx in
@@ -39,11 +39,11 @@ struct BroadcastView: View {
                 .padding(.all)
             }
         }
-        .alert("Invalid Transaction hex", isPresented: $showError, actions: {
+        .alert("invalid_tx_hex", isPresented: $showError, actions: {
             Button {
                 showError.toggle()
             } label: {
-                Text(verbatim: "Close")
+                Text(verbatim: "close")
             }
             
         })

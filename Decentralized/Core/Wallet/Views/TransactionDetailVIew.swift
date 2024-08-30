@@ -43,7 +43,7 @@ struct TransactionDetailView: View {
                             ForEach(esTx?.vin ?? []) { tx in
                                 TableRow(tx)
                                     .contextMenu {
-                                        Button("Copy Address") {
+                                        Button("copy_address") {
                                             NSPasteboard.general.clearContents()
                                             NSPasteboard.general.setString(tx.prevout.scriptpubkeyAddress ?? "", forType: .string)
                                         }
@@ -64,7 +64,7 @@ struct TransactionDetailView: View {
                             ForEach(esTx?.vout ?? []) { tx in
                                 TableRow(tx)
                                     .contextMenu {
-                                        Button("Copy Address") {
+                                        Button("copy_address") {
                                             NSPasteboard.general.clearContents()
                                             NSPasteboard.general.setString(tx.scriptpubkeyAddress ?? "", forType: .string)
                                         }
