@@ -86,7 +86,7 @@ struct DecentralizedApp: App {
         Settings {
             SettingsView()
                 .containerBackground(.thickMaterial, for: .window)
+                .scaledToFit()
         }
-
     }
 }

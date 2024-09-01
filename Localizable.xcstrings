@@ -105,6 +105,9 @@
         }
       }
     },
+    "Enable" : {
+
+    },
     "Enter" : {
       "localizations" : {
         "zh-Hans" : {
@@ -402,6 +405,9 @@
           }
         }
       }
+    },
+    "Touch ID" : {
+
     },
     "Txid" : {
       "extractionState" : "manual",

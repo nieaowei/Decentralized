@@ -9,31 +9,10 @@ import Combine
 import SwiftUI
 
 struct SettingsView: View {
-    private enum Tabs: Hashable {
-        case server
-        case wallet
-    }
-
     @State var settingsVM: SettingsViewModel = .init()
 
     var body: some View {
-//        TabView {
-//            WalletSettingsView(settingsVm: settingsVM)
-//                .tabItem {
-//                    Image(systemName: "creditcard")
-//                    Label("Wallet", systemImage: "creditcard")
-//                }
-//                .tag(Tabs.wallet)
-//        }
         WalletSettingsView(settingsVm: settingsVM)
-    }
-}
-
-struct SeverSettingsView: View {
-    var body: some View {
-        Form {
-            Toggle("Test", isOn: .constant(true))
-        }
     }
 }
 
@@ -56,7 +35,7 @@ struct WalletSettingsView: View {
         Form {
             LabeledContent("Notification") {
                 if settingsVm.enableNotifiaction {
-                    Text(verbatim: "Enable")
+                    Text("Enable")
                 } else {
                     Button {
                         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
@@ -85,12 +64,17 @@ struct WalletSettingsView: View {
                 }
                 TextField("Server Url", text: settingsVm.$serverUrl)
             }
-
-            Button(action: {
+            
+            Section{
+                Toggle("Touch ID", isOn: .constant(false))
+            }
+            
+            Button {
                 global.delete()
-            }, label: {
+            } label: {
                 Text("Reset Wallet")
-            })
+            }
+            .controlSize(.large)
             .buttonStyle(BorderedButtonStyle())
             .foregroundColor(.red)
         }
@@ -101,6 +85,10 @@ struct WalletSettingsView: View {
         .onDisappear {
             logger.info("Settings Disappear")
         }
+        Form{
+            
+        }
+       
     }
 }
 

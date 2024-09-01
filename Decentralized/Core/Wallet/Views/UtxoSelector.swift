@@ -12,7 +12,6 @@ struct UtxoSelector: View {
 
     @State var utxos: [LocalOutput]
 
-
     var body: some View {
         VStack {
             Table(utxos, selection: $selected) {
