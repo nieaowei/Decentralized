@@ -51,21 +51,21 @@ struct MeView: View {
                     .frame(height: 180)
                 ])
                 GroupedBox("PayWallet", items: [
-                    GroupedLabeledContent("Address:") {
+                    GroupedLabeledContent("Address") {
                         Text(verbatim: walletVm.global.payAddress)
                     },
-                    GroupedLabeledContent("Balance:") {
+                    GroupedLabeledContent("Balance") {
                         Text(verbatim: walletVm.global.balance.displayBtc)
                     },
-                    GroupedLabeledContent("QR:") {
+                    GroupedLabeledContent("QR") {
                         QRCodeView(data: "\(walletVm.global.payAddress)")
                     }
                 ])
                 GroupedBox("OrdinalsWallet", items: [
-                    GroupedLabeledContent("Address:") {
+                    GroupedLabeledContent("Address") {
                         Text(verbatim: walletVm.global.ordiAddress)
                     },
-                    GroupedLabeledContent("QR:") {
+                    GroupedLabeledContent("QR") {
                         QRCodeView(data: "\(walletVm.global.ordiAddress)")
                     }
                 ])

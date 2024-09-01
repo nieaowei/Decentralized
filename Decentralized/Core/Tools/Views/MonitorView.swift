@@ -17,10 +17,10 @@ struct MonitorView: View {
 
     var body: some View {
         VStack {
-            TextField("ads", text: $text)
-                .onPasteCommand(of: [.plainText], perform: { str in
-                    print(str.description)
-                })
+//            TextField("ads", text: $text)
+//                .onPasteCommand(of: [.plainText], perform: { str in
+//                    print(str.description)
+//                })
             HSplitView(content: {
                 MonitorList()
 

@@ -10,7 +10,6 @@ import SwiftUI
 struct GroupedBox: View {
     let items: [AnyView]
     var title: String? = nil
-    
 
     init(_ title: String, items: [any View]) {
         self.title = title
@@ -18,7 +17,7 @@ struct GroupedBox: View {
             AnyView(view)
         }
     }
-    
+
     init(_ items: [any View]) {
         self.items = items.map { view in
             AnyView(view)
@@ -46,7 +45,7 @@ struct GroupedBox: View {
 
         } label: {
             if let title {
-                Text(verbatim: title)
+                Text(NSLocalizedString(title, comment: ""))
                     .font(.headline)
                     .padding(.vertical, 10)
             }
@@ -57,16 +56,16 @@ struct GroupedBox: View {
 
 struct GroupedLabeledContent<Content: View>: View {
     let content: Content
-    let header: String
+    let title: String
 
-    init(_ header: String, @ViewBuilder content: () -> Content) {
-        self.header = header
+    init(_ title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
         self.content = content()
     }
 
     var body: some View {
         HStack(alignment: .top) {
-            Text(header)
+            Text(NSLocalizedString(title, comment: ""))
             Spacer()
             content
                 .textSelection(.enabled)

@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "" : {
-
+      "shouldTranslate" : false
     },
     "About" : {
       "localizations" : {
@@ -34,27 +34,13 @@
         }
       }
     },
-    "Address:" : {
-      "extractionState" : "stale",
+    "Balance" : {
+      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "地址："
-          }
-        }
-      }
-    },
-    "ads" : {
-
-    },
-    "Balance:" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "余额："
+            "value" : "余额"
           }
         }
       }
@@ -80,7 +66,7 @@
       }
     },
     "Child Pay For Parent" : {
-
+      "shouldTranslate" : false
     },
     "close" : {
       "extractionState" : "manual",
@@ -120,7 +106,14 @@
       }
     },
     "Enter" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始使用"
+          }
+        }
+      }
     },
     "Extract Hex" : {
       "localizations" : {
@@ -132,19 +125,8 @@
         }
       }
     },
-    "Failed to generate QR Code" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "生成二维码失败"
-          }
-        }
-      }
-    },
     "Fee" : {
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -155,7 +137,7 @@
       }
     },
     "FeeRate" : {
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -166,7 +148,7 @@
       }
     },
     "HomeView Error" : {
-
+      "shouldTranslate" : false
     },
     "ID" : {
       "shouldTranslate" : false
@@ -193,7 +175,14 @@
       }
     },
     "Invalid transaction hex string" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不合法的交易Hex字符串"
+          }
+        }
+      }
     },
     "Me" : {
       "extractionState" : "manual",
@@ -258,7 +247,7 @@
       }
     },
     "Onboarding Error" : {
-
+      "shouldTranslate" : false
     },
     "Open Detail" : {
       "localizations" : {
@@ -271,7 +260,7 @@
       }
     },
     "OrdinalsWallet" : {
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -282,10 +271,10 @@
       }
     },
     "OutPoint" : {
-
+      "shouldTranslate" : false
     },
     "PayWallet" : {
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -295,13 +284,13 @@
         }
       }
     },
-    "QR:" : {
-      "extractionState" : "stale",
+    "QR" : {
+      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "二维码:"
+            "value" : "二维码"
           }
         }
       }
@@ -320,7 +309,7 @@
       "shouldTranslate" : false
     },
     "Replace By Fee" : {
-
+      "shouldTranslate" : false
     },
     "Reset Wallet" : {
       "localizations" : {
@@ -333,7 +322,7 @@
       }
     },
     "sats/vB" : {
-
+      "shouldTranslate" : false
     },
     "Send" : {
       "localizations" : {
@@ -383,7 +372,7 @@
       }
     },
     "Size" : {
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -394,7 +383,7 @@
       }
     },
     "Status" : {
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -415,7 +404,7 @@
       }
     },
     "Txid" : {
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -436,7 +425,7 @@
       }
     },
     "Version" : {
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -457,7 +446,7 @@
       }
     },
     "Vsize" : {
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
