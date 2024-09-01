@@ -5,9 +5,9 @@
 //  Created by Nekilc on 2024/7/11.
 //
 
+import AppKit
 import BitcoinDevKit
 import SwiftUI
-import AppKit
 
 struct TransactionDetailView: View {
     @State var tx: CanonicalTx
@@ -15,21 +15,21 @@ struct TransactionDetailView: View {
     @State var esTx: Tx?
 
     var body: some View {
-        VStack {
-            Form {
-                Section {
-                    LabeledContent("Txid") {
+        ScrollView {
+            VStack{
+                GroupedBox([
+                    GroupedLabeledContent("Txid") {
                         Text(verbatim: tx.id)
-                    }
-                    LabeledContent("Status") {
+                    },
+                    GroupedLabeledContent("Status") {
                         Text(verbatim: tx.isComfirmed ? "Comfirmed" : "Uncomfirmed")
-                    }
-                    LabeledContent("Fee") {
+                    },
+                    GroupedLabeledContent("Fee") {
                         Text(verbatim: "\(esTx?.fee ?? 0) sats")
-                    }
-                    LabeledContent("FeeRate") {
+                    },
+                    GroupedLabeledContent("FeeRate") {
                         Text(verbatim: "\((esTx?.fee ?? 0) / (esTx?.size ?? 1)) sats/vB")
-                    }
+                    },
                     HSplitView {
                         Table(of: Vin.self) {
                             TableColumn("Address") { vin in
@@ -49,7 +49,6 @@ struct TransactionDetailView: View {
                                         }
                                     }
                             }
-                            
                         }
                         .truncationMode(.middle)
                         Table(of: Vout.self) {
@@ -73,27 +72,27 @@ struct TransactionDetailView: View {
                         }
                     }
                     .frame(minHeight: 218)
-                }
+                ])
 
-                Section {
-                    LabeledContent("Vsize") {
+                GroupedBox([
+                    GroupedLabeledContent("Vsize") {
                         Text(verbatim: "\(tx.transaction.vsize()) kvB")
-                    }
-                    LabeledContent("Size") {
+                    },
+                    GroupedLabeledContent("Size") {
                         Text(verbatim: "\(tx.transaction.totalSize()) kB")
-                    }
-                    LabeledContent("Version") {
+                    },
+                    GroupedLabeledContent("Version") {
                         Text(verbatim: "\(tx.transaction.version())")
-                    }
-                    LabeledContent("Weight") {
+                    },
+                    GroupedLabeledContent("Weight") {
                         Text(verbatim: "\(tx.transaction.weight()) kWu")
-                    }
-                    LabeledContent("LockTime") {
+                    },
+                    GroupedLabeledContent("LockTime") {
                         Text(verbatim: "\(tx.transaction.lockTime())")
                     }
-                }
+                ])
             }
-            .formStyle(.grouped)
+            .padding(.vertical)
         }
         .task {
             fetchTx()

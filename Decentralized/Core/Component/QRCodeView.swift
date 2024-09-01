@@ -19,7 +19,10 @@ struct QRCodeView: View {
                 .resizable()
                 .frame(width: 100, height: 100)
         } else {
-            Text("Failed to generate QR Code")
+            Image(systemName: "exclamationmark.triangle")
+                .interpolation(.none)
+                .resizable()
+                .frame(width: 100, height: 100)
         }
     }
 

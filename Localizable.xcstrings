@@ -35,6 +35,7 @@
       }
     },
     "Address:" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -48,6 +49,7 @@
 
     },
     "Balance:" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -130,10 +132,8 @@
         }
       }
     },
-    "extract_hex" : {
-
-    },
     "Failed to generate QR Code" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -144,6 +144,7 @@
       }
     },
     "Fee" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -154,6 +155,7 @@
       }
     },
     "FeeRate" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -190,10 +192,7 @@
         }
       }
     },
-    "invalid_tx_hex" : {
-
-    },
-    "LockTime" : {
+    "Invalid transaction hex string" : {
 
     },
     "Me" : {
@@ -272,6 +271,7 @@
       }
     },
     "OrdinalsWallet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -285,6 +285,7 @@
 
     },
     "PayWallet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -295,6 +296,7 @@
       }
     },
     "QR:" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -381,6 +383,7 @@
       }
     },
     "Size" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -391,6 +394,7 @@
       }
     },
     "Status" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -411,6 +415,7 @@
       }
     },
     "Txid" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -431,6 +436,7 @@
       }
     },
     "Version" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -451,6 +457,7 @@
       }
     },
     "Vsize" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -480,9 +487,6 @@
           }
         }
       }
-    },
-    "Weight" : {
-
     }
   },
   "version" : "1.0"

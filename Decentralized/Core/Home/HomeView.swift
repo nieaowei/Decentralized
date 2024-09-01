@@ -93,33 +93,35 @@ struct HomeView: View {
             SiderbarView(tabIndex: $global.tabIndex)
         }
         detail: {
-            switch global.tabIndex {
-            case .wallet(let dest):
-                switch dest {
-                case .me:
-                    MeView(walletVm: walletVm)
-                        .navigationTitle(dest.title)
-                case .utxos:
-                    UtxosView(walletVm: walletVm)
-                        .navigationTitle(dest.title)
-                case .transactions:
-                    TransactionView(walletVm: walletVm)
-                        .navigationTitle(dest.title)
-                case .send(let selected):
-                    SendView(walletVm: walletVm, selectedOutpoints: selected)
-                        .navigationTitle(dest.title)
-                case .contacts:
-                    ContactView()
-                        .navigationTitle(dest.title)
-                }
-            case .tools(let dest):
-                switch dest {
-                case .broadcast:
-                    BroadcastView()
-                        .navigationTitle(dest.title)
-                case .sign:
-                    SignView()
-                        .navigationTitle(dest.title)
+            NavigationStack{
+                switch global.tabIndex {
+                case .wallet(let dest):
+                    switch dest {
+                    case .me:
+                        MeView(walletVm: walletVm)
+                            .navigationTitle(dest.title)
+                    case .utxos:
+                        UtxosView(walletVm: walletVm)
+                            .navigationTitle(dest.title)
+                    case .transactions:
+                        TransactionView(walletVm: walletVm)
+                            .navigationTitle(dest.title)
+                    case .send(let selected):
+                        SendView(walletVm: walletVm, selectedOutpoints: selected)
+                            .navigationTitle(dest.title)
+                    case .contacts:
+                        ContactView()
+                            .navigationTitle(dest.title)
+                    }
+                case .tools(let dest):
+                    switch dest {
+                    case .broadcast:
+                        BroadcastView()
+                            .navigationTitle(dest.title)
+                    case .sign:
+                        SignView()
+                            .navigationTitle(dest.title)
+                    }
                 }
             }
         }

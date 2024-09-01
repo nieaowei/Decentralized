@@ -18,6 +18,7 @@ class GlobalViewModel {
     let bdkClient: BDKClient
     var wss: MempoolService = .init()
     var notify: NotificationManager = .init()
+//    let esploraClient: EsploraClient
     
     var payAddress: String = ""
     var ordiAddress: String = ""
@@ -30,12 +31,13 @@ class GlobalViewModel {
     @AppStorage("isOnBoarding")
     var isOnboarding: Bool?
     
-    var tabIndex: Sections = .wallet( .me)
+    var tabIndex: Sections = .wallet(.me)
 
     var walletSyncState: WalletSyncState = .notStarted
     
     init(bdkClient: BDKClient = .live) {
         self.bdkClient = bdkClient
+//        self.esploraClient = EsploraClient(url: "")
     }
     
     func loadWallet() {

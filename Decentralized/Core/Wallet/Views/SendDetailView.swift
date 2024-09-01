@@ -15,92 +15,80 @@ struct SendDetailView: View {
 
     @Binding var txBuilder: TxBuilder
 
-    var esTx: Tx {
-        let vout: [Vout] = tx.output().map { (txout: TxOut) in
-            return Vout(scriptpubkey: txout.scriptPubkey.toBytes().description, scriptpubkeyASM: "", scriptpubkeyType: .opReturn, scriptpubkeyAddress: try? Address.fromScript(script: txout.scriptPubkey, network: .bitcoin).description, value: txout.value)
-        }
+//    @State var inputs: [TxOut] = []
 
-//        let vin = tx.input().map { vin in
-//            Vin(txid: vin.id, vout: vin.previousOutput.vout, prevout: <#T##Vout#>, scriptsig: <#T##String#>, scriptsigASM: <#T##String#>, witness: <#T##[String]?#>, isCoinbase: <#T##Bool#>, sequence: <#T##Int#>, innerWitnessscriptASM: <#T##String?#>, innerRedeemscriptASM: <#T##String?#>)
-//        }
-        return Tx(txid: tx.id, version: Int(tx.version()), locktime: Int(tx.lockTime()), vin: [], vout: vout, size: Int(tx.totalSize()), weight: Int(tx.weight()), sigops: 0, fee: Int(walletVm.calcFee(tx: tx)), status: Status(confirmed: false, blockHeight: 0, blockHash: "", blockTime: 0))
+    var outputs: [TxOutRow] {
+        tx.output().map { txout in
+            TxOutRow(inner: txout)
+        }
     }
 
     var body: some View {
         VStack {
-            Form {
-                Section {
-                    LabeledContent("Txid") {
+            ScrollView {
+                GroupedBox([
+                    GroupedLabeledContent("Txid") {
                         Text(verbatim: tx.id)
-                    }
-//                    LabeledContent("Status") {
-//                        Text(verbatim: tx.isComfirmed ? "Comfirmed" : "Uncomfirmed")
-//                    }
-                    LabeledContent("Fee") {
+                    },
+                    GroupedLabeledContent("Fee") {
                         Text(verbatim: "\(walletVm.calcFee(tx: tx)) sats")
-                    }
-//                    LabeledContent("FeeRate") {
-//                        Text(verbatim: "\((esTx?.fee ?? 0) / (esTx?.size ?? 1)) sats/vB")
-//                    }
+                    },
                     HSplitView {
-                        Table(of: TxIn.self) {
-                            TableColumn("Address") { txin in
-                                
-//                                Text(verbatim: "\(vin.previousOutput.txid ?? "")")
-//                                    .truncationMode(.middle)
-                            }
-                            TableColumn("Value") { _ in
-//                                Text(verbatim: "\(Amount.fromSat(fromSat: vin.previousOutput.value).displayBtc)")
-                            }
-                        } rows: {
-                            ForEach(tx.input(), id: \.id) { tx in
-                                TableRow(tx)
-                            }
-                        }
-                        .truncationMode(.middle)
-                        Table(of: Vout.self) {
+                        Table(of: TxOutRow.self) {
                             TableColumn("Address") { vout in
-                                Text(verbatim: "\(vout.scriptpubkeyAddress ?? "")")
-                                    .truncationMode(.middle)
+                                Text(verbatim: "\(vout.address(network: .bitcoin) ?? "")")
                             }
                             TableColumn("Value") { vout in
-                                Text(verbatim: "\(Amount.fromSat(fromSat: vout.value).displayBtc)")
+                                Text(verbatim: "\(vout.amount.displayBtc)")
                             }
                         } rows: {
-                            ForEach(esTx.vout) { tx in
-                                TableRow(tx)
+                            ForEach(outputs) { out in
+                                TableRow(out)
+                            }
+                        }
+                        Table(of: TxOutRow.self) {
+                            TableColumn("Address") { vout in
+                                Text(verbatim: "\(vout.address(network: .bitcoin) ?? "")")
+                            }
+                            TableColumn("Value") { vout in
+                                Text(verbatim: "\(vout.amount.displayBtc)")
+                            }
+                        } rows: {
+                            ForEach(outputs) { out in
+                                TableRow(out)
                             }
                         }
                     }
                     .frame(minHeight: 218)
-                }
 
-                Section {
-                    LabeledContent("Vsize") {
+                ])
+
+                GroupedBox([
+                    GroupedLabeledContent("Vsize") {
                         Text(verbatim: "\(tx.vsize()) kvB")
-                    }
-                    LabeledContent("Size") {
+                    },
+                    GroupedLabeledContent("Size") {
                         Text(verbatim: "\(tx.totalSize()) kB")
-                    }
-                    LabeledContent("Version") {
+                    },
+                    GroupedLabeledContent("Version") {
                         Text(verbatim: "\(tx.version())")
-                    }
-                    LabeledContent("Weight") {
+                    },
+                    GroupedLabeledContent("Weight") {
                         Text(verbatim: "\(tx.weight()) kWu")
-                    }
-                    LabeledContent("LockTime") {
+                    },
+                    GroupedLabeledContent("LockTime") {
                         Text(verbatim: "\(tx.lockTime())")
                     }
-                }
+                ])
             }
-            .formStyle(.grouped)
+            .padding(.top)
             VStack {
                 HStack {
                     Spacer()
                     Button {
                         do {
                             let (ok, psbt) = try walletVm.sign(txBuilder)
-                            if ok{
+                            if ok {
                                 print(psbt.serializeHex())
                             }
                         } catch {
@@ -114,5 +102,21 @@ struct SendDetailView: View {
             }
             .padding(.all)
         }
+        .task {
+            print(tx.output())
+        }
+//        .task {
+//            let prevouts = tx.input().map { txin in
+//                txin.previousOutput
+//            }
+//            do {
+//                for prevout in prevouts {
+//                    let resp = try walletVm.global.esploraClient.getTx(txid: prevout.txid.lowercased())
+//                    let addressValue = resp.output()[Int(prevout.vout)]
+//                    inputs.append(addressValue)
+//                }
+//
+//            } catch {}
+//        }
     }
 }

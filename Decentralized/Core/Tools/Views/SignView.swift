@@ -11,12 +11,12 @@ import SwiftUI
 struct SignView: View {
     @State var psbtHex: String = ""
     @State var showTxid: String? = nil
-    @State var tx: Psbt? = nil
+    @State var tx: BitcoinDevKit.Transaction? = nil
     
     @State var errorMsg: String? = nil
     @State var showError: Bool = false
     var body: some View {
-        NavigationStack {
+        
             VStack {
                 TextEditor(text: $psbtHex)
                     .textEditorStyle(.automatic)
@@ -30,12 +30,12 @@ struct SignView: View {
                     }
                     .primary()
                     .navigationDestination(item: $tx) { tx in
-                        SendDetailView(walletVm: .init(global: .live), tx: try! tx.extractTx(), txBuilder: .constant(.init()))
+                        SendDetailView(walletVm: .init(global: .live), tx: tx, txBuilder: .constant(.init()))
                     }
                 }
                 .padding(.all)
             }
-        }
+        
         .alert("Invalid Transaction hex", isPresented: $showError, actions: {
             Button {
                 showError.toggle()
@@ -50,7 +50,9 @@ struct SignView: View {
     
     func onExtract() {
         do {
-            tx = try Psbt.fromHex(psbtHex: psbtHex)
+            print(psbtHex)
+            let psbt = try Psbt.fromHex(psbtHex: psbtHex)
+            tx = try psbt.extractTx()
         } catch {
             logger.error("\(error.localizedDescription)")
             errorMsg = "Invalid Transaction hex"

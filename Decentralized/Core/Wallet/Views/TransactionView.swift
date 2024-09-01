@@ -16,7 +16,7 @@ struct TransactionView: View {
     @State private var sortOrder = [KeyPathComparator(\CanonicalTx.timestamp, order: .reverse)]
 
     var body: some View {
-        NavigationStack {
+        VStack {
             Table(of: CanonicalTx.self, selection: $selected, sortOrder: $sortOrder) {
                 TableColumn("ID") { tx in
                     HStack {

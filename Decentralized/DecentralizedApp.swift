@@ -85,13 +85,8 @@ struct DecentralizedApp: App {
 
         Settings {
             SettingsView()
-//                .toolbar(removing: .title)
-//                .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
                 .containerBackground(.thickMaterial, for: .window)
-//                .windowMinimizeBehavior(.disabled)
-//                .windowResizeBehavior(.disabled)
         }
-//        .windowResizability(.contentSize)
-//        .restorationBehavior(.disabled)
+
     }
 }

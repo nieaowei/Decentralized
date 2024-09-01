@@ -18,7 +18,7 @@ struct BroadcastView: View {
     @State var errorMsg: String? = nil
     @State var showError: Bool = false
     var body: some View {
-        NavigationStack {
+        
             VStack {
                 
                 TextEditor(text: $sigedHex)
@@ -29,7 +29,7 @@ struct BroadcastView: View {
                     Button {
                         onExtract()
                     } label: {
-                        Text("extract_hex")
+                        Text("Extract Hex")
                     }
                     .primary()
                     .navigationDestination(item: $tx) { tx in
@@ -38,8 +38,8 @@ struct BroadcastView: View {
                 }
                 .padding(.all)
             }
-        }
-        .alert("invalid_tx_hex", isPresented: $showError, actions: {
+        
+        .alert("Invalid transaction hex string", isPresented: $showError, actions: {
             Button {
                 showError.toggle()
             } label: {

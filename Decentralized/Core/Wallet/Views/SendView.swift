@@ -63,120 +63,121 @@ struct SendView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            VStack {
-                HSplitView {
-                    VStack {
-                        Table(of: SendUtxo.self) {
-                            TableColumn("OutPoint") { utxo in
-                                Text(utxo.id).truncationMode(.middle)
-                            }
-                            TableColumn("Value", value: \.displayBtcValue)
-                        } rows: {
-                            ForEach(inputs) { o in
-                                TableRow(o)
-                                    .contextMenu {
-                                        if o.deleteable {
-                                            Button {
-                                                onDeleteUtxo(o.id)
-                                            } label: {
-                                                Image(systemName: "trash")
-                                                Text(verbatim: "Delete")
-                                            }
-                                        }
-                                    }
-                            }
+        VStack {
+            HSplitView {
+                VStack {
+                    Table(of: SendUtxo.self) {
+                        TableColumn("OutPoint") { utxo in
+                            Text(utxo.id).truncationMode(.middle)
                         }
-                        .contextMenu {
-                            Button {
-                                showUtxosSelector = true
-                            } label: {
-                                Image(systemName: "plus")
-                                Text(verbatim: "Add")
-                            }
-                            Button {
-                                selectedOutpoints.removeAll()
-                            } label: {
-                                Image(systemName: "trash")
-                                Text(verbatim: "Delete All")
-                            }
-                        }
-                        .truncationMode(.middle)
-                    }
-
-                    VStack {
-                        Table(of: Binding<Output>.self) {
-                            TableColumn("Address") { $o in
-                                Picker("", selection: $o.address) {
-                                    ForEach(contacts) { contact in
-                                        Text(verbatim: contact.addr)
-                                            .truncationMode(.middle)
-                                            .tag(contact.addr)
-                                    }
-                                }
-                                .truncationMode(.middle)
-                            }
-                            TableColumn("Value") { $o in
-                                HStack(spacing: 0) {
-                                    TextField("", value: $o.value, format: .number)
-                                        .textFieldStyle(.roundedBorder)
-                                    Spacer()
-                                    Text("BTC")
-                                        .padding(.leading)
-                                }
-                            }
-                        } rows: {
-                            ForEach($outputs) { o in
-                                TableRow(o)
-                                    .contextMenu {
-                                        Button(action: {
-                                            outputs.removeAll { o1 in
-                                                o1.id == o.id
-                                            }
-                                        }, label: {
+                        TableColumn("Value", value: \.displayBtcValue)
+                    } rows: {
+                        ForEach(inputs) { o in
+                            TableRow(o)
+                                .contextMenu {
+                                    if o.deleteable {
+                                        Button {
+                                            onDeleteUtxo(o.id)
+                                        } label: {
                                             Image(systemName: "trash")
                                             Text(verbatim: "Delete")
-                                        })
+                                        }
                                     }
-                            }
-                        }
-                        .truncationMode(.middle)
-                        .contextMenu {
-                            Button {
-                                outputs.append(Output(address: contacts.first?.addr ?? "", value: 0.001))
-                            } label: {
-                                Image(systemName: "plus")
-                                Text(verbatim: "Add")
-                            }
+                                }
                         }
                     }
+                    .contextMenu {
+                        Button {
+                            showUtxosSelector = true
+                        } label: {
+                            Image(systemName: "plus")
+                            Text(verbatim: "Add")
+                        }
+                        Button {
+                            selectedOutpoints.removeAll()
+                        } label: {
+                            Image(systemName: "trash")
+                            Text(verbatim: "Delete All")
+                        }
+                    }
+                    .truncationMode(.middle)
                 }
+
                 VStack {
-                    HStack(spacing: 18) {
-                        Spacer()
-                        Toggle("RBF", isOn: $enableRbf)
-                        LabeledContent("Rate") {
-                            TextField("Rate", value: $rate, format: .number)
-                                .textFieldStyle(.roundedBorder)
-
-                            Text("sats/vB")
-                        }
-                        .frame(width: 150)
-
-                        Button(action: onBuild) {
-                            Text("Build")
-                                .padding(.horizontal)
-                        }
-                        .primary()
-                        .navigationDestination(isPresented: $gotoSendDetail) {
-                            if case let .some(builtTx) = builtTx {
-                                SendDetailView(walletVm: walletVm, tx: builtTx, txBuilder: $txBuilder)
+                    Table(of: Binding<Output>.self) {
+                        TableColumn("Address") { $o in
+                            Picker("", selection: $o.address) {
+                                ForEach(contacts) { contact in
+                                    Text(verbatim: contact.addr)
+                                        .truncationMode(.middle)
+                                        .tag(contact.addr)
+                                }
                             }
+                            .truncationMode(.middle)
+                        }
+                        TableColumn("Value") { $o in
+                            HStack(spacing: 0) {
+                                TextField("", value: $o.value, format: .number)
+                                    .textFieldStyle(.roundedBorder)
+                                Spacer()
+                                Text("BTC")
+                                    .padding(.leading)
+                            }
+                        }
+                    } rows: {
+                        ForEach($outputs) { o in
+                            TableRow(o)
+                                .contextMenu {
+                                    Button {
+                                        outputs.removeAll { o1 in
+                                            o1.id == o.id
+                                        }
+                                    } label: {
+                                        Image(systemName: "trash")
+                                        Text(verbatim: "Delete")
+                                    }
+                                }
+                        }
+                    }
+                    .truncationMode(.middle)
+                    .contextMenu {
+                        Button {
+                            outputs.append(Output(address: contacts.first?.addr ?? "", value: 0.001))
+                        } label: {
+                            Image(systemName: "plus")
+                            Text(verbatim: "Add")
                         }
                     }
                 }
-                .padding(.all)
             }
+            VStack {
+                HStack(spacing: 18) {
+                    Spacer()
+                    Toggle("RBF", isOn: $enableRbf)
+                    LabeledContent("Rate") {
+                        TextField("Rate", value: $rate, format: .number)
+                            .textFieldStyle(.roundedBorder)
+
+                        Text("sats/vB")
+                    }
+                    .frame(width: 150)
+
+                    Button(action: onBuild) {
+                        Text("Build")
+                            .padding(.horizontal)
+                    }
+                    .primary()
+//                    .navigationDestination(item: builtTx, destination: { tx in
+//                        <#code#>
+//                    })
+                    .navigationDestination(isPresented: $gotoSendDetail) {
+                        if case let .some(builtTx) = builtTx {
+                            SendDetailView(walletVm: walletVm, tx: builtTx, txBuilder: $txBuilder)
+                        }
+                    }
+                }
+            }
+            .padding(.all)
             .sheet(isPresented: $showUtxosSelector, content: {
                 VStack {
                     UtxoSelector(selected: $selectedOutpoints, utxos: walletVm.utxos)
@@ -184,7 +185,7 @@ struct SendView: View {
                         Button {
                             showUtxosSelector = false
                         } label: {
-                            Text(verbatim: "Ok")
+                            Text(verbatim: "OK")
                                 .padding(.horizontal)
                         }
                         .controlSize(.large)
@@ -194,7 +195,15 @@ struct SendView: View {
                 .frame(minHeight: 300)
                 .padding(.all)
             })
-            .alert(isPresented: $showError, error: appError, actions: {})
+//            .alert(appError?.localizedDescription ?? "", isPresented: $showError, actions: {
+//                Button {} label: {
+//                    Text(verbatim: "OK")
+//                }
+//            })
+            .alert("Test", isPresented: $showError, actions: {}, message: {
+                Text(verbatim: "error")
+            })
+//            .alert(isPresented: $showError, error: appError, actions: {})
             .onChange(of: walletVm.global.walletSyncState, initial: true) {
                 walletVm.getUtxos()
             }
@@ -205,7 +214,6 @@ struct SendView: View {
     }
 
     func onBuild() {
-
         if !inputs.isEmpty {
             for utxo in inputs {
                 txBuilder = txBuilder.addUtxo(outpoint: utxo.outpoint)
@@ -227,12 +235,21 @@ struct SendView: View {
                 }
             }
         }
+
+        if enableRbf {
+            txBuilder = txBuilder.enableRbf()
+        }
+
         do {
             txBuilder = try txBuilder.feeRate(feeRate: FeeRate.fromSatPerVb(satPerVb: UInt64(rate)))
+
             txBuilder = try txBuilder.drainTo(script: walletVm.global.bdkClient.getPayAddress().scriptPubkey())
             builtTx = try walletVm.global.bdkClient.buildTx(txBuilder)
 
             gotoSendDetail = true
+        } catch let error as CreateTxError {
+            showError = true
+            appError = .generic(message: error.localizedDescription)
         } catch {
             showError = true
             appError = .generic(message: error.localizedDescription)
@@ -241,6 +258,10 @@ struct SendView: View {
 
     func onDeleteUtxo(_ id: String) {
         selectedOutpoints.remove(id)
+    }
+
+    func onDeleteAllUtxo() {
+        selectedOutpoints.removeAll()
     }
 }
 
