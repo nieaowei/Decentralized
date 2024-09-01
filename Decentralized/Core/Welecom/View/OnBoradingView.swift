@@ -16,9 +16,17 @@ struct OnBoradingView: View {
         VStack {
             if !vm.isLoading {
                 VStack {
-                    Spacer()
-                    Text(verbatim: "Decentralized")
-                        .font(.largeTitle)
+                    HStack {
+                        Image("Icon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 96, height: 96)
+                            .clipShape(RoundedRectangle(cornerRadius: 15))
+                            .shadow(radius: 10)
+
+                        Text(verbatim: "Decentralized")
+                            .font(.largeTitle)
+                    }
                     VStack(spacing: 10) {
                         Picker("", selection: $vm.mode) {
                             ForEach(WalletMode.allCases, id: \.self) { item in
@@ -34,8 +42,6 @@ struct OnBoradingView: View {
                             .padding(.horizontal)
                     }
                     .primary()
-
-                    Spacer()
                 }
                 .padding(.all)
             } else {
@@ -44,10 +50,11 @@ struct OnBoradingView: View {
                 }
             }
         }
+        .frame(maxHeight: .infinity)
         .alert(isPresented: $vm.showError, content: {
             Alert(
-                title: Text("Onboarding Error"),
-                message: Text(vm.onboardingViewError?.description ?? "Unknown"),
+                title: Text(vm.onboardingViewError?.description ?? "Unknown"),
+                message: nil,
                 dismissButton: .default(Text("OK")) {
                     vm.onboardingViewError = nil
                 }

@@ -35,7 +35,7 @@ struct WalletSettingsView: View {
         Form {
             LabeledContent("Notification") {
                 if settingsVm.enableNotifiaction {
-                    Text("Enable")
+                    Text("Enabled")
                 } else {
                     Button {
                         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {

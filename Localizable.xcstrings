@@ -106,6 +106,17 @@
       }
     },
     "Enable" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用"
+          }
+        }
+      }
+    },
+    "Enabled" : {
 
     },
     "Enter" : {
@@ -248,9 +259,6 @@
           }
         }
       }
-    },
-    "Onboarding Error" : {
-      "shouldTranslate" : false
     },
     "Open Detail" : {
       "localizations" : {
