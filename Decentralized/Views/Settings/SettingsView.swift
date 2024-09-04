@@ -9,32 +9,29 @@ import Combine
 import SwiftUI
 
 struct SettingsView: View {
-    @State var settingsVM: SettingsViewModel = .init()
-
     var body: some View {
-        WalletSettingsView(settingsVm: settingsVM)
+        WalletSettingsView()
     }
 }
 
 struct WalletSettingsView: View {
-    let global: GlobalViewModel = .live
+//    let global: GlobalViewModel = .live
+    @Environment(WalletStore.self) var wallet: WalletStore
 
-    @Bindable var settingsVm: SettingsViewModel
+    @Environment(Setting.self) private var settings: Setting
+    @Environment(\.showError) private var showError
 
-    @State var serverType: ServerType
     @State var checkTask: Date = .init()
     private var timer: Publishers.Autoconnect<Timer.TimerPublisher>
 
-    init(settingsVm: SettingsViewModel) {
-        self.settingsVm = settingsVm
-        self.serverType = settingsVm.serverType
+    init() {
         self.timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
     }
 
     var body: some View {
         Form {
             LabeledContent("Notification") {
-                if settingsVm.enableNotifiaction {
+                if settings.enableNotifiaction {
                     Text("Enabled")
                 } else {
                     Button {
@@ -50,27 +47,29 @@ struct WalletSettingsView: View {
                 checkTask = tim
             })
             .task(id: checkTask) {
-                await settingsVm.getEnableNotifiaction()
+                await settings.getEnableNotifiaction()
             }
 
             Section {
-                Picker("Server Type", selection: $serverType) {
+                Picker("Server Type", selection: settings.$serverType) {
                     ForEach(ServerType.allCases) { t in
                         Text(verbatim: "\(t)").tag(t)
                     }
                 }
-                .onChange(of: serverType) {
-                    settingsVm.serverType = serverType
-                }
-                TextField("Server Url", text: settingsVm.$serverUrl)
+                TextField("Server Url", text: settings.$serverUrl)
             }
-            
-            Section{
-                Toggle("Touch ID", isOn: .constant(false))
+
+            Section {
+                @Bindable var settings = settings
+                Toggle("Touch ID", isOn: $settings.enableTouchID)
             }
-            
+
             Button {
-                global.delete()
+                do {
+                    try wallet.delete()
+                } catch {
+                    showError(error, "Delete")
+                }
             } label: {
                 Text("Reset Wallet")
             }
@@ -85,10 +84,6 @@ struct WalletSettingsView: View {
         .onDisappear {
             logger.info("Settings Disappear")
         }
-        Form{
-            
-        }
-       
     }
 }
 

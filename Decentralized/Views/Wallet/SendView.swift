@@ -36,7 +36,8 @@ struct SendUtxo: Identifiable {
 }
 
 struct SendView: View {
-    @Bindable var walletVm: WalletViewModel
+    @Environment(WalletStore.self) var wallet: WalletStore
+    @Environment(GlobalStore.self) var global: GlobalStore
 
     @State var outputs: [Output] = []
     @State var selectedOutpoints = Set<String>()
@@ -55,7 +56,7 @@ struct SendView: View {
     @State var appError: AppError?
 
     var inputs: [SendUtxo] {
-        return walletVm.utxos.filter { lo in
+        return wallet.utxos.filter { lo in
             selectedOutpoints.contains(lo.id)
         }.map { lo in
             SendUtxo(lo: lo)
@@ -172,7 +173,7 @@ struct SendView: View {
 //                    })
                     .navigationDestination(isPresented: $gotoSendDetail) {
                         if case let .some(builtTx) = builtTx {
-                            SendDetailView(walletVm: walletVm, tx: builtTx, txBuilder: $txBuilder)
+                            SendDetailView(tx: builtTx, txBuilder: $txBuilder)
                         }
                     }
                 }
@@ -180,7 +181,7 @@ struct SendView: View {
             .padding(.all)
             .sheet(isPresented: $showUtxosSelector, content: {
                 VStack {
-                    UtxoSelector(selected: $selectedOutpoints, utxos: walletVm.utxos)
+                    UtxoSelector(selected: $selectedOutpoints, utxos: wallet.utxos)
                     HStack {
                         Button {
                             showUtxosSelector = false
@@ -204,11 +205,11 @@ struct SendView: View {
                 Text(verbatim: "error")
             })
 //            .alert(isPresented: $showError, error: appError, actions: {})
-            .onChange(of: walletVm.global.walletSyncState, initial: true) {
-                walletVm.getUtxos()
+            .onChange(of: wallet.syncStatus, initial: true) {
+//                wallet.getUtxos()
             }
             .onAppear {
-                rate = walletVm.global.wss.fastfee
+                rate = global.fastFee
             }
         }
     }
@@ -243,8 +244,8 @@ struct SendView: View {
         do {
             txBuilder = try txBuilder.feeRate(feeRate: FeeRate.fromSatPerVb(satPerVb: UInt64(rate)))
 
-            txBuilder = try txBuilder.drainTo(script: walletVm.global.bdkClient.getPayAddress().scriptPubkey())
-            builtTx = try walletVm.global.bdkClient.buildTx(txBuilder)
+//            txBuilder = try txBuilder.drainTo(script: walletVm.global.bdkClient.getPayAddress().scriptPubkey())
+//            builtTx = try walletVm.global.bdkClient.buildTx(txBuilder)
 
             gotoSendDetail = true
         } catch let error as CreateTxError {
@@ -266,5 +267,5 @@ struct SendView: View {
 }
 
 #Preview {
-    SendView(walletVm: .init(global: .live))
+//    SendView(walletVm: .init(global: .live))
 }

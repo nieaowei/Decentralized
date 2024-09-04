@@ -4,20 +4,27 @@
 //
 //  Created by Nekilc on 2024/5/28.
 //
-import SwiftUI
 import CoreImage.CIFilterBuiltins
+import SwiftUI
 
 struct QRCodeView: View {
     let context = CIContext()
     let filter = CIFilter.qrCodeGenerator()
-    let data: String
+    let data: String?
 
     var body: some View {
-        if let qrCodeImage = generateQRCode(from: data) {
-            Image(nsImage: qrCodeImage)
-                .interpolation(.none)
-                .resizable()
-                .frame(width: 100, height: 100)
+        if let data = data {
+            if let qrCodeImage = generateQRCode(from: data) {
+                Image(nsImage: qrCodeImage)
+                    .interpolation(.none)
+                    .resizable()
+                    .frame(width: 100, height: 100)
+            } else {
+                Image(systemName: "exclamationmark.triangle")
+                    .interpolation(.none)
+                    .resizable()
+                    .frame(width: 100, height: 100)
+            }
         } else {
             Image(systemName: "exclamationmark.triangle")
                 .interpolation(.none)

@@ -9,13 +9,23 @@ import BitcoinDevKit
 import SwiftUI
 
 struct SendDetailView: View {
-    @Bindable var walletVm: WalletViewModel
+    @Environment(WalletStore.self) var wallet: WalletStore
 
     var tx: BitcoinDevKit.Transaction
 
     @Binding var txBuilder: TxBuilder
 
-//    @State var inputs: [TxOut] = []
+//    var amountChange: String {
+//        walletVm.valueChangeToBtc(tx: tx).displayBtc
+//    }
+//
+//    var fee: UInt64 {
+//        walletVm.calcFee(tx: tx)
+//    }
+
+//    var feeRate: Double {
+//        Double(fee) / Double(tx.vsize())
+//    }
 
     var outputs: [TxOutRow] {
         tx.output().map { txout in
@@ -26,20 +36,27 @@ struct SendDetailView: View {
     var body: some View {
         VStack {
             ScrollView {
+//                GroupedBox([
+//                    Text("\(amountChange)")
+//                        .font(.largeTitle)
+//                ])
                 GroupedBox([
                     GroupedLabeledContent("Txid") {
-                        Text(verbatim: tx.id)
+                        Text(tx.id)
                     },
-                    GroupedLabeledContent("Fee") {
-                        Text(verbatim: "\(walletVm.calcFee(tx: tx)) sats")
-                    },
+//                    GroupedLabeledContent("Fee") {
+//                        Text("\(fee) sats")
+//                    },
+//                    GroupedLabeledContent("FeeRate") {
+//                        Text("\(feeRate) sats/vb")
+//                    },
                     HSplitView {
                         Table(of: TxOutRow.self) {
                             TableColumn("Address") { vout in
-                                Text(verbatim: "\(vout.address(network: .bitcoin) ?? "")")
+                                Text("\(vout.address(network: .bitcoin) ?? "")")
                             }
                             TableColumn("Value") { vout in
-                                Text(verbatim: "\(vout.amount.displayBtc)")
+                                Text("\(vout.amount.displayBtc)")
                             }
                         } rows: {
                             ForEach(outputs) { out in
@@ -48,10 +65,10 @@ struct SendDetailView: View {
                         }
                         Table(of: TxOutRow.self) {
                             TableColumn("Address") { vout in
-                                Text(verbatim: "\(vout.address(network: .bitcoin) ?? "")")
+                                Text("\(vout.address(network: .bitcoin) ?? "")")
                             }
                             TableColumn("Value") { vout in
-                                Text(verbatim: "\(vout.amount.displayBtc)")
+                                Text("\(vout.amount.displayBtc)")
                             }
                         } rows: {
                             ForEach(outputs) { out in
@@ -65,19 +82,19 @@ struct SendDetailView: View {
 
                 GroupedBox([
                     GroupedLabeledContent("Vsize") {
-                        Text(verbatim: "\(tx.vsize()) kvB")
+                        Text("\(tx.vsize()) kvB")
                     },
                     GroupedLabeledContent("Size") {
-                        Text(verbatim: "\(tx.totalSize()) kB")
+                        Text("\(tx.totalSize()) kB")
                     },
                     GroupedLabeledContent("Version") {
-                        Text(verbatim: "\(tx.version())")
+                        Text("\(tx.version())")
                     },
                     GroupedLabeledContent("Weight") {
-                        Text(verbatim: "\(tx.weight()) kWu")
+                        Text("\(tx.weight()) kWu")
                     },
                     GroupedLabeledContent("LockTime") {
-                        Text(verbatim: "\(tx.lockTime())")
+                        Text("\(tx.lockTime())")
                     }
                 ])
             }
@@ -86,14 +103,14 @@ struct SendDetailView: View {
                 HStack {
                     Spacer()
                     Button {
-                        do {
-                            let (ok, psbt) = try walletVm.sign(txBuilder)
-                            if ok {
-                                print(psbt.serializeHex())
-                            }
-                        } catch {
-                            print(error)
-                        }
+//                        do {
+//                            let (ok, psbt) = try walletVm.sign(txBuilder)
+//                            if ok {
+//                                print(psbt.serializeHex())
+//                            }
+//                        } catch {
+//                            print(error)
+//                        }
                     } label: {
                         Text("Sign")
                     }

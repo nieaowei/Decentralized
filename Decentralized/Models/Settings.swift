@@ -1,12 +1,11 @@
 //
-//  SettingViewModel.swift
+//  Settings.swift
 //  Decentralized
 //
-//  Created by Nekilc on 2024/7/18.
+//  Created by Nekilc on 2024/9/2.
 //
 
 import Foundation
-import Observation
 import SwiftUI
 import UserNotifications
 
@@ -18,17 +17,27 @@ enum ServerType: String, CaseIterable, Identifiable {
     }
 }
 
-@Observable
-class SettingsViewModel {
-    var enableNotifiaction: Bool = false
 
+@Observable
+class Setting{
+    
+    var enableNotifiaction: Bool = false
+    
+    @ObservationIgnored
+    @AppStorage("network")
+    var enableTouchID: Bool = false
+
+    @ObservationIgnored
+    @AppStorage("network")
+    var network: Networks = .bitcoin
+    
     @ObservationIgnored
     @AppStorage("severType")
     var serverType: ServerType = .Esplora
 
     @ObservationIgnored
     @AppStorage("serverUrl")
-    var serverUrl: String = "https://mempool.space"
+    var serverUrl: String = "https://mempool.space/api"
 
     init() {
         UNUserNotificationCenter.current().getNotificationSettings { settings in

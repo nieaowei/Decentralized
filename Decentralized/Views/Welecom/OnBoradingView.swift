@@ -8,13 +8,18 @@
 import SwiftUI
 
 struct OnBoradingView: View {
-    @State var vm = OnBoradingViewModel()
+    @Environment(WalletStore.self) var wallet: WalletStore
 
-    @AppStorage("isOnBoarding") var isOnBoarding: Bool?
+    @State var mnemonic: String = ""
+    @State var mode: WalletMode = .xverse
+    @State var loading: Bool = false
+
+    @AppStorage("isOnBoarding")
+    var isOnboarding: Bool?
 
     var body: some View {
         VStack {
-            if !vm.isLoading {
+            if !loading {
                 VStack {
                     HStack {
                         Image("Icon")
@@ -28,16 +33,20 @@ struct OnBoradingView: View {
                             .font(.largeTitle)
                     }
                     VStack(spacing: 10) {
-                        Picker("", selection: $vm.mode) {
+                        Picker("Mode", selection: $mode) {
                             ForEach(WalletMode.allCases, id: \.self) { item in
                                 Text(verbatim: item.rawValue.capitalized).tag(item)
                             }
                         }
                         .pickerStyle(.segmented)
-                        MmemonicInputView(mnemonic: $vm.mnemonic)
+                        MmemonicInputView(mnemonic: $mnemonic)
                     }
                     Spacer()
-                    Button(action: vm.createWallet) {
+                    Button {
+                        do {
+                            try wallet.create(words: mnemonic, mode: mode)
+                        } catch {}
+                    } label: {
                         Text("Enter")
                             .padding(.horizontal)
                     }
@@ -46,20 +55,20 @@ struct OnBoradingView: View {
                 .padding(.all)
             } else {
                 ProgressView {
-                    Text(verbatim: "Creating")
+                    Text("Creating")
                 }
             }
         }
-        .frame(maxHeight: .infinity)
-        .alert(isPresented: $vm.showError, content: {
-            Alert(
-                title: Text(vm.onboardingViewError?.description ?? "Unknown"),
-                message: nil,
-                dismissButton: .default(Text("OK")) {
-                    vm.onboardingViewError = nil
-                }
-            )
-        })
+//        .frame(maxHeight: .infinity)
+//        .alert(isPresented: $vm.showError, content: {
+//            Alert(
+//                title: Text(vm.onboardingViewError?.description ?? "Unknown"),
+//                message: nil,
+//                dismissButton: .default(Text("OK")) {
+//                    vm.onboardingViewError = nil
+//                }
+//            )
+//        })
     }
 }
 

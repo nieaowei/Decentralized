@@ -8,6 +8,26 @@
 import BitcoinDevKit
 import Foundation
 
+enum Networks: String {
+    case bitcoin
+    case testnet
+    case signet
+    case regtest
+
+    func toBdkNetwork() -> Network {
+        switch self {
+        case .bitcoin:
+            Network.bitcoin
+        case .testnet:
+            .testnet
+        case .signet:
+            .signet
+        case .regtest:
+            .regtest
+        }
+    }
+}
+
 extension Network {
     var description: String {
         switch self {
@@ -28,7 +48,3 @@ extension Network {
         }
     }
 }
-
-#if DEBUG
-    let mockKeyClientNetwork = Network.regtest
-#endif

@@ -7,7 +7,7 @@ import Foundation
 
 // MARK: - PersonElement
 
-struct Tx: Identifiable, Codable {
+struct EsploraTx: Identifiable, Codable {
     var id: String {
         self.txid
     }
@@ -22,9 +22,9 @@ struct Tx: Identifiable, Codable {
 
 // MARK: PersonElement convenience initializers and mutators
 
-extension Tx {
+extension EsploraTx {
     init(data: Data) throws {
-        self = try newJSONDecoder().decode(Tx.self, from: data)
+        self = try newJSONDecoder().decode(EsploraTx.self, from: data)
     }
 
     init(_ json: String, using encoding: String.Encoding = .utf8) throws {
@@ -49,8 +49,8 @@ extension Tx {
         sigops: Int? = nil,
         fee: Int? = nil,
         status: Status? = nil
-    ) -> Tx {
-        return Tx(
+    ) -> EsploraTx {
+        return EsploraTx(
             txid: txid ?? self.txid,
             version: version ?? self.version,
             locktime: locktime ?? self.locktime,
@@ -227,7 +227,7 @@ enum ScriptpubkeyType: String, Codable {
     case v1P2Tr = "v1_p2tr"
 }
 
-typealias Txs = [Tx]
+typealias Txs = [EsploraTx]
 
 extension Array where Element == Txs.Element {
     init(data: Data) throws {
@@ -254,7 +254,7 @@ extension Array where Element == Txs.Element {
     }
 }
 
-extension Tx {
+extension EsploraTx {
 //    var changeBalance: Amount{
 //        self.
 //    }

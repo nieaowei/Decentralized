@@ -4,6 +4,38 @@
     "" : {
       "shouldTranslate" : false
     },
+    "%@" : {
+
+    },
+    "%d" : {
+
+    },
+    "%lld sats/vB" : {
+
+    },
+    "%llu kB" : {
+
+    },
+    "%llu kvB" : {
+
+    },
+    "%llu kWu" : {
+
+    },
+    "%llu sats" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%llu 聪"
+          }
+        }
+      }
+    },
+    "%u" : {
+
+    },
     "About" : {
       "localizations" : {
         "zh-Hans" : {
@@ -95,6 +127,9 @@
         }
       }
     },
+    "Creating" : {
+
+    },
     "Date" : {
       "localizations" : {
         "zh-Hans" : {
@@ -105,19 +140,15 @@
         }
       }
     },
-    "Enable" : {
-      "extractionState" : "stale",
+    "Enabled" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "启用"
+            "value" : "已启用"
           }
         }
       }
-    },
-    "Enabled" : {
-
     },
     "Enter" : {
       "localizations" : {
@@ -160,9 +191,6 @@
           }
         }
       }
-    },
-    "HomeView Error" : {
-      "shouldTranslate" : false
     },
     "ID" : {
       "shouldTranslate" : false
@@ -219,6 +247,9 @@
         }
       }
     },
+    "Mode" : {
+
+    },
     "Name" : {
       "localizations" : {
         "zh-Hans" : {
@@ -251,6 +282,7 @@
       }
     },
     "OK" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -415,7 +447,14 @@
       }
     },
     "Touch ID" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "触控ID"
+          }
+        }
+      }
     },
     "Txid" : {
       "extractionState" : "manual",

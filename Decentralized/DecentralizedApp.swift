@@ -5,8 +5,8 @@
 //  Created by Nekilc on 2024/5/22.
 //
 
+import BitcoinDevKit
 import SwiftUI
-
 import UserNotifications
 
 class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
@@ -42,9 +42,17 @@ struct DecentralizedApp: App {
     @AppStorage("isOnBoarding") var isOnBoarding: Bool = true
     @Environment(\.openWindow) private var openWindow
 
-    let n: NotificationManager = .init()
+    @State var settings: Setting = .init()
+    @State var wallet: WalletStore?
+    @State var global: GlobalStore = .init()
+    @State private var errorWrapper: ErrorWrapper?
 
-    @State var global: GlobalViewModel = .live
+    init() {
+        let walletService = WalletService(network: settings.network.toBdkNetwork(), syncClient: .esplora(EsploraClient(url: settings.serverUrl)))
+//        print("\(settings.serverUrl)")
+        _wallet = State(wrappedValue: WalletStore(wallet: walletService))
+    }
+
     var body: some Scene {
         WindowGroup {
             if isOnBoarding {
@@ -54,10 +62,23 @@ struct DecentralizedApp: App {
                     .containerBackground(.thickMaterial, for: .window)
                     .windowMinimizeBehavior(.disabled)
                     .windowResizeBehavior(.disabled)
+                    .sheet(item: $errorWrapper) { errorWrapper in
+                        Text(errorWrapper.error.localizedDescription)
+                    }
             } else {
-                HomeView(global: global)
+                HomeView()
+                    .sheet(item: $errorWrapper) { errorWrapper in
+                        Text(errorWrapper.error.localizedDescription)
+                    }
             }
         }
+        .environment(global)
+        .environment(wallet)
+        .environment(settings)
+        .environment(\.showError) { error, guidance in
+            errorWrapper = ErrorWrapper(error: error, guidance: guidance)
+        }
+
         .modelContainer(for: Contact.self)
         // Replace About Button Action
         .commands {
@@ -88,5 +109,7 @@ struct DecentralizedApp: App {
                 .containerBackground(.thickMaterial, for: .window)
                 .scaledToFit()
         }
+        .environment(settings)
+        .environment(wallet)
     }
 }

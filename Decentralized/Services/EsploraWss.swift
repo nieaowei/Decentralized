@@ -8,97 +8,123 @@
 import BitcoinDevKit
 import Foundation
 import Observation
+import OSLog
 
-enum Signal {
-    case newTx([String])
-    case rmTx([String])
-    case confirmedTx([String])
-}
+// @Observable
+class EsploraWss {
+    static let shared: EsploraWss = .init()
 
-@Observable
-class MempoolService {
     enum Status {
         case connected, disconnected, connecting
     }
 
-    @ObservationIgnored
-    private var webSocketTask: URLSessionWebSocketTask?
-    @ObservationIgnored
+    enum Data {
+        case address(String)
+        case transaction(String)
+    }
+
+    private var webSocketTask: URLSessionWebSocketTask
     private var urlSession: URLSession
 
-    var newTranactions: [String] = []
-    var rmTranactions: [String] = []
-    var confirmedTranactions: [String] = []
-    var fastfee: Int = 0
+    var handleNewTx: ((_ tx: EsploraTx) async -> Void)?
+    var handleConfirmedTx: ((_ tx: String) async -> Void)?
+    var handleFees: ((_ tx: Fees) async -> Void)?
+    var handleRemovedTx: ((_ tx: EsploraTx) async -> Void)?
 
     var status: Status = .disconnected
 
+    let logger: Logger = .init(subsystem: "app.decentralized", category: "wss")
+
     init() {
         self.urlSession = URLSession(configuration: .default)
+        let url = URL(string: "wss://mempool.space/api/v1/ws")!
+        self.webSocketTask = urlSession.webSocketTask(with: url)
     }
 
     func connect() {
         status = .connecting
-        guard let url = URL(string: "wss://mempool.space/api/v1/ws") else { return }
-        webSocketTask = urlSession.webSocketTask(with: url)
-        webSocketTask?.resume()
+
+        webSocketTask.resume()
         wantStats()
         receiveMessage()
     }
 
     func disconnect() {
-        webSocketTask?.cancel(with: .goingAway, reason: nil)
+        webSocketTask.cancel(with: .goingAway, reason: nil)
     }
 
-    func trackAddress(_ address: String) {
+    func subscribe(datas: [EsploraWss.Data]) {
+        for data in datas {
+            switch data {
+            case .address(let string):
+                trackAddress(string)
+            case .transaction(let string):
+                trackTransaction(string)
+            }
+        }
+    }
+
+    private func trackAddress(_ address: String) {
         sendMessage("{\"track-address\":\"\(address)\"}")
     }
 
-    func trackTransaction(_ txid: String) {
+    private func trackTransaction(_ txid: String) {
         sendMessage("{\"track-tx\":\"\(txid)\"}")
     }
 
-    func wantStats() {
+    private func wantStats() {
         sendMessage("{\"action\":\"want\",\"data\":[\"stats\"]}")
     }
 
-    func sendMessage(_ message: String) {
+    private func sendMessage(_ message: String) {
         let message = URLSessionWebSocketTask.Message.string(message)
-        webSocketTask?.send(message) { error in
+        webSocketTask.send(message) { error in
             if let error = error {
-                print("Error sending message: \(error)")
+                self.logger.error("Sending message: \(error)")
             }
         }
     }
 
     private func receiveMessage() {
-        webSocketTask?.receive { [weak self] result in
+        webSocketTask.receive { [self] result in
             switch result {
             case .failure(let error):
-                print("Error receiving message: \(error)")
-                self?.status = .disconnected
+                self.logger.error("Receiving message: \(error)")
+                self.status = .disconnected
             case .success(let message):
-//                print("Recv msg")
                 switch message {
                 case .string(let text):
                     DispatchQueue.main.async {
-                        self?.status = .connected
+                        self.status = .connected
                         do {
-//                            print(text)
                             let msg = try Message(text)
-
                             for tx in msg.addressTransactions {
-                                self?.newTranactions.append(tx.txid)
+                                if let handle = self.handleNewTx {
+                                    Task {
+                                        await handle(tx)
+                                    }
+                                }
                             }
 
                             for tx in msg.addressRemovedTransactions {
-                                self?.rmTranactions.append(tx.txid)
+                                if let handle = self.handleRemovedTx {
+                                    Task {
+                                        await handle(tx)
+                                    }
+                                }
+                            }
+                            if let handle = self.handleFees {
+                                Task {
+                                    await handle(msg.fees)
+                                }
                             }
 
-                            self?.fastfee = msg.fees.fastestFee
-
                             if !msg.txConfirmed.isEmpty {
-                                self?.confirmedTranactions.append(msg.txConfirmed)
+                                if let handle = self.handleConfirmedTx {
+                                    Task {
+                                        await handle(msg.txConfirmed)
+                                    }
+                                }
                             }
 
                         } catch {
@@ -106,20 +132,19 @@ class MempoolService {
                         }
                     }
                 case .data(let data):
-                    print("Received binary data: \(data)")
+                    self.logger.info("Received binary data: \(data)")
                 @unknown default:
                     fatalError()
                 }
-                // Continue to receive messages
-                self?.receiveMessage()
+                self.receiveMessage()
             }
         }
     }
 }
 
 struct Message: Codable {
-    var addressTransactions: [Tx] = [] // add
-    var addressRemovedTransactions: [Tx] = [] // rbf
+    var addressTransactions: [EsploraTx] = [] // add
+    var addressRemovedTransactions: [EsploraTx] = [] // rbf
     var txConfirmed: String = ""
     var fees: Fees = .init(fastestFee: 0)
 
@@ -132,8 +157,8 @@ struct Message: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.addressTransactions = try container.decodeIfPresent([Tx].self, forKey: .addressTransactions) ?? []
-        self.addressRemovedTransactions = try container.decodeIfPresent([Tx].self, forKey: .addressRemovedTransactions) ?? []
+        self.addressTransactions = try container.decodeIfPresent([EsploraTx].self, forKey: .addressTransactions) ?? []
+        self.addressRemovedTransactions = try container.decodeIfPresent([EsploraTx].self, forKey: .addressRemovedTransactions) ?? []
         self.txConfirmed = try container.decodeIfPresent(String.self, forKey: .txConfirmed) ?? ""
         self.fees = try container.decodeIfPresent(Fees.self, forKey: .fees) ?? .init(fastestFee: 0)
     }
@@ -216,4 +241,3 @@ extension Fees {
         return try String(data: jsonData(), encoding: encoding)
     }
 }
-

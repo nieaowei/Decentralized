@@ -30,7 +30,7 @@ struct SignView: View {
                     }
                     .primary()
                     .navigationDestination(item: $tx) { tx in
-                        SendDetailView(walletVm: .init(global: .live), tx: tx, txBuilder: .constant(.init()))
+                        SendDetailView( tx: tx, txBuilder: .constant(.init()))
                     }
                 }
                 .padding(.all)

@@ -8,24 +8,23 @@
 import SwiftUI
 import UserNotifications
 
-class NotificationManager {
-    func requestAuthorization() async{
-//        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
-//            NSWorkspace.shared.open(url)
-//        }
+enum NotificationManager {
+//    static let shared: NotificationManager = .init()
+
+    static func requestAuthorization() async {
         do {
             let ok = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound, .providesAppNotificationSettings])
             if ok {
                 print("Notfication granted")
-            }else{
+            } else {
                 print("Notfication failed")
             }
-        }catch{
+        } catch {
             print("Notfication error \(error)")
-        } 
+        }
     }
 
-    func sendNotification(title: String, subtitle: String, body: String) {
+    static func sendNotification(title: String, subtitle: String, body: String) {
         let content = UNMutableNotificationContent()
         content.title = title
         content.subtitle = subtitle

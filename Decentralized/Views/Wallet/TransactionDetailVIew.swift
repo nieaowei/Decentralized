@@ -12,11 +12,17 @@ import SwiftUI
 struct TransactionDetailView: View {
     @State var tx: CanonicalTx
 
-    @State var esTx: Tx?
+    @State var esTx: EsploraTx?
 
+    var valueChange: String
+    
     var body: some View {
         ScrollView {
-            VStack{
+            VStack {
+//                GroupedBox([
+//                    Text("\(valueChange)")
+//                        .font(.largeTitle)
+//                ])
                 GroupedBox([
                     GroupedLabeledContent("Txid") {
                         Text(verbatim: tx.id)
@@ -24,6 +30,7 @@ struct TransactionDetailView: View {
                     GroupedLabeledContent("Status") {
                         Text(verbatim: tx.isComfirmed ? "Comfirmed" : "Uncomfirmed")
                     },
+                    
                     GroupedLabeledContent("Fee") {
                         Text(verbatim: "\(esTx?.fee ?? 0) sats")
                     },
@@ -100,7 +107,7 @@ struct TransactionDetailView: View {
     }
 
     func fetchTx() {
-        NetworkManager.shared.request(urlString: "https://mempool.space/api/tx/\(tx.id)") { (result: Result<Tx, NetworkManager.NetworkError>) in
+        NetworkManager.shared.request(urlString: "https://mempool.space/api/tx/\(tx.id)") { (result: Result<EsploraTx, NetworkManager.NetworkError>) in
             switch result {
             case .success(let tx):
                 esTx = tx

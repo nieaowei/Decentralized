@@ -35,13 +35,3 @@ struct BackupInfo: Codable, Equatable {
             && lhs.ordiDescriptor == rhs.ordiDescriptor && lhs.payAddress == rhs.payAddress && lhs.ordiAddress == rhs.ordiAddress && lhs.payChangeDescriptor == rhs.payChangeDescriptor && lhs.ordiChangeDescriptor == rhs.ordiChangeDescriptor
     }
 }
-
-enum CurrencyCode: String {
-    case USD
-    case EUR
-    case GBP
-    case CAD
-    case CHF
-    case AUD
-    case JPY
-}

@@ -9,23 +9,27 @@ import BitcoinDevKit
 import SwiftUI
 
 struct UtxosView: View {
-    @Bindable var walletVm: WalletViewModel
+    @Environment(WalletStore.self) var wallet: WalletStore
 
     @State var selected: Set<String> = .init()
+    @State private var sortOrder = [KeyPathComparator(\LocalOutput.txout.value, order: .reverse)]
 
     var body: some View {
         VStack {
-            Table(walletVm.utxos, selection: $selected) {
+            Table(wallet.utxos, selection: $selected, sortOrder: $sortOrder) {
                 TableColumn("OutPoint") { utxo in
                     Text(verbatim: "\(utxo.id)")
                         .truncationMode(.middle)
                 }
                 TableColumn("Value", value: \.diplayBTCValue)
             }
+            .onChange(of: sortOrder, initial: true) { _, sortOrder in
+                wallet.utxos.sort(using: sortOrder)
+            }
             HStack {
                 Spacer()
                 Button(action: {
-                    walletVm.global.tabIndex = .wallet(.send(selected: selected))
+//                    wallet.global.tabIndex = .wallet(.send(selected: selected))
                 }, label: {
                     Text("Send")
                         .padding(.horizontal)
