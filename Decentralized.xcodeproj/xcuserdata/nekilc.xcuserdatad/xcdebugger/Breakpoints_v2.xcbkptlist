@@ -24,7 +24,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "32E66E81-804F-44B9-9CD7-3ACE2ADB71EE"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Decentralized/Views/Welecom/OnBoradingView.swift"
@@ -34,36 +34,6 @@
             endingLineNumber = "21"
             landmarkName = "body"
             landmarkType = "24">
-            <Locations>
-               <Location
-                  uuid = "32E66E81-804F-44B9-9CD7-3ACE2ADB71EE - b6baf24cdc25b9f6"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "Decentralized.OnBoradingView.body.getter : some"
-                  moduleName = "Decentralized.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/nekilc/Downloads/Decentralized/Decentralized/Views/Welecom/OnBoradingView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "21"
-                  endingLineNumber = "21">
-               </Location>
-               <Location
-                  uuid = "32E66E81-804F-44B9-9CD7-3ACE2ADB71EE - aaad422027651e17"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 () -&gt; SwiftUI._ConditionalContent&lt;&lt;&lt;opaque return type of SwiftUI.View.padding(SwiftUI.Edge.Set, Swift.Optional&lt;CoreGraphics.CGFloat&gt;) -&gt; some&gt;&gt;.0, SwiftUI.ProgressView&lt;SwiftUI.Text, SwiftUI.EmptyView&gt;&gt; in Decentralized.OnBoradingView.body.getter : some"
-                  moduleName = "Decentralized.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/nekilc/Downloads/Decentralized/Decentralized/Views/Welecom/OnBoradingView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "21"
-                  endingLineNumber = "21">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

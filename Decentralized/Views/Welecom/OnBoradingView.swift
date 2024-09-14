@@ -33,7 +33,7 @@ struct OnBoradingView: View {
                             .font(.largeTitle)
                     }
                     VStack(spacing: 10) {
-                        Picker("Mode", selection: $mode) {
+                        Picker("", selection: $mode) {
                             ForEach(WalletMode.allCases, id: \.self) { item in
                                 Text(verbatim: item.rawValue.capitalized).tag(item)
                             }
@@ -45,6 +45,7 @@ struct OnBoradingView: View {
                     Button {
                         do {
                             try wallet.create(words: mnemonic, mode: mode)
+                            isOnboarding = false
                         } catch {}
                     } label: {
                         Text("Enter")
@@ -59,16 +60,6 @@ struct OnBoradingView: View {
                 }
             }
         }
-//        .frame(maxHeight: .infinity)
-//        .alert(isPresented: $vm.showError, content: {
-//            Alert(
-//                title: Text(vm.onboardingViewError?.description ?? "Unknown"),
-//                message: nil,
-//                dismissButton: .default(Text("OK")) {
-//                    vm.onboardingViewError = nil
-//                }
-//            )
-//        })
     }
 }
 

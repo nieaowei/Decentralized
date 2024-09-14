@@ -42,14 +42,25 @@ struct DecentralizedApp: App {
     @AppStorage("isOnBoarding") var isOnBoarding: Bool = true
     @Environment(\.openWindow) private var openWindow
 
-    @State var settings: Setting = .init()
+    @State var settings: AppSettings = .init()
     @State var wallet: WalletStore?
-    @State var global: GlobalStore = .init()
+    @State var global: WssStore = .init()
     @State private var errorWrapper: ErrorWrapper?
+    @State var syncClient: SyncClient?
 
     init() {
-        let walletService = WalletService(network: settings.network.toBdkNetwork(), syncClient: .esplora(EsploraClient(url: settings.serverUrl)))
-//        print("\(settings.serverUrl)")
+        let syncClientInner = switch settings.serverType {
+        case .Esplora:
+            SyncClientInner.esplora(EsploraClient(url: settings.serverUrl))
+        case .Electrum:
+            SyncClientInner.electrum(try! ElectrumClient(url: settings.serverUrl))
+        }
+        let syncClient = SyncClient(inner: syncClientInner)
+
+        let walletService = WalletService(network: settings.network.toBdkNetwork(), syncClient: syncClient)
+
+        _syncClient = State(wrappedValue: syncClient)
+
         _wallet = State(wrappedValue: WalletStore(wallet: walletService))
     }
 
@@ -68,13 +79,26 @@ struct DecentralizedApp: App {
             } else {
                 HomeView()
                     .sheet(item: $errorWrapper) { errorWrapper in
-                        Text(errorWrapper.error.localizedDescription)
+                        VStack{
+                            Text(errorWrapper.guidance)
+                                .font(.title3)
+                            Text(errorWrapper.error.localizedDescription)
+                            Button {
+                                self.errorWrapper = nil
+                            } label: {
+                                Text(verbatim: "OK")
+                                    .padding(.horizontal)
+                            }
+                            .primary()
+                        }
+                        .padding(.all)
                     }
             }
         }
         .environment(global)
         .environment(wallet)
         .environment(settings)
+        .environment(syncClient)
         .environment(\.showError) { error, guidance in
             errorWrapper = ErrorWrapper(error: error, guidance: guidance)
         }
@@ -94,6 +118,12 @@ struct DecentralizedApp: App {
         // Custom About
         Window("About", id: "about") {
             AboutView()
+                .onChange(of: settings.serverType) {
+                    updateSyncClientInner()
+                }
+                .onChange(of: settings.serverUrl) {
+                    updateSyncClientInner()
+                }
                 .toolbar(removing: .title)
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
                 .containerBackground(.thickMaterial, for: .window)
@@ -111,5 +141,16 @@ struct DecentralizedApp: App {
         }
         .environment(settings)
         .environment(wallet)
+    }
+    
+    
+    func updateSyncClientInner() -> Void {
+        let syncClientInner = switch settings.serverType {
+        case .Esplora:
+            SyncClientInner.esplora(EsploraClient(url: settings.serverUrl))
+        case .Electrum:
+            SyncClientInner.electrum(try! ElectrumClient(url: settings.serverUrl))
+        }
+        syncClient?.inner = syncClientInner
     }
 }

@@ -51,5 +51,5 @@ struct MeView: View {
 }
 
 #Preview {
-//    MeView(walletVm: .init(global: .live))
+//    MeView()
 }

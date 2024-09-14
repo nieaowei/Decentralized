@@ -13,6 +13,13 @@ extension Button {
         self.buttonStyle(BorderedProminentButtonStyle())
             .controlSize(.large)
     }
-    
    
+}
+
+
+extension NavigationLink{
+    func primary() -> some View {
+        self.buttonStyle(BorderedProminentButtonStyle())
+            .controlSize(.large)
+    }
 }

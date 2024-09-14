@@ -14,11 +14,17 @@ struct SettingsView: View {
     }
 }
 
+struct ServerSettings: View {
+    var body: some View {
+        Text("Se")
+    }
+}
+
 struct WalletSettingsView: View {
 //    let global: GlobalViewModel = .live
     @Environment(WalletStore.self) var wallet: WalletStore
 
-    @Environment(Setting.self) private var settings: Setting
+    @Environment(AppSettings.self) private var settings: AppSettings
     @Environment(\.showError) private var showError
 
     @State var checkTask: Date = .init()
@@ -51,6 +57,8 @@ struct WalletSettingsView: View {
             }
 
             Section {
+                LabeledContent("Network", value: settings.network.rawValue)
+                
                 Picker("Server Type", selection: settings.$serverType) {
                     ForEach(ServerType.allCases) { t in
                         Text(verbatim: "\(t)").tag(t)
@@ -60,13 +68,14 @@ struct WalletSettingsView: View {
             }
 
             Section {
-                @Bindable var settings = settings
-                Toggle("Touch ID", isOn: $settings.enableTouchID)
+//                @Bindable var settings = settings
+                Toggle("Touch ID", isOn: settings.$enableTouchID)
             }
 
             Button {
                 do {
                     try wallet.delete()
+                    settings.isOnBoarding = true
                 } catch {
                     showError(error, "Delete")
                 }

@@ -8,7 +8,7 @@ import SwiftUI
 
 struct HomeDetailView: View {
     var route: Route
-    
+
     var body: some View {
         switch route {
         case .wallet(let dest):
@@ -45,16 +45,17 @@ struct HomeDetailView: View {
 struct HomeView: View {
     @Environment(\.scenePhase) private var scenePhase
 
-    @Environment(GlobalStore.self) var global: GlobalStore
+    @Environment(WssStore.self) var wss: WssStore
     @Environment(WalletStore.self) var wallet: WalletStore
     @Environment(\.showError) private var showError
 
-    @State var isFirst: Bool = true
+    
+    @State
+    var isFirst: Bool = true
 
-    @State var wss: EsploraWss = .init()
     @State var showPop: Bool = false
     @State var route: Route = .wallet(.me)
-    @State var routes: [Route] = []
+    @State var routes: [Route] = [.wallet(.me)]
 
     var body: some View {
         NavigationSplitView {
@@ -68,10 +69,11 @@ struct HomeView: View {
                     }
             }
             .onNavigate { navType in
-                print("ada")
                 switch navType {
                 case .push(let route):
                     routes.append(route)
+                case .goto(let route):
+                    self.route = route
                 case .unwind(let route):
                     if route == .wallet(.me) {
                         routes = []
@@ -84,19 +86,19 @@ struct HomeView: View {
             .onChange(of: route, initial: true) {
                 print("route: \(route)")
             }
-            .onChange(of: routes) {
-                print(routes)
+            .onChange(of: routes, initial: true) {
+                print("routes:\(routes)")
             }
         }
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
-                Text("\(global.fastFee) sats/vB")
+                Text("\(wss.fastFee) sats/vB")
                 Text("\(wallet.balance.displayBtc)")
                 SyncStateView(synced: wallet.syncStatus)
                     .onTapGesture {
                         wallet.syncStatus = .syncing
                     }
-//                WssStatusView(status: global.status)
+                WssStatusView(status: wss.status)
             }
         }
         .onChange(of: scenePhase) {
@@ -114,65 +116,45 @@ struct HomeView: View {
                 showError(error, "Sync Retry")
             }
         }
-
-//        .task(id: global.status) {
-//            if global.status == .disconnected {
-//                global.wss.connect()
-//            }
-//        }
-//        .task(id: global.wss.status) {
-//            if global.wss.status == .connected {
-//                global.wss.trackAddress(global.payAddress)
-//                if global.walletSyncState == .synced { // Track tx after Syned
-//                    for tx in wallet.transactions {
-//                        if !tx.isComfirmed {
-//                            logger.info("Track unconfirmed: \(tx.id)")
-//                            global.wss.trackTransaction(tx.id)
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        .task(id: wallet.syncStatus) {
-//            if wallet.syncStatus == .synced {
-        ////                wallet.refresh()
-//                if global.status == .connected {
-//                    for tx in wallet.transactions {
-//                        if !tx.isComfirmed {
-//                            logger.info("Track unconfirmed: \(tx.id)")
-//                            global.trackTransaction(tx.id)
-//                        }
-//                    }
-//                }
-//            }
-//            if wallet.syncStatus == .syncing {
-//                await global.sync()
-//            }
-//        }
-        // Handle wss response
-//        .task(id: global.wss.newTranactions) {
-//            if !global.wss.newTranactions.isEmpty {
-//                print("New: \(global.wss.newTranactions)")
-//                global.wss.newTranactions.removeAll()
-//                NotificationManager.sendNotification(title: "New Transaction", subtitle: "", body: "")
-//                await global.resync()
-//            }
-//        }
-//        .task(id: global.wss.rmTranactions) {
-//            if !global.wss.rmTranactions.isEmpty {
-//                print("Removed: \(global.wss.rmTranactions)")
-//                global.wss.rmTranactions.removeAll()
-//                await global.resync()
-//            }
-//        }
-//        .task(id: global.wss.confirmedTranactions) {
-//            if !global.wss.confirmedTranactions.isEmpty {
-//                print("Confirmed: \(global.wss.confirmedTranactions)")
-//                global.wss.confirmedTranactions.removeAll()
-//                NotificationManager.sendNotification(title: "Transaction Comfirmed", subtitle: "", body: "")
-//                await global.resync()
-//            }
-//        }
+        .task(id: wss.status) {
+            if wss.status == .disconnected {
+                logger.info("Wss connetting")
+                wss.connect()
+            }
+        }
+        .task(id: wss.status) {
+            if wss.status == .connected {
+                wss.subscribe([.address(wallet.payAddress?.description ?? "")])
+                if wallet.syncStatus == .synced { // Track tx after Syned
+                    for tx in wallet.transactions {
+                        if !tx.isComfirmed {
+                            wss.subscribe([.transaction("tx.id")])
+                        }
+                    }
+                }
+            }
+        }
+        .task(id: wallet.syncStatus) {
+            if wallet.syncStatus == .synced {
+                if wss.status == .connected {
+                    for tx in wallet.transactions {
+                        if !tx.isComfirmed {
+                            wss.subscribe([.transaction(tx.id)])
+                        }
+                    }
+                }
+            }
+            if !isFirst && wallet.syncStatus == .syncing {
+                do {
+                    try await wallet.sync()
+                } catch {
+                    showError(error, "Sync Retry")
+                }
+            }
+        }
+        .task(id: wss.event) {
+            wallet.syncStatus = .syncing
+        }
     }
 }
 
@@ -251,7 +233,7 @@ struct SyncStateView: View {
 }
 
 struct WssStatusView: View {
-    @Binding var status: EsploraWss.Status
+    var status: EsploraWss.Status
     var body: some View {
         Image(systemName: sign().0)
             .foregroundColor(sign().1)

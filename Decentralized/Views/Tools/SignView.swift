@@ -29,9 +29,9 @@ struct SignView: View {
                         Text("Extract Hex")
                     }
                     .primary()
-                    .navigationDestination(item: $tx) { tx in
-                        SendDetailView( tx: tx, txBuilder: .constant(.init()))
-                    }
+//                    .navigationDestination(item: $tx) { tx in
+//                        SendDetailView( tx: tx, txBuilder: .constant(.init()))
+//                    }
                 }
                 .padding(.all)
             }

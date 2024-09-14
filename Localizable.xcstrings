@@ -118,6 +118,7 @@
       }
     },
     "copy_address" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -247,15 +248,32 @@
         }
       }
     },
-    "Mode" : {
-
-    },
     "Name" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "名称"
+          }
+        }
+      }
+    },
+    "Network" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络"
+          }
+        }
+      }
+    },
+    "New Transaction" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新的交易"
           }
         }
       }
@@ -282,7 +300,6 @@
       }
     },
     "OK" : {
-      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -315,6 +332,9 @@
     },
     "OutPoint" : {
       "shouldTranslate" : false
+    },
+    "Payment Sent" : {
+
     },
     "PayWallet" : {
       "extractionState" : "manual",
@@ -366,6 +386,9 @@
     },
     "sats/vB" : {
       "shouldTranslate" : false
+    },
+    "Se" : {
+
     },
     "Send" : {
       "localizations" : {
@@ -456,6 +479,26 @@
         }
       }
     },
+    "Transaction Confirmed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交易已确认"
+          }
+        }
+      }
+    },
+    "Transaction Removed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已经已移除"
+          }
+        }
+      }
+    },
     "Txid" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -529,6 +572,9 @@
           }
         }
       }
+    },
+    "Your transaction has been successfully sent" : {
+
     }
   },
   "version" : "1.0"

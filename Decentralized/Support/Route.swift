@@ -90,9 +90,19 @@ enum ToolRoute: String, Hashable, CaseIterable {
         }
     }
 }
+//
+enum SendRoute: Hashable{
+    case main(selected: Set<String>)
+    case detail(tx: WalletTransaction)
+    
+//    static var allCases: [SendRoute] {
+//        [.SendRoute, .detail(tx: <#T##WalletTransaction#>)]
+//    }
+}
 
 enum NavigationType: Hashable {
     case push(Route)
+    case goto(Route)
     case unwind(Route)
 }
 

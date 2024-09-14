@@ -37,7 +37,11 @@ struct SendUtxo: Identifiable {
 
 struct SendView: View {
     @Environment(WalletStore.self) var wallet: WalletStore
-    @Environment(GlobalStore.self) var global: GlobalStore
+    @Environment(WssStore.self) var wss: WssStore
+    @Environment(SyncClient.self) var syncClient: SyncClient
+    @Environment(AppSettings.self) var settings: AppSettings
+    @Environment(\.navigate) var navigate
+    @Environment(\.showError) var showError
 
     @State var outputs: [Output] = []
     @State var selectedOutpoints = Set<String>()
@@ -49,11 +53,15 @@ struct SendView: View {
     @State var showUtxosSelector: Bool = false
     @State var gotoSendDetail: Bool = false
 
-    @State var builtTx: BitcoinDevKit.Transaction? = nil
-    @State var txBuilder: TxBuilder = .init()
+    @State
+    var showBroadcast: Bool = false
 
-    @State var showError: Bool = false
-    @State var appError: AppError?
+    @State
+    var loading: Bool = false
+
+    @State var builtTx: WalletTransaction? = nil
+    @State var txBuilder: TxBuilder = .init()
+    @State var psbt: Psbt? = nil
 
     var inputs: [SendUtxo] {
         return wallet.utxos.filter { lo in
@@ -168,92 +176,137 @@ struct SendView: View {
                             .padding(.horizontal)
                     }
                     .primary()
-//                    .navigationDestination(item: builtTx, destination: { tx in
-//                        <#code#>
-//                    })
-                    .navigationDestination(isPresented: $gotoSendDetail) {
-                        if case let .some(builtTx) = builtTx {
-                            SendDetailView(tx: builtTx, txBuilder: $txBuilder)
-                        }
-                    }
                 }
-            }
-            .padding(.all)
-            .sheet(isPresented: $showUtxosSelector, content: {
-                VStack {
-                    UtxoSelector(selected: $selectedOutpoints, utxos: wallet.utxos)
-                    HStack {
-                        Button {
-                            showUtxosSelector = false
-                        } label: {
-                            Text(verbatim: "OK")
-                                .padding(.horizontal)
-                        }
-                        .controlSize(.large)
-                        .buttonStyle(BorderedProminentButtonStyle())
-                    }
-                }
-                .frame(minHeight: 300)
                 .padding(.all)
-            })
-//            .alert(appError?.localizedDescription ?? "", isPresented: $showError, actions: {
-//                Button {} label: {
-//                    Text(verbatim: "OK")
-//                }
-//            })
-            .alert("Test", isPresented: $showError, actions: {}, message: {
-                Text(verbatim: "error")
-            })
-//            .alert(isPresented: $showError, error: appError, actions: {})
-            .onChange(of: wallet.syncStatus, initial: true) {
-//                wallet.getUtxos()
+                .sheet(isPresented: $showUtxosSelector, content: {
+                    VStack {
+                        UtxoSelector(selected: $selectedOutpoints, utxos: wallet.utxos)
+                        HStack {
+                            Button {
+                                showUtxosSelector = false
+                            } label: {
+                                Text(verbatim: "OK")
+                                    .padding(.horizontal)
+                            }
+                            .controlSize(.large)
+                            .buttonStyle(BorderedProminentButtonStyle())
+                        }
+                    }
+                    .frame(minHeight: 300)
+                    .padding(.all)
+                })
+                .onAppear {
+                    rate = wss.fastFee
+                }
             }
-            .onAppear {
-                rate = global.fastFee
+            .navigationDestination(isPresented: $gotoSendDetail) {
+                if let builtTx = builtTx {
+                    TransactionDetailView1(tx: builtTx) {
+                        HStack {
+                            Spacer()
+                            Button {
+                                showBroadcast = true
+                                gotoSendDetail = false
+                                onSign()
+                            } label: {
+                                Text("Sign")
+                                    .padding(.horizontal)
+                            }
+                            .primary()
+                        }
+                        .padding(.all)
+                    }
+                }
+            }
+            .sheet(isPresented: $showBroadcast) {
+                VStack {
+                    if loading {
+                        ProgressView()
+                    } else {
+                        VStack(spacing: 20) {
+                            Image(systemName: "checkmark.circle")
+                                .resizable()
+                                .frame(width: 64, height: 64)
+                                .foregroundStyle(.green)
+                            Text("Payment Sent")
+                                .font(.title2)
+                            Text("Your transaction has been successfully sent")
+                                .font(.footnote)
+                            Button {
+                                showBroadcast = false
+                            } label: {
+                                Text("OK").padding(.horizontal)
+                            }
+                            .primary()
+                        }
+                    }
+                }
+                .padding(.all)
             }
         }
     }
 
     func onBuild() {
-        if !inputs.isEmpty {
-            for utxo in inputs {
-                txBuilder = txBuilder.addUtxo(outpoint: utxo.outpoint)
+        txBuilder = TxBuilder()
+
+        for utxo in inputs {
+            txBuilder = txBuilder.addUtxo(outpoint: utxo.outpoint)
+        }
+
+        for o in outputs {
+            do {
+                let script = try Address(address: o.address, network: settings.network.toBdkNetwork())
+                    .scriptPubkey()
+                txBuilder = try txBuilder.addRecipient(script: script, amount: Amount.fromBtc(fromBtc: o.value))
+            } catch let error as AddressParseError {
+                showError(error, "")
+            } catch let error as ParseAmountError {
+                showError(error, "")
+            } catch {
+                showError(error, "")
             }
         }
 
-        if !outputs.isEmpty {
-            for o in outputs {
-                do {
-                    let script = try Address(address: o.address, network: .bitcoin)
-                        .scriptPubkey()
-                    txBuilder = try txBuilder.addRecipient(script: script, amount: Amount.fromBtc(fromBtc: o.value))
-                } catch let error as AddressParseError {
-                    print(error)
-                } catch let error as ParseAmountError {
-                    print(error)
-                } catch {
-                    print(error)
-                }
-            }
-        }
-
-        if enableRbf {
-            txBuilder = txBuilder.enableRbf()
-        }
+        txBuilder = txBuilder.enableRbf()
 
         do {
             txBuilder = try txBuilder.feeRate(feeRate: FeeRate.fromSatPerVb(satPerVb: UInt64(rate)))
 
-//            txBuilder = try txBuilder.drainTo(script: walletVm.global.bdkClient.getPayAddress().scriptPubkey())
-//            builtTx = try walletVm.global.bdkClient.buildTx(txBuilder)
-
+            txBuilder = txBuilder.drainTo(script: wallet.payAddress!.scriptPubkey())
+            let (tx, psbt) = try wallet.buildTx(txBuilder)
+            builtTx = wallet.createWalletTx(tx: tx)
+            self.psbt = psbt
             gotoSendDetail = true
         } catch let error as CreateTxError {
-            showError = true
-            appError = .generic(message: error.localizedDescription)
+            showError(error, "")
         } catch {
-            showError = true
-            appError = .generic(message: error.localizedDescription)
+            showError(error, "")
+        }
+    }
+
+    func onSign() {
+        self.showBroadcast = true
+        self.loading = true
+        
+        Task {
+            do {
+                let ok = try wallet.sign(psbt!)
+
+                let tx = try psbt!.extractTx()
+                wss.subscribe([.transaction(tx.id)])
+
+                let _ = try self.syncClient.broadcast(tx)
+                try await Task.sleep(nanoseconds: 1500000000)
+
+                self.loading = false
+
+            } catch let error as CreateTxError {
+                showError(error, "")
+                self.loading = false
+            } catch {
+                showError(error, "")
+                self.loading = false
+            }
         }
     }
 
@@ -263,6 +316,26 @@ struct SendView: View {
 
     func onDeleteAllUtxo() {
         selectedOutpoints.removeAll()
+    }
+}
+
+struct SignView1: View {
+    let tx: WalletTransaction
+    var body: some View {
+        VStack {
+            ScrollView {
+                TransactionDetailView(tx: tx)
+            }
+            HStack {
+                Spacer()
+                Button {} label: {
+                    Text("Test")
+                        .padding(.horizontal)
+                }
+                .primary()
+            }
+            .padding(.all)
+        }
     }
 }
 

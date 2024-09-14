@@ -47,14 +47,10 @@ struct TransactionView: View {
                 ForEach(wallet.transactions) { tx in
                     TableRow(tx)
                         .contextMenu {
-                            Button {
-                                navigate(.push(.wallet(.utxos)))
-                            } label: {
-                                Text("Test")
-                            }
-                            NavigationLink("Sign", value: Route.tools(.sign))
                             NavigationLink("Open Detail") {
-                                TransactionDetailView(tx: tx.inner, valueChange: tx.changeAmount.displayBtc)
+                                ScrollView{
+                                    TransactionDetailView(tx: tx)
+                                }
                             }
                             if !tx.isComfirmed {
                                 NavigationLink("Child Pay For Parent") {
@@ -73,11 +69,11 @@ struct TransactionView: View {
                         }
                 }
             }
-            .onTapGesture {
-                logger.info("\(selected ?? "")")
-            }
             .truncationMode(.middle)
             .onChange(of: sortOrder, initial: true) { _, sortOrder in
+                wallet.transactions.sort(using: sortOrder)
+            }
+            .onChange(of: wallet.transactions) { _, _ in
                 wallet.transactions.sort(using: sortOrder)
             }
         }

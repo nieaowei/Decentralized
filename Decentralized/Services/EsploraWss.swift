@@ -10,7 +10,6 @@ import Foundation
 import Observation
 import OSLog
 
-// @Observable
 class EsploraWss {
     static let shared: EsploraWss = .init()
 
@@ -26,10 +25,12 @@ class EsploraWss {
     private var webSocketTask: URLSessionWebSocketTask
     private var urlSession: URLSession
 
-    var handleNewTx: ((_ tx: EsploraTx) async -> Void)?
-    var handleConfirmedTx: ((_ tx: String) async -> Void)?
-    var handleFees: ((_ tx: Fees) async -> Void)?
-    var handleRemovedTx: ((_ tx: EsploraTx) async -> Void)?
+    var handleNewTx: ((_ tx: EsploraTx) -> Void)?
+    var handleConfirmedTx: ((_ tx: String) -> Void)?
+    var handleFees: ((_ tx: Fees) -> Void)?
+    var handleRemovedTx: ((_ tx: EsploraTx) -> Void)?
+
+    var handleStatus: ((_ status: Status) -> Void)?
 
     var status: Status = .disconnected
 
@@ -37,12 +38,17 @@ class EsploraWss {
 
     init() {
         self.urlSession = URLSession(configuration: .default)
-        let url = URL(string: "wss://mempool.space/api/v1/ws")!
+        let url = URL(string: "wss://mempool.space/testnet/api/v1/ws")!
         self.webSocketTask = urlSession.webSocketTask(with: url)
     }
 
     func connect() {
         status = .connecting
+        if let handleStatus = handleStatus {
+            Task {
+                handleStatus(status)
+            }
+        }
 
         webSocketTask.resume()
         wantStats()
@@ -54,6 +60,7 @@ class EsploraWss {
     }
 
     func subscribe(datas: [EsploraWss.Data]) {
+        logger.info("Subscribe: \(datas)")
         for data in datas {
             switch data {
             case .address(let string):
@@ -84,6 +91,43 @@ class EsploraWss {
             }
         }
     }
+    
+    private func handleMessage(_ text: String){
+        do {
+            let msg = try Message(text)
+            for tx in msg.addressTransactions {
+                if let handle = self.handleNewTx {
+                    Task {
+                        handle(tx)
+                    }
+                }
+            }
+
+            for tx in msg.addressRemovedTransactions {
+                if let handle = self.handleRemovedTx {
+                    Task {
+                        handle(tx)
+                    }
+                }
+            }
+            if let handle = self.handleFees {
+                Task {
+                    handle(msg.fees)
+                }
+            }
+
+            if !msg.txConfirmed.isEmpty {
+                if let handle = self.handleConfirmedTx {
+                    Task {
+                        handle(msg.txConfirmed)
+                    }
+                }
+            }
+
+        } catch {
+            self.logger.error("\(error)")
+        }
+    }
 
     private func receiveMessage() {
         webSocketTask.receive { [self] result in
@@ -91,50 +135,30 @@ class EsploraWss {
             case .failure(let error):
                 self.logger.error("Receiving message: \(error)")
                 self.status = .disconnected
+                if let handleStatus = handleStatus {
+                    Task {
+                        handleStatus(status)
+                    }
+                }
+                return
             case .success(let message):
                 switch message {
                 case .string(let text):
-                    DispatchQueue.main.async {
-                        self.status = .connected
-                        do {
-                            let msg = try Message(text)
-                            for tx in msg.addressTransactions {
-                                if let handle = self.handleNewTx {
-                                    Task {
-                                        await handle(tx)
-                                    }
-                                }
-                            }
-
-                            for tx in msg.addressRemovedTransactions {
-                                if let handle = self.handleRemovedTx {
-                                    Task {
-                                        await handle(tx)
-                                    }
-                                }
-                            }
-                            if let handle = self.handleFees {
-                                Task {
-                                    await handle(msg.fees)
-                                }
-                            }
-
-                            if !msg.txConfirmed.isEmpty {
-                                if let handle = self.handleConfirmedTx {
-                                    Task {
-                                        await handle(msg.txConfirmed)
-                                    }
-                                }
-                            }
-
-                        } catch {
-                            print(error)
-                        }
+                    self.status = .connected
+                    DispatchQueue.global(qos: .background).async{
+                        self.handleMessage(text)
                     }
+
                 case .data(let data):
                     self.logger.info("Received binary data: \(data)")
+                
                 @unknown default:
                     fatalError()
+                }
+                if let handleStatus = handleStatus {
+                    Task {
+                        handleStatus(status)
+                    }
                 }
                 self.receiveMessage()
             }

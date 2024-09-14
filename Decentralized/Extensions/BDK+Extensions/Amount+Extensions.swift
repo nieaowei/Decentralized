@@ -18,6 +18,8 @@ extension Amount {
     var displayBtc: String {
         String(format: "%.8f BTC", arguments: [toBtc()])
     }
+
+    static let Zero: Amount = .fromSat(fromSat: 0)
 }
 
 extension Amount {
@@ -26,9 +28,12 @@ extension Amount {
     }
 }
 
-
-extension Double{
+extension Double {
     var displayBtc: String {
-        String(format: "%.8f BTC", arguments: [self])
+        if self <= 0 {
+            String(format: "%.8f BTC", arguments: [self])
+        } else {
+            String(format: "+%.8f BTC", arguments: [self])
+        }
     }
 }

@@ -10,6 +10,7 @@ import SwiftUI
 
 struct UtxosView: View {
     @Environment(WalletStore.self) var wallet: WalletStore
+    @Environment(\.navigate) var navigate: NavigateAction
 
     @State var selected: Set<String> = .init()
     @State private var sortOrder = [KeyPathComparator(\LocalOutput.txout.value, order: .reverse)]
@@ -29,7 +30,7 @@ struct UtxosView: View {
             HStack {
                 Spacer()
                 Button(action: {
-//                    wallet.global.tabIndex = .wallet(.send(selected: selected))
+                    navigate(.goto(.wallet(.send(selected: selected))))
                 }, label: {
                     Text("Send")
                         .padding(.horizontal)

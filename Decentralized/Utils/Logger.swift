@@ -12,6 +12,9 @@ import os
 let logger = Logger(subsystem: "app.decentralized", category: "")
 
 
+func AppLogger(cat: String) -> Logger{
+    Logger(subsystem: "app.decentralized", category: cat)
+}
 
 
 

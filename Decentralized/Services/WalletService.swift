@@ -7,6 +7,8 @@
 
 import BitcoinDevKit
 import Foundation
+import Observation
+import OSLog
 
 enum WalletError: Error {
     case walletNotFound
@@ -20,7 +22,33 @@ enum WalletMode: String, Codable, CaseIterable {
     case peek
 }
 
-enum SyncClient {
+@Observable
+class SyncClient {
+    var inner: SyncClientInner
+    var ttt: Int = 0
+
+    init(inner: SyncClientInner) {
+        self.inner = inner
+    }
+
+    func tttt() {
+        self.ttt += 1
+    }
+
+    func broadcast(_ tx: Transaction) throws -> String {
+        try self.inner.broadcast(tx)
+    }
+
+    func sync(_ syncRequest: SyncRequest) throws -> Update {
+        try self.inner.sync(syncRequest)
+    }
+
+    func getTx(_ txid: String) throws -> Transaction {
+        try self.inner.getTx(txid)
+    }
+}
+
+enum SyncClientInner {
     case esplora(EsploraClient)
     case electrum(ElectrumClient)
 
@@ -29,19 +57,28 @@ enum SyncClient {
         case .esplora(let esploraClient):
             try {
                 try esploraClient.broadcast(transaction: tx)
-                return ""
+                return tx.id
             }()
         case .electrum(let electrumClient):
             try electrumClient.broadcast(transaction: tx)
         }
     }
 
-    func sync(syncRequest: SyncRequest) throws -> Update {
+    func sync(_ syncRequest: SyncRequest) throws -> Update {
         return switch self {
         case .esplora(let esploraClient):
             try esploraClient.sync(syncRequest: syncRequest, parallelRequests: 10)
         case .electrum(let electrumClient):
             try electrumClient.sync(syncRequest: syncRequest, batchSize: 10, fetchPrevTxouts: true)
+        }
+    }
+
+    func getTx(_ txid: String) throws -> Transaction {
+        return switch self {
+        case .esplora(let esploraClient):
+            try esploraClient.getTx(txid: txid)
+        case .electrum(let electrumClient):
+            try electrumClient.getTx(txid: txid)
         }
     }
 }
@@ -76,6 +113,8 @@ class WalletService {
     private var ordiAddress: Address?
 
     private let syncClient: SyncClient
+
+    private let logger: Logger = AppLogger(cat: "WalletService")
 
     init(
         network: Network,
@@ -132,8 +171,16 @@ class WalletService {
         return wallet.listOutput()
     }
 
+    func getTxOut(op: OutPoint) throws -> TxOut? {
+        guard let wallet = self.payWallet else {
+            throw WalletError.walletNotFound
+        }
+        return wallet.getTxout(outpoint: op)
+    }
+
     func createWallet(words: String?, mode: WalletMode) throws {
         var words12: String
+
 
         if let words = words, !words.isEmpty {
             words12 = words
@@ -193,11 +240,11 @@ class WalletService {
         let documentsDirectoryURL = FileManager.default.getDocumentsDirectoryPath()
         let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_wallet_data.sqlite")
         let payPersistenceBackendPath = payWalletDataDirectoryURL.path
-        logger.info("PayDB URl:\(payPersistenceBackendPath)")
+        self.logger.info("PayDB URl:\(payPersistenceBackendPath)")
 
         let payDb = try Connection(path: payPersistenceBackendPath)
 
-        logger.info("Read OK")
+        self.logger.info("Read OK")
 
         let payWallet = try Wallet(
             descriptor: payDescriptor,
@@ -211,7 +258,7 @@ class WalletService {
 
         let ordiDb = try! Connection(path: ordiPersistenceBackendPath)
 
-        logger.info("OrdiDB URl:\(ordiPersistenceBackendPath)")
+        self.logger.info("OrdiDB URl:\(ordiPersistenceBackendPath)")
 
         let ordiWallet = try Wallet(
             descriptor: ordiDescriptor,
@@ -220,7 +267,7 @@ class WalletService {
             connection: ordiDb
         )
 
-        logger.info("Peek Address")
+        self.logger.info("Peek Address")
         let payAddress = payWallet.peekAddress(keychain: .external, index: 0).address
         _ = payWallet.revealAddressesTo(keychain: .external, index: 0)
         var ordiAddress = ordiWallet.peekAddress(keychain: .external, index: 0).address
@@ -243,11 +290,11 @@ class WalletService {
 
         let backupInfo = BackupInfo(
             mnemonic: mnemonic.description,
-            payDescriptor: payDescriptor.description,
-            payChangeDescriptor: payChangeDescriptor.description,
+            payDescriptor: payDescriptor.toStringWithSecret(),
+            payChangeDescriptor: payChangeDescriptor.toStringWithSecret(),
             payAddress: payAddress.description,
-            ordiDescriptor: ordiDescriptor.description,
-            ordiChangeDescriptor: ordiChangeDescriptor.description,
+            ordiDescriptor: ordiDescriptor.toStringWithSecret(),
+            ordiChangeDescriptor: ordiChangeDescriptor.toStringWithSecret(),
             ordiAddress: ordiAddress.description,
             mode: mode
         )
@@ -307,20 +354,59 @@ class WalletService {
         try FileManager.default.deleteAllContentsInDocumentsDirectory()
     }
 
-    func buildTx(_ tx: TxBuilder) throws -> BitcoinDevKit.Transaction {
+    func buildTx(_ tx: TxBuilder) throws -> (BitcoinDevKit.Transaction, Psbt) {
         guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
 
         let psbt = try tx.finish(wallet: wallet)
-        return try psbt.extractTx()
+        return try (psbt.extractTx(), psbt)
     }
 
-    func sign(_ tx: TxBuilder) throws -> (Bool, Psbt) {
+    func buildAndSignTx(_ tx: TxBuilder) throws -> (BitcoinDevKit.Transaction, Psbt) {
         guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
 
         let psbt = try tx.finish(wallet: wallet)
+        let ok = try wallet.sign(psbt: psbt)
+        if !ok {
+            print("SIgn error")
+        }
+
+        return try (psbt.extractTx(), psbt)
+    }
+
+    func buildTransaction(address: String, amount: UInt64, feeRate: UInt64) throws
+        -> Psbt
+    {
+        guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
+        let script = try Address(address: address, network: self.network)
+            .scriptPubkey()
+        let txBuilder = try TxBuilder()
+            .addRecipient(
+                script: script,
+                amount: Amount.fromSat(fromSat: amount)
+            )
+            .feeRate(feeRate: FeeRate.fromSatPerVb(satPerVb: feeRate))
+            .drainTo(script: payAddress!.scriptPubkey())
+            .finish(wallet: wallet)
+        return txBuilder
+    }
+
+     func signAndBroadcast(psbt: Psbt) throws {
+        guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
+        let isSigned = try wallet.sign(psbt: psbt)
+        if isSigned {
+            let transaction = try psbt.extractTx()
+            let client = self.syncClient
+            try client.broadcast(transaction)
+        } else {
+            throw WalletError.walletNotFound
+        }
+    }
+
+    func sign(_ psbt: Psbt) throws -> (Bool, Psbt) {
+        guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
 
         let ok = try wallet.sign(psbt: psbt)
-        print(psbt.serializeHex())
+
         return (ok, psbt)
     }
 
@@ -334,10 +420,12 @@ class WalletService {
 
         let syncRequest = try wallet.startSyncWithRevealedSpks().inspectSpks(inspector: WalletSyncScriptInspector(updateProgress: self.inspector)).build()
 
-        let update = try syncClient.sync(syncRequest: syncRequest)
+        self.logger.info("Syning")
+        let update = try syncClient.sync(syncRequest)
 
+        self.logger.info("Update")
         try wallet.applyUpdate(update: update)
-
+        self.logger.info("Persist")
         _ = try wallet.persist(connection: payConn)
 
         // TODO: Do i need to do this next step of setting wallet to wallet again?
@@ -345,28 +433,26 @@ class WalletService {
         self.payWallet = wallet
     }
 
-    func calculateFee(_ tx: BitcoinDevKit.Transaction) throws -> UInt64 {
-        guard let wallet = self.payWallet else {
-            throw WalletError.walletNotFound
+    func calculateFee(_ tx: BitcoinDevKit.Transaction) -> UInt64 {
+        do {
+            let fee = try self.payWallet!.calculateFee(tx: tx)
+            return fee.toSat()
+        } catch {
+            return 0
         }
-        let fee = try wallet.calculateFee(tx: tx)
-        return fee.toSat()
     }
 
-    func calculateFeeRate(_ tx: BitcoinDevKit.Transaction) throws -> UInt64 {
-        guard let wallet = self.payWallet else {
-            throw WalletError.walletNotFound
+    func calculateFeeRate(_ tx: BitcoinDevKit.Transaction) -> UInt64 {
+        do {
+            let feeRate = try self.payWallet!.calculateFeeRate(tx: tx)
+            return feeRate.toSatPerVbCeil()
+        } catch {
+            return 0
         }
-        let feeRate = try wallet.calculateFeeRate(tx: tx)
-        return feeRate.toSatPerVbCeil() // TODO: is this the right method to use on feerate?
     }
 
-    func sentAndReceived(_ tx: BitcoinDevKit.Transaction) throws -> SentAndReceivedValues {
-        guard let wallet = self.payWallet else {
-            throw WalletError.walletNotFound
-        }
-        let values = wallet.sentAndReceived(tx: tx)
-        return values
+    func sentAndReceived(_ tx: BitcoinDevKit.Transaction) -> SentAndReceivedValues {
+        self.payWallet!.sentAndReceived(tx: tx)
     }
 }
 
@@ -470,4 +556,3 @@ class WalletService {
 //        )
 //    }
 // #endif
-

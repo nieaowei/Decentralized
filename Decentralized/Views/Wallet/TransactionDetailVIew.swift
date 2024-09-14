@@ -10,115 +10,260 @@ import BitcoinDevKit
 import SwiftUI
 
 struct TransactionDetailView: View {
-    @State var tx: CanonicalTx
+    @Environment(WalletStore.self) var wallet: WalletStore
+    @Environment(SyncClient.self) var syncClient: SyncClient
+    @Environment(\.showError) var showError
+    @Environment(AppSettings.self) var settings: AppSettings
 
-    @State var esTx: EsploraTx?
+    var tx: WalletTransaction
 
-    var valueChange: String
-    
-    var body: some View {
-        ScrollView {
-            VStack {
-//                GroupedBox([
-//                    Text("\(valueChange)")
-//                        .font(.largeTitle)
-//                ])
-                GroupedBox([
-                    GroupedLabeledContent("Txid") {
-                        Text(verbatim: tx.id)
-                    },
-                    GroupedLabeledContent("Status") {
-                        Text(verbatim: tx.isComfirmed ? "Comfirmed" : "Uncomfirmed")
-                    },
-                    
-                    GroupedLabeledContent("Fee") {
-                        Text(verbatim: "\(esTx?.fee ?? 0) sats")
-                    },
-                    GroupedLabeledContent("FeeRate") {
-                        Text(verbatim: "\((esTx?.fee ?? 0) / (esTx?.size ?? 1)) sats/vB")
-                    },
-                    HSplitView {
-                        Table(of: Vin.self) {
-                            TableColumn("Address") { vin in
-                                Text(verbatim: "\(vin.prevout.scriptpubkeyAddress ?? "")")
-                                    .truncationMode(.middle)
-                            }
-                            TableColumn("Value") { vin in
-                                Text(verbatim: "\(Amount.fromSat(fromSat: vin.prevout.value).displayBtc)")
-                            }
-                        } rows: {
-                            ForEach(esTx?.vin ?? []) { tx in
-                                TableRow(tx)
-                                    .contextMenu {
-                                        Button("copy_address") {
-                                            NSPasteboard.general.clearContents()
-                                            NSPasteboard.general.setString(tx.prevout.scriptpubkeyAddress ?? "", forType: .string)
-                                        }
-                                    }
-                            }
-                        }
-                        .truncationMode(.middle)
-                        Table(of: Vout.self) {
-                            TableColumn("Address") { vout in
-                                Text(verbatim: "\(vout.scriptpubkeyAddress ?? "")")
-                                    .truncationMode(.middle)
-                            }
-                            TableColumn("Value") { vout in
-                                Text(verbatim: "\(Amount.fromSat(fromSat: vout.value).displayBtc)")
-                            }
-                        } rows: {
-                            ForEach(esTx?.vout ?? []) { tx in
-                                TableRow(tx)
-                                    .contextMenu {
-                                        Button("copy_address") {
-                                            NSPasteboard.general.clearContents()
-                                            NSPasteboard.general.setString(tx.scriptpubkeyAddress ?? "", forType: .string)
-                                        }
-                                    }
-                            }
-                        }
-                    }
-                    .frame(minHeight: 218)
-                ])
+    @State
+    var inputs: [TxOutRow] = []
 
-                GroupedBox([
-                    GroupedLabeledContent("Vsize") {
-                        Text(verbatim: "\(tx.transaction.vsize()) kvB")
-                    },
-                    GroupedLabeledContent("Size") {
-                        Text(verbatim: "\(tx.transaction.totalSize()) kB")
-                    },
-                    GroupedLabeledContent("Version") {
-                        Text(verbatim: "\(tx.transaction.version())")
-                    },
-                    GroupedLabeledContent("Weight") {
-                        Text(verbatim: "\(tx.transaction.weight()) kWu")
-                    },
-                    GroupedLabeledContent("LockTime") {
-                        Text(verbatim: "\(tx.transaction.lockTime())")
-                    }
-                ])
-            }
-            .padding(.vertical)
-        }
-        .task {
-            fetchTx()
+//    @MainActor
+//    let action: Action
+//
+//    init(tx: WalletTransaction, @ViewBuilder action: () -> Action ) {
+//        self.tx = tx
+//        self.action = action()
+//    }
+
+    var outputs: [TxOutRow] {
+        tx.outputs.map { out in
+            TxOutRow(inner: out)
         }
     }
 
-    func fetchTx() {
-        NetworkManager.shared.request(urlString: "https://mempool.space/api/tx/\(tx.id)") { (result: Result<EsploraTx, NetworkManager.NetworkError>) in
-            switch result {
-            case .success(let tx):
-                esTx = tx
-                logger.info("FetchTx: \(tx.txid)")
-            case .failure(let err):
-                logger.error("\(err)")
+    var body: some View {
+        VStack {
+            GroupedBox([
+                Text("\(tx.changeAmount.displayBtc)")
+                    .font(.largeTitle)
+            ])
+            GroupedBox([
+                GroupedLabeledContent("Txid") {
+                    Text(verbatim: tx.id)
+                },
+                GroupedLabeledContent("Status") {
+                    Text(verbatim: tx.isComfirmed ? "Comfirmed" : "Uncomfirmed")
+                },
+
+                GroupedLabeledContent("Fee") {
+                    Text(verbatim: "\(tx.fee) sats")
+                },
+                GroupedLabeledContent("FeeRate") {
+                    Text(verbatim: "\((tx.fee) / (tx.vsize)) sats/vB")
+                },
+                HSplitView {
+                    Table(of: TxOutRow.self) {
+                        TableColumn("Address") { vout in
+                            Text(verbatim: "\(vout.address(network: settings.network.toBdkNetwork()) ?? "")")
+                                .truncationMode(.middle)
+                        }
+                        TableColumn("Value") { vout in
+                            Text(verbatim: "\(vout.amount.displayBtc)")
+                        }
+                    } rows: {
+                        ForEach(inputs) { tx in
+                            TableRow(tx)
+                        }
+                    }
+                    .truncationMode(.middle)
+                    Table(of: TxOutRow.self) {
+                        TableColumn("Address") { vout in
+                            Text(verbatim: "\(vout.address(network: settings.network.toBdkNetwork()) ?? "")")
+                                .truncationMode(.middle)
+                        }
+                        TableColumn("Value") { vout in
+                            Text(verbatim: "\(vout.amount.displayBtc)")
+                        }
+                    } rows: {
+                        ForEach(outputs) { tx in
+                            TableRow(tx)
+                        }
+                    }
+                }
+                .frame(minHeight: 218)
+            ])
+
+            GroupedBox([
+                GroupedLabeledContent("Vsize") {
+                    Text("\(tx.vsize) kvB")
+                },
+                GroupedLabeledContent("Size") {
+                    Text("\(tx.totalSize) kB")
+                },
+                GroupedLabeledContent("Version") {
+                    Text("\(tx.version)")
+                },
+                GroupedLabeledContent("Weight") {
+                    Text("\(tx.weight) kWu")
+                },
+                GroupedLabeledContent("LockTime") {
+                    Text("\(tx.lockTime)")
+                }
+            ])
+        }
+        .padding(.vertical)
+        .task {
+            fetchOutputs()
+        }
+    }
+
+    func fetchOutputs() {
+        do {
+            for txin in tx.inputs {
+                if let txout = try wallet.getTxOut(txin.previousOutput) {
+                    inputs.append(TxOutRow(inner: txout))
+                } else {
+                    let (txid, vout) = (txin.previousOutput.txid, txin.previousOutput.vout)
+
+                    let tx = try syncClient.getTx(txid.lowercased())
+
+                    if vout < tx.output().count {
+                        let txout = tx.output()[Int(txin.previousOutput.vout)]
+                        inputs.append(TxOutRow(inner: txout))
+                    }
+                }
             }
+
+        } catch {
+            showError(error, "")
         }
     }
 }
 
-// #Preview {
+
+/// Cause in cpu 100%
+struct TransactionDetailView1<Action: View>: View {
+    @Environment(WalletStore.self) var wallet: WalletStore
+    @Environment(SyncClient.self) var syncClient: SyncClient
+    @Environment(\.showError) var showError
+    @Environment(AppSettings.self) var settings: AppSettings
+
+    var tx: WalletTransaction
+
+    @State
+    var inputs: [TxOutRow] = []
+
+    @ViewBuilder
+    let action: Action
+
+    init(tx: WalletTransaction, @ViewBuilder action: () -> Action = { EmptyView() }) {
+        self.tx = tx
+        self.action = action()
+    }
+
+    var outputs: [TxOutRow] {
+        tx.outputs.map { out in
+            TxOutRow(inner: out)
+        }
+    }
+
+    var body: some View {
+        VStack{
+            ScrollView{
+                VStack {
+                    GroupedBox([
+                        Text("\(tx.changeAmount.displayBtc)")
+                            .font(.largeTitle)
+                    ])
+                    GroupedBox([
+                        GroupedLabeledContent("Txid") {
+                            Text(verbatim: tx.id)
+                        },
+                        GroupedLabeledContent("Status") {
+                            Text(verbatim: tx.isComfirmed ? "Comfirmed" : "Uncomfirmed")
+                        },
+
+                        GroupedLabeledContent("Fee") {
+                            Text(verbatim: "\(tx.fee) sats")
+                        },
+                        GroupedLabeledContent("FeeRate") {
+                            Text(verbatim: "\((tx.fee) / (tx.vsize)) sats/vB")
+                        },
+                        HSplitView {
+                            Table(of: TxOutRow.self) {
+                                TableColumn("Address") { vout in
+                                    Text(verbatim: "\(vout.address(network: settings.network.toBdkNetwork()) ?? "")")
+                                        .truncationMode(.middle)
+                                }
+                                TableColumn("Value") { vout in
+                                    Text(verbatim: "\(vout.amount.displayBtc)")
+                                }
+                            } rows: {
+                                ForEach(inputs) { tx in
+                                    TableRow(tx)
+                                }
+                            }
+                            .truncationMode(.middle)
+                            Table(of: TxOutRow.self) {
+                                TableColumn("Address") { vout in
+                                    Text(verbatim: "\(vout.address(network: settings.network.toBdkNetwork()) ?? "")")
+                                        .truncationMode(.middle)
+                                }
+                                TableColumn("Value") { vout in
+                                    Text(verbatim: "\(vout.amount.displayBtc)")
+                                }
+                            } rows: {
+                                ForEach(outputs) { tx in
+                                    TableRow(tx)
+                                }
+                            }
+                        }
+                        .frame(minHeight: 218)
+                    ])
+
+                    GroupedBox([
+                        GroupedLabeledContent("Vsize") {
+                            Text("\(tx.vsize) kvB")
+                        },
+                        GroupedLabeledContent("Size") {
+                            Text("\(tx.totalSize) kB")
+                        },
+                        GroupedLabeledContent("Version") {
+                            Text("\(tx.version)")
+                        },
+                        GroupedLabeledContent("Weight") {
+                            Text("\(tx.weight) kWu")
+                        },
+                        GroupedLabeledContent("LockTime") {
+                            Text("\(tx.lockTime)")
+                        }
+                    ])
+                }
+                .padding(.vertical)
+                .task {
+                    fetchOutputs()
+                }
+            }
+            self.action
+        }
+    }
+
+    func fetchOutputs() {
+        do {
+            for txin in tx.inputs {
+                if let txout = try wallet.getTxOut(txin.previousOutput) {
+                    inputs.append(TxOutRow(inner: txout))
+                } else {
+                    let (txid, vout) = (txin.previousOutput.txid, txin.previousOutput.vout)
+
+                    let tx = try syncClient.getTx(txid.lowercased())
+
+                    if vout < tx.output().count {
+                        let txout = tx.output()[Int(txin.previousOutput.vout)]
+                        inputs.append(TxOutRow(inner: txout))
+                    }
+                }
+            }
+
+        } catch {
+            showError(error, "")
+        }
+    }
+}
+
+#Preview {
 //    TransactionDetailView()
-// }
+}

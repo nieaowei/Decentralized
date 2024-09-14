@@ -9,7 +9,15 @@ import BitcoinDevKit
 import Foundation
 import SwiftUI
 
-struct WalletTransaction: Identifiable {
+struct WalletTransaction: Identifiable, Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func ==(l: Self, r: Self) -> Bool {
+        return l.id == r.id
+    }
+    
     private let walletService: WalletService
     
     var inner: CanonicalTx
@@ -82,7 +90,7 @@ struct WalletTransaction: Identifiable {
     }
     
     var changeAmount: Double {
-        let sentAndRecv = try! walletService.sentAndReceived(inner.transaction)
+        let sentAndRecv = walletService.sentAndReceived(inner.transaction)
         let sent = sentAndRecv.sent
         let recv = sentAndRecv.received
         let (plus, change) = if sent.toSat() > recv.toSat() {
@@ -93,6 +101,10 @@ struct WalletTransaction: Identifiable {
         let changeBtc = Amount.fromSat(fromSat: change).toBtc()
 
         return plus ? changeBtc : -changeBtc
+    }
+    
+    var fee: UInt64 {
+        walletService.calculateFee(inner.transaction)
     }
 }
 
@@ -105,27 +117,42 @@ class WalletStore {
         case synced
     }
     
-    private let wallet: WalletService
+    let wallet: WalletService
     
+    @MainActor
     var balance: Amount = .fromSat(fromSat: 0)
+    @MainActor
     var payAddress: Address?
+    @MainActor
     var ordiAddress: Address?
+
+    @MainActor
     var transactions: [WalletTransaction] = []
+    
+    @MainActor
     var utxos: [LocalOutput] = []
     
+    @MainActor
     var syncStatus: SyncStatus = .notStarted
     
     init(wallet: WalletService) {
         self.wallet = wallet
-        self.load()
+        DispatchQueue.main.async {
+            self.load()
+        }
     }
     
+    func getTxOut(_ op: OutPoint) throws -> TxOut? {
+        return try wallet.getTxOut(op: op)
+    }
+    
+    @MainActor
     func load() {
         do {
             try wallet.loadWalletFromBackup()
             balance = try wallet.getBalance().total
-            payAddress =  wallet.getPayAddress()
-            ordiAddress =  wallet.getOrdiAddress()
+            payAddress = wallet.getPayAddress()
+            ordiAddress = wallet.getOrdiAddress()
             transactions = try wallet.getTransactions().map { ctx in
                 WalletTransaction(walletService: wallet, inner: ctx)
             }
@@ -133,10 +160,21 @@ class WalletStore {
         } catch {}
     }
     
+    @MainActor
+    func updateStatus(status: SyncStatus) {
+        syncStatus = status
+    }
+    
     func sync() async throws {
-        syncStatus = .syncing
-        try await wallet.sync()
-        syncStatus = .synced
+        do {
+            await updateStatus(status: .syncing)
+            try await wallet.sync()
+            await updateStatus(status: .synced)
+            await load()
+        } catch {
+            await updateStatus(status: .error(error.localizedDescription))
+            throw error
+        }
     }
     
     func create(words: String, mode: WalletMode) throws {
@@ -145,5 +183,21 @@ class WalletStore {
     
     func delete() throws {
         try wallet.deleteWallet()
+    }
+    
+    func buildTx(_ tx: TxBuilder) throws -> (BitcoinDevKit.Transaction, Psbt) {
+        return try wallet.buildTx(tx)
+    }
+    
+    func buildAndSignTx(_ tx: TxBuilder) throws -> (BitcoinDevKit.Transaction, Psbt) {
+        return try wallet.buildAndSignTx(tx)
+    }
+    
+    func sign(_ psbt: Psbt) throws -> (Bool, Psbt) {
+        try wallet.sign(psbt)
+    }
+    
+    func createWalletTx(tx: BitcoinDevKit.Transaction) -> WalletTransaction {
+        WalletTransaction(walletService: wallet, inner: CanonicalTx(transaction: tx, chainPosition: ChainPosition.unconfirmed(timestamp: 0)))
     }
 }

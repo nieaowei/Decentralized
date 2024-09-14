@@ -19,7 +19,7 @@ enum ServerType: String, CaseIterable, Identifiable {
 
 
 @Observable
-class Setting{
+class AppSettings{
     
     var enableNotifiaction: Bool = false
     
@@ -29,7 +29,7 @@ class Setting{
 
     @ObservationIgnored
     @AppStorage("network")
-    var network: Networks = .bitcoin
+    var network: Networks = .testnet
     
     @ObservationIgnored
     @AppStorage("severType")
@@ -38,6 +38,10 @@ class Setting{
     @ObservationIgnored
     @AppStorage("serverUrl")
     var serverUrl: String = "https://mempool.space/api"
+    
+    @ObservationIgnored
+    @AppStorage("isOnBoarding")
+    var isOnBoarding: Bool = true
 
     init() {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
