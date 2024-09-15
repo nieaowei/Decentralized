@@ -10,7 +10,6 @@ import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
-
     var body: some View {
         TabView {
             Tab("Server", systemImage: "server.rack") {
@@ -31,6 +30,13 @@ struct SettingsView: View {
 }
 
 struct WalletSettings: View {
+    @Environment(AppSettings.self) private var settings: AppSettings
+    @Environment(\.showError) private var showError
+    @Environment(\.dismissWindow) private var dismissWindow
+    @Environment(WalletStore.self) var wallet: WalletStore
+
+    @Environment(\.modelContext) private var ctx
+
     var body: some View {
         Form {
             Section {
@@ -38,11 +44,24 @@ struct WalletSettings: View {
                     Button("Export Mnemonic") {}
                 }
                 LabeledContent("Reset Wallet") {
-                    Button("Reset Wallet") {}
+                    Button("Reset Wallet") {
+                        onReset()
+                    }
                 }
             }
         }
         .formStyle(.grouped)
+    }
+
+    func onReset() {
+        do {
+            try wallet.delete()
+            try ctx.delete(model: Contact.self)
+            settings.isOnBoarding = true
+            dismissWindow()
+        } catch {
+            showError(error, "Delete")
+        }
     }
 }
 
@@ -95,7 +114,7 @@ struct ServerSettings: View {
     }
 
     func onApply() {
-        DispatchQueue.main.async{
+        DispatchQueue.main.async {
             settings.network = network
             settings.serverUrl = serverUrl
             settings.serverType = serverType

@@ -45,6 +45,7 @@ struct HomeDetailView: View {
 struct HomeView: View {
     @Environment(\.scenePhase) private var scenePhase
 
+    @Environment(AppSettings.self) var settings
     @Environment(WssStore.self) var wss: WssStore
     @Environment(WalletStore.self) var wallet: WalletStore
     @Environment(\.showError) private var showError
@@ -98,6 +99,7 @@ struct HomeView: View {
                         wallet.updateStatus(.notStarted)
                     }
                 WssStatusView(status: wss.status)
+                Text(settings.network.rawValue)
             }
         }
         .onChange(of: scenePhase) {

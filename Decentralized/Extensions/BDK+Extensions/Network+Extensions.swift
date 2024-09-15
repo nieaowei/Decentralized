@@ -21,7 +21,7 @@ enum Networks: String, Codable, CaseIterable, Identifiable {
     func toBdkNetwork() -> Network {
         switch self {
         case .bitcoin:
-            Network.bitcoin
+            .bitcoin
         case .testnet:
             .testnet
         case .signet:

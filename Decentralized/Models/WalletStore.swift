@@ -138,6 +138,7 @@ class WalletStore {
     init(wallet: WalletService) {
         self.wallet = wallet
         DispatchQueue.main.async {
+            
             self.load()
         }
     }
@@ -150,6 +151,7 @@ class WalletStore {
     func load() {
         do {
             try wallet.loadWalletFromBackup()
+
             balance = try wallet.getBalance().total
             payAddress = wallet.getPayAddress()
             ordiAddress = wallet.getOrdiAddress()
@@ -157,7 +159,9 @@ class WalletStore {
                 WalletTransaction(walletService: wallet, inner: ctx)
             }
             utxos = try wallet.getUtxos()
-        } catch {}
+        } catch {
+            print(error)
+        }
     }
     
     @MainActor

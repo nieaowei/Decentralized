@@ -26,14 +26,9 @@ enum WalletMode: String, Codable, CaseIterable {
 @Observable
 class SyncClient {
     var inner: SyncClientInner
-    var ttt: Int = 0
 
     init(inner: SyncClientInner) {
         self.inner = inner
-    }
-
-    func tttt() {
-        self.ttt += 1
     }
 
     func broadcast(_ tx: Transaction) throws -> String {
@@ -179,16 +174,8 @@ class WalletService {
         return wallet.getTxout(outpoint: op)
     }
 
-    func createWallet(words: String?, mode: WalletMode) throws {
-        var words12: String
-
-        if let words = words, !words.isEmpty {
-            words12 = words
-        } else {
-            let mnemonic = Mnemonic(wordCount: WordCount.words12)
-            words12 = mnemonic.description
-        }
-        let mnemonic = try Mnemonic.fromString(mnemonic: words12)
+    private func createDescriptor(words: String, mode: WalletMode) throws -> (Descriptor, Descriptor, Descriptor, Descriptor) {
+        let mnemonic = try Mnemonic.fromString(mnemonic: words)
 
         let paySecretKey = DescriptorSecretKey(
             network: network,
@@ -237,8 +224,23 @@ class WalletService {
             network: self.network
         )
 
+        return (payDescriptor, payChangeDescriptor, ordiDescriptor, ordiChangeDescriptor)
+    }
+
+    func createWallet(words: String?, mode: WalletMode) throws {
+        var words12: String
+
+        if let words = words, !words.isEmpty {
+            words12 = words
+        } else {
+            let mnemonic = Mnemonic(wordCount: WordCount.words12)
+            words12 = mnemonic.description
+        }
+
+        let (payDescriptor, payChangeDescriptor, ordiDescriptor, ordiChangeDescriptor) = try createDescriptor(words: words12, mode: mode)
+
         let documentsDirectoryURL = FileManager.default.getDocumentsDirectoryPath()
-        let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_wallet_data.sqlite")
+        let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_\(self.network.description).sqlite")
         let payPersistenceBackendPath = payWalletDataDirectoryURL.path
         self.logger.info("PayDB URl:\(payPersistenceBackendPath)")
 
@@ -253,7 +255,7 @@ class WalletService {
             connection: payDb
         )
 
-        let ordiWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("ordi_wallet_data.sqlite")
+        let ordiWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("ordi_\(self.network.description).sqlite")
         let ordiPersistenceBackendPath = ordiWalletDataDirectoryURL.path
 
         let ordiDb = try! Connection(path: ordiPersistenceBackendPath)
@@ -289,23 +291,17 @@ class WalletService {
         self.ordiConn = ordiDb
 
         let backupInfo = BackupInfo(
-            mnemonic: mnemonic.description,
-            payDescriptor: payDescriptor.toStringWithSecret(),
-            payChangeDescriptor: payChangeDescriptor.toStringWithSecret(),
-            payAddress: payAddress.description,
-            ordiDescriptor: ordiDescriptor.toStringWithSecret(),
-            ordiChangeDescriptor: ordiChangeDescriptor.toStringWithSecret(),
-            ordiAddress: ordiAddress.description,
+            mnemonic: words12,
             mode: mode
         )
 
         try self.keyService.saveBackupInfo(backupInfo)
     }
 
-    private func loadWallet(payDescriptor: Descriptor, payChangeDesc: Descriptor, payAddr: Address, ordiDescriptor: Descriptor, ordiChangeDesc: Descriptor, ordiAddr: Address) throws {
+    private func loadWallet(mode: WalletMode, payDescriptor: Descriptor, payChangeDesc: Descriptor, ordiDescriptor: Descriptor, ordiChangeDesc: Descriptor) throws {
         let documentsDirectoryURL = FileManager.default.getDocumentsDirectoryPath()
 
-        let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_wallet_data.sqlite")
+        let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_\(self.network.description).sqlite")
         let payPersistenceBackendPath = payWalletDataDirectoryURL.path
 
         let db = try Connection(path: payPersistenceBackendPath)
@@ -316,7 +312,7 @@ class WalletService {
             connection: db
         )
 
-        let ordiWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("ordi_wallet_data.sqlite")
+        let ordiWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("ordi_\(self.network.description).sqlite")
         let ordiPersistenceBackendPath = ordiWalletDataDirectoryURL.path
         let ordiDb = try Connection(path: ordiPersistenceBackendPath)
 
@@ -325,6 +321,13 @@ class WalletService {
             changeDescriptor: ordiChangeDesc,
             connection: ordiDb
         )
+
+        let payAddr = payWallet.peekAddress(keychain: .external, index: 0).address
+        var ordiAddr = ordiWallet.peekAddress(keychain: .external, index: 0).address
+        if mode == .peek {
+            ordiAddr = ordiWallet.peekAddress(keychain: .external, index: 1).address
+        }
+
         self.payWallet = payWallet
         self.ordiWallet = ordiWallet
         self.payAddress = payAddr
@@ -335,15 +338,18 @@ class WalletService {
 
     func loadWalletFromBackup() throws {
         let backupInfo = try keyService.getBackupInfo()
-        let payDescriptor = try Descriptor(descriptor: backupInfo.payDescriptor, network: self.network)
-        let payChangeDescriptor = try Descriptor(descriptor: backupInfo.payChangeDescriptor, network: self.network)
 
-        let ordiDescriptor = try Descriptor(descriptor: backupInfo.ordiDescriptor, network: self.network)
-        let ordiChangeDescriptor = try Descriptor(descriptor: backupInfo.ordiChangeDescriptor, network: self.network)
+        self.logger.info("loadWalletFromBackup: \(self.network.description)")
 
-        let payAddr = try Address(address: backupInfo.payAddress, network: self.network)
-        let ordiAddr = try Address(address: backupInfo.ordiAddress, network: self.network)
-        try self.loadWallet(payDescriptor: payDescriptor, payChangeDesc: payChangeDescriptor, payAddr: payAddr, ordiDescriptor: ordiDescriptor, ordiChangeDesc: ordiChangeDescriptor, ordiAddr: ordiAddr)
+        if !FileManager.default.fileExists(atPath: FileManager.default.getDocumentsDirectoryPath().appendingPathComponent("pay_\(self.network.description).sqlite").path) {
+            self.logger.info("Load Create: \(self.network.description)")
+            try self.createWallet(words: backupInfo.mnemonic, mode: backupInfo.mode)
+            return
+        }
+
+        let (payDescriptor, payChangeDescriptor, ordiDescriptor, ordiChangeDescriptor) = try createDescriptor(words: backupInfo.mnemonic, mode: backupInfo.mode)
+
+        try self.loadWallet(mode: backupInfo.mode, payDescriptor: payDescriptor, payChangeDesc: payChangeDescriptor, ordiDescriptor: ordiDescriptor, ordiChangeDesc: ordiChangeDescriptor)
     }
 
     func deleteWallet() throws {
@@ -352,7 +358,6 @@ class WalletService {
 //        }
         try self.keyService.deleteBackupInfo()
         try FileManager.default.deleteAllContentsInDocumentsDirectory()
-        
     }
 
     func buildTx(_ tx: TxBuilder) throws -> (BitcoinDevKit.Transaction, Psbt) {
