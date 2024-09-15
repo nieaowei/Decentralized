@@ -36,7 +36,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
 }
 
-
 @main
 struct DecentralizedApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate: AppDelegate
@@ -54,7 +53,6 @@ struct DecentralizedApp: App {
     let mainModelContainer: ModelContainer
 
     init() {
-
         mainModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, configurations: ModelConfiguration())
 
         let settings = AppSettings()

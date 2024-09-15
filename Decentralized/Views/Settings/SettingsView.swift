@@ -35,8 +35,13 @@ struct WalletSettingsView: View {
 
     @State var isDevelopment = false
 
+    @State var network: Networks = .bitcoin
+    @State var serverUrl: String = "https://mempool.space/api"
+    @State var serverType: ServerType = .Esplora
+
     init() {
         self.timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
+
     }
 
     var body: some View {
@@ -62,8 +67,11 @@ struct WalletSettingsView: View {
             }
 
             Section {
-                LabeledContent {
-                    Text(settings.network.rawValue)
+                Picker(selection: $network) {
+                    ForEach(Networks.allCases) { net in
+                        Text(net.rawValue)
+                            .tag(net)
+                    }
                 } label: {
                     Text("Network")
                         .onTapGesture(count: 5) {
@@ -76,7 +84,8 @@ struct WalletSettingsView: View {
                         Text(verbatim: "\(t)").tag(t)
                     }
                 }
-                ServerUrlPicker(selection: settings.$serverUrl, network: settings.network)
+
+                ServerUrlPicker(selection: $serverUrl, serverType: serverType, network: network)
             }
 
             Section {
@@ -100,6 +109,8 @@ struct WalletSettingsView: View {
         .formStyle(.grouped)
         .onAppear {
             logger.info("Settings Appear")
+            network = settings.network
+            serverUrl = settings.serverUrl
         }
         .onDisappear {
             logger.info("Settings Disappear")
@@ -112,6 +123,16 @@ struct WalletSettingsView: View {
                 }
                 try! ctx.save()
             }
+        }
+        .onChange(of: network) {
+            serverUrl = staticServerUrls.first(where: { u in
+                u.network == network.rawValue && u.type == serverType.rawValue
+            })!.url
+        }
+        .onChange(of: serverType) {
+            serverUrl = staticServerUrls.first(where: { u in
+                u.network == network.rawValue && u.type == serverType.rawValue
+            })!.url
         }
     }
 
@@ -131,17 +152,29 @@ struct ServerUrlPicker: View {
     @Binding var selection: String
     @Query var serverUrls: [ServerUrl]
 
-    init(selection: Binding<String>, network: Networks) {
+    init(selection: Binding<String>, serverType: ServerType, network: Networks) {
         _selection = selection
-        _serverUrls = Query(filter: #Predicate<ServerUrl> { url in url.network == network.rawValue })
+        let cur = selection.wrappedValue
+        _serverUrls = Query(filter: #Predicate<ServerUrl> { url in
+            url.network == network.rawValue && url.type == serverType.rawValue && url.url != cur
+        })
     }
 
     var body: some View {
         Picker("Server Url", selection: $selection) {
+            // Avoid tag not exist error
+            Text(selection)
+                .tag(selection)
             ForEach(serverUrls) { u in
                 Text(u.url)
                     .tag(u.url)
             }
+//            HStack {
+//                Spacer()
+//                Button {} label: {
+//                    Text("...Add")
+//                }
+//            }
         }
     }
 }

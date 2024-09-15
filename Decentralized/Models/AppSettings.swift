@@ -14,12 +14,12 @@ import UserNotifications
 class ServerUrl {
     @Attribute(.unique)
     var url: String
-    var type: ServerType
+    var type: String
     var network: String
     
     init(url: String, type: ServerType, network: Networks) {
         self.url = url
-        self.type = type
+        self.type = type.rawValue
         self.network = network.rawValue
     }
 }
