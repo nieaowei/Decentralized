@@ -6,6 +6,7 @@
 //
 
 import Combine
+import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
@@ -16,20 +17,22 @@ struct SettingsView: View {
 
 struct ServerSettings: View {
     var body: some View {
-        Text("Se")
+        Text("")
     }
 }
 
 struct WalletSettingsView: View {
-//    let global: GlobalViewModel = .live
     @Environment(WalletStore.self) var wallet: WalletStore
 
     @Environment(AppSettings.self) private var settings: AppSettings
     @Environment(\.showError) private var showError
 
+    @Environment(\.modelContext) private var ctx
+
     @State var checkTask: Date = .init()
     private var timer: Publishers.Autoconnect<Timer.TimerPublisher>
 
+    
     init() {
         self.timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
     }
@@ -58,13 +61,20 @@ struct WalletSettingsView: View {
 
             Section {
                 LabeledContent("Network", value: settings.network.rawValue)
-                
+
                 Picker("Server Type", selection: settings.$serverType) {
                     ForEach(ServerType.allCases) { t in
                         Text(verbatim: "\(t)").tag(t)
                     }
                 }
-                TextField("Server Url", text: settings.$serverUrl)
+//                TextField("Server Url", text: settings.$serverUrl)
+                ServerUrlPicker(selection: settings.$serverUrl,network: settings.network)
+//                Picker("", selection: settings.$serverUrl) {
+//                    ForEach(serverUrls) { u in
+//                        Text(u.url)
+//                            .tag(u.url)
+//                    }
+//                }
             }
 
             Section {
@@ -92,6 +102,34 @@ struct WalletSettingsView: View {
         }
         .onDisappear {
             logger.info("Settings Disappear")
+        }
+        .onAppear {
+            if settings.isFirst {
+                settings.isFirst = false
+                for i in staticServerUrls {
+                    ctx.insert(i)
+                }
+                try! ctx.save()
+            }
+        }
+    }
+}
+
+struct ServerUrlPicker: View {
+    @Binding var selection: String
+    @Query var serverUrls: [ServerUrl]
+
+    init(selection: Binding<String>, network: Networks) {
+        _selection = selection
+        _serverUrls = Query(filter: #Predicate<ServerUrl> { url in url.network == network.rawValue })
+    }
+
+    var body: some View {
+        Picker("Server Url", selection: $selection) {
+            ForEach(serverUrls) { u in
+                Text(u.url)
+                    .tag(u.url)
+            }
         }
     }
 }

@@ -8,11 +8,15 @@
 import BitcoinDevKit
 import Foundation
 
-enum Networks: String {
+enum Networks: String, Codable, CaseIterable, Identifiable {
     case bitcoin
     case testnet
     case signet
     case regtest
+
+    var id: String {
+        self.rawValue
+    }
 
     func toBdkNetwork() -> Network {
         switch self {
