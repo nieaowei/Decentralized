@@ -45,16 +45,14 @@ struct DecentralizedApp: App {
 
     @State var settings: AppSettings
     @State var wallet: WalletStore
-    @State var global: WssStore
+    @State var wss: WssStore
     @State private var errorWrapper: ErrorWrapper?
     @State var syncClient: SyncClient
     @State var loading: Bool = false
 
-    let mainModelContainer: ModelContainer
+    let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, configurations: ModelConfiguration())
 
     init() {
-        mainModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, configurations: ModelConfiguration())
-
         let settings = AppSettings()
 
         let syncClientInner = switch settings.serverType {
@@ -63,12 +61,13 @@ struct DecentralizedApp: App {
         case .Electrum:
             SyncClientInner.electrum(try! ElectrumClient(url: settings.serverUrl))
         }
+
         let syncClient = SyncClient(inner: syncClientInner)
 
         let walletService = WalletService(network: settings.network.toBdkNetwork(), syncClient: syncClient)
 
         _settings = State(wrappedValue: settings)
-        _global = State(wrappedValue: .init())
+        _wss = State(wrappedValue: .init())
         _syncClient = State(wrappedValue: syncClient)
         _wallet = State(wrappedValue: WalletStore(wallet: walletService))
     }
@@ -87,6 +86,23 @@ struct DecentralizedApp: App {
                     }
             } else {
                 HomeView()
+                    .onChange(of: settings.serverType) {
+                        print("Change")
+
+                        updateSyncClientInner()
+                    }
+                    .onChange(of: settings.serverUrl) {
+                        print("Change")
+
+                        updateSyncClientInner()
+                    }
+                    .onChange(of: settings.network) {
+                        updateWallet()
+                    }
+                    .onChange(of: settings.changed) { _, _ in
+                        print("Change")
+                    }
+
                     .sheet(item: $errorWrapper) { errorWrapper in
                         VStack {
                             Text(errorWrapper.guidance)
@@ -104,7 +120,7 @@ struct DecentralizedApp: App {
                     }
             }
         }
-        .environment(global)
+        .environment(wss)
         .environment(wallet)
         .environment(settings)
         .environment(syncClient)
@@ -140,18 +156,13 @@ struct DecentralizedApp: App {
 
         Settings {
             SettingsView()
-                .containerBackground(.thickMaterial, for: .window)
-                .scaledToFit()
+                .windowResizeBehavior(.enabled)
                 .modelContainer(mainModelContainer)
-                .onChange(of: settings.serverType) {
-                    updateSyncClientInner()
-                }
-                .onChange(of: settings.serverUrl) {
-                    updateSyncClientInner()
-                }
         }
         .environment(settings)
         .environment(wallet)
+        .windowIdealSize(.fitToContent)
+        .windowResizability(.contentSize)
     }
 
     func updateSyncClientInner() {
@@ -162,5 +173,9 @@ struct DecentralizedApp: App {
             SyncClientInner.electrum(try! ElectrumClient(url: settings.serverUrl))
         }
         syncClient.inner = syncClientInner
+    }
+    
+    func updateWallet(){
+        wallet = WalletStore(wallet: WalletService(network: settings.network.toBdkNetwork(), syncClient: syncClient))
     }
 }
