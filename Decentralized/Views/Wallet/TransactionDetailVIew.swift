@@ -108,6 +108,7 @@ struct TransactionDetailView: View {
         .task {
             fetchOutputs()
         }
+        .navigationTitle("Transaction Detail")
     }
 
     func fetchOutputs() {

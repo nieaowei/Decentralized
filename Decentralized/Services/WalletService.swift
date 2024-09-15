@@ -347,11 +347,12 @@ class WalletService {
     }
 
     func deleteWallet() throws {
-        if let bundleID = Bundle.main.bundleIdentifier {
-            UserDefaults.standard.removePersistentDomain(forName: bundleID)
-        }
+//        if let bundleID = Bundle.main.bundleIdentifier {
+//            UserDefaults.standard.removePersistentDomain(forName: bundleID)
+//        }
         try self.keyService.deleteBackupInfo()
         try FileManager.default.deleteAllContentsInDocumentsDirectory()
+        
     }
 
     func buildTx(_ tx: TxBuilder) throws -> (BitcoinDevKit.Transaction, Psbt) {

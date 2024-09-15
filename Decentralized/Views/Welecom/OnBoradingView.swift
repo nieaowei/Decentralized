@@ -44,7 +44,9 @@ struct OnBoradingView: View {
                     Spacer()
                     Button {
                         do {
+                            loading = true
                             try wallet.create(words: mnemonic, mode: mode)
+                            wallet.load()
                             isOnboarding = false
                         } catch {}
                     } label: {

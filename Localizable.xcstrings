@@ -141,6 +141,9 @@
         }
       }
     },
+    "Development" : {
+
+    },
     "Enabled" : {
       "localizations" : {
         "zh-Hans" : {
@@ -192,6 +195,9 @@
           }
         }
       }
+    },
+    "First Start" : {
+
     },
     "ID" : {
       "shouldTranslate" : false
@@ -397,6 +403,9 @@
         }
       }
     },
+    "Send Transaction Detail" : {
+
+    },
     "Server Type" : {
       "localizations" : {
         "zh-Hans" : {
@@ -486,6 +495,9 @@
           }
         }
       }
+    },
+    "Transaction Detail" : {
+
     },
     "Transaction Removed" : {
       "localizations" : {

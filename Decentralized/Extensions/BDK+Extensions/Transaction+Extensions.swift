@@ -80,12 +80,3 @@ extension CanonicalTx {
 }
 
 
-extension Psbt: @retroactive Equatable, @retroactive Hashable {
-    public static func == (lhs: Psbt ,rhs: Psbt) -> Bool {
-        lhs.serializeHex() == rhs.serializeHex()
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(self.serializeHex())
-    }
-}

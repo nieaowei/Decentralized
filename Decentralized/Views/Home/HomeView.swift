@@ -48,14 +48,13 @@ struct HomeView: View {
     @Environment(WssStore.self) var wss: WssStore
     @Environment(WalletStore.self) var wallet: WalletStore
     @Environment(\.showError) private var showError
-
     
-    @State
-    var isFirst: Bool = true
+    @State var isFirst: Bool = true
 
     @State var showPop: Bool = false
     @State var route: Route = .wallet(.me)
     @State var routes: [Route] = [.wallet(.me)]
+    
 
     var body: some View {
         NavigationSplitView {

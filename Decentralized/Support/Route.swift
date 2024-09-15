@@ -105,20 +105,3 @@ enum NavigationType: Hashable {
     case goto(Route)
     case unwind(Route)
 }
-
-struct NavigateEnvironmentKey: EnvironmentKey {
-    static var defaultValue: NavigateAction = .init(action: { _ in })
-}
-
-extension EnvironmentValues {
-    var navigate: NavigateAction {
-        get { self[NavigateEnvironmentKey.self] }
-        set { self[NavigateEnvironmentKey.self] = newValue }
-    }
-}
-
-extension View {
-    func onNavigate(_ action: @escaping NavigateAction.Action) -> some View {
-        environment(\.navigate, NavigateAction(action: action))
-    }
-}

@@ -36,6 +36,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
 }
 
+
 @main
 struct DecentralizedApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate: AppDelegate
@@ -43,19 +44,20 @@ struct DecentralizedApp: App {
     @AppStorage("isOnBoarding") var isOnBoarding: Bool = true
     @Environment(\.openWindow) private var openWindow
 
-    @State var settings: AppSettings = .init()
-    @State var wallet: WalletStore?
-    @State var global: WssStore = .init()
+    @State var settings: AppSettings
+    @State var wallet: WalletStore
+    @State var global: WssStore
     @State private var errorWrapper: ErrorWrapper?
-    @State var syncClient: SyncClient?
+    @State var syncClient: SyncClient
+    @State var loading: Bool = false
 
-    let modelContainer: ModelContainer
+    let mainModelContainer: ModelContainer
 
-    
-    
     init() {
-        let config = ModelConfiguration()
-        modelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, configurations: config)
+
+        mainModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, configurations: ModelConfiguration())
+
+        let settings = AppSettings()
 
         let syncClientInner = switch settings.serverType {
         case .Esplora:
@@ -67,8 +69,9 @@ struct DecentralizedApp: App {
 
         let walletService = WalletService(network: settings.network.toBdkNetwork(), syncClient: syncClient)
 
+        _settings = State(wrappedValue: settings)
+        _global = State(wrappedValue: .init())
         _syncClient = State(wrappedValue: syncClient)
-
         _wallet = State(wrappedValue: WalletStore(wallet: walletService))
     }
 
@@ -110,9 +113,9 @@ struct DecentralizedApp: App {
         .environment(\.showError) { error, guidance in
             errorWrapper = ErrorWrapper(error: error, guidance: guidance)
         }
+//        .environment(\.loading, false)
+        .modelContainer(mainModelContainer)
 
-        .modelContainer(modelContainer)
-        
         // Replace About Button Action
         .commands {
             CommandGroup(replacing: CommandGroupPlacement.appInfo) {
@@ -127,12 +130,6 @@ struct DecentralizedApp: App {
         // Custom About
         Window("About", id: "about") {
             AboutView()
-                .onChange(of: settings.serverType) {
-                    updateSyncClientInner()
-                }
-                .onChange(of: settings.serverUrl) {
-                    updateSyncClientInner()
-                }
                 .toolbar(removing: .title)
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
                 .containerBackground(.thickMaterial, for: .window)
@@ -147,7 +144,13 @@ struct DecentralizedApp: App {
             SettingsView()
                 .containerBackground(.thickMaterial, for: .window)
                 .scaledToFit()
-                .modelContainer(modelContainer)
+                .modelContainer(mainModelContainer)
+                .onChange(of: settings.serverType) {
+                    updateSyncClientInner()
+                }
+                .onChange(of: settings.serverUrl) {
+                    updateSyncClientInner()
+                }
         }
         .environment(settings)
         .environment(wallet)
@@ -160,6 +163,6 @@ struct DecentralizedApp: App {
         case .Electrum:
             SyncClientInner.electrum(try! ElectrumClient(url: settings.serverUrl))
         }
-        syncClient?.inner = syncClientInner
+        syncClient.inner = syncClientInner
     }
 }

@@ -26,13 +26,15 @@ struct WalletSettingsView: View {
 
     @Environment(AppSettings.self) private var settings: AppSettings
     @Environment(\.showError) private var showError
+    @Environment(\.dismissWindow) private var dismissWindow
 
     @Environment(\.modelContext) private var ctx
 
     @State var checkTask: Date = .init()
     private var timer: Publishers.Autoconnect<Timer.TimerPublisher>
 
-    
+    @State var isDevelopment = false
+
     init() {
         self.timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
     }
@@ -60,41 +62,40 @@ struct WalletSettingsView: View {
             }
 
             Section {
-                LabeledContent("Network", value: settings.network.rawValue)
+                LabeledContent {
+                    Text(settings.network.rawValue)
+                } label: {
+                    Text("Network")
+                        .onTapGesture(count: 5) {
+                            isDevelopment = !isDevelopment
+                        }
+                }
 
                 Picker("Server Type", selection: settings.$serverType) {
                     ForEach(ServerType.allCases) { t in
                         Text(verbatim: "\(t)").tag(t)
                     }
                 }
-//                TextField("Server Url", text: settings.$serverUrl)
-                ServerUrlPicker(selection: settings.$serverUrl,network: settings.network)
-//                Picker("", selection: settings.$serverUrl) {
-//                    ForEach(serverUrls) { u in
-//                        Text(u.url)
-//                            .tag(u.url)
-//                    }
-//                }
+                ServerUrlPicker(selection: settings.$serverUrl, network: settings.network)
             }
 
             Section {
-//                @Bindable var settings = settings
                 Toggle("Touch ID", isOn: settings.$enableTouchID)
             }
 
-            Button {
-                do {
-                    try wallet.delete()
-                    settings.isOnBoarding = true
-                } catch {
-                    showError(error, "Delete")
+            HStack {
+                Button(action: onReset) {
+                    Text("Reset Wallet")
                 }
-            } label: {
-                Text("Reset Wallet")
+                .controlSize(.large)
+                .buttonStyle(BorderedButtonStyle())
+                .foregroundColor(.red)
             }
-            .controlSize(.large)
-            .buttonStyle(BorderedButtonStyle())
-            .foregroundColor(.red)
+            if isDevelopment {
+                Section("Development") {
+                    Toggle("First Start", isOn: settings.$isFirst)
+                }
+            }
         }
         .formStyle(.grouped)
         .onAppear {
@@ -111,6 +112,17 @@ struct WalletSettingsView: View {
                 }
                 try! ctx.save()
             }
+        }
+    }
+
+    func onReset() {
+        do {
+            try wallet.delete()
+            try ctx.delete(model: Contact.self)
+            settings.isOnBoarding = true
+            dismissWindow()
+        } catch {
+            showError(error, "Delete")
         }
     }
 }
@@ -134,6 +146,6 @@ struct ServerUrlPicker: View {
     }
 }
 
-#Preview {
-    SettingsView()
-}
+// #Preview {
+//    SettingsView()
+// }

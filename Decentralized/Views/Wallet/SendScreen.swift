@@ -36,6 +36,11 @@ struct SendUtxo: Identifiable {
 }
 
 struct SendScreen: View {
+    struct TxPsbt: Hashable {
+        let tx: BitcoinDevKit.Transaction
+        let psbt: Psbt
+    }
+
     @Environment(WalletStore.self) var wallet: WalletStore
     @Environment(WssStore.self) var wss: WssStore
     @Environment(SyncClient.self) var syncClient: SyncClient
@@ -52,15 +57,21 @@ struct SendScreen: View {
 
     @State var showUtxosSelector: Bool = false
 
-    @State var builtTx: WalletTransaction? = nil
     @State var txBuilder: TxBuilder = .init()
     @State var psbt: Psbt? = nil
+    @State var builtTx: TxPsbt? = nil
 
     var inputs: [SendUtxo] {
         return wallet.utxos.filter { lo in
             selectedOutpoints.contains(lo.id)
         }.map { lo in
             SendUtxo(lo: lo)
+        }
+    }
+
+    var inputTotal: Amount {
+        inputs.reduce(Amount.Zero) { partialResult, u in
+            partialResult + Amount.fromSat(fromSat: u.txout.value)
         }
     }
 
@@ -96,13 +107,16 @@ struct SendScreen: View {
                             Text(verbatim: "Add")
                         }
                         Button {
-                            selectedOutpoints.removeAll()
+                            withAnimation {
+                                selectedOutpoints.removeAll()
+                            }
                         } label: {
                             Image(systemName: "trash")
                             Text(verbatim: "Delete All")
                         }
                     }
                     .truncationMode(.middle)
+//                    Text("Selected: \(inputTotal.displayBtc)")
                 }
 
                 VStack {
@@ -131,8 +145,8 @@ struct SendScreen: View {
                             TableRow(o)
                                 .contextMenu {
                                     Button {
-                                        outputs.removeAll { o1 in
-                                            o1.id == o.id
+                                        withAnimation {
+                                            outputs.removeAll { $0.id == o.id }
                                         }
                                     } label: {
                                         Image(systemName: "trash")
@@ -144,7 +158,9 @@ struct SendScreen: View {
                     .truncationMode(.middle)
                     .contextMenu {
                         Button {
-                            outputs.append(Output(address: contacts.first?.addr ?? "", value: 0.001))
+                            withAnimation {
+                                outputs.append(Output(address: contacts.first?.addr ?? "", value: 0.001))
+                            }
                         } label: {
                             Image(systemName: "plus")
                             Text(verbatim: "Add")
@@ -192,11 +208,9 @@ struct SendScreen: View {
                     rate = wss.fastFee
                 }
             }
-            .navigationDestination(item: $builtTx) { builtTx in
-                if let psbt = psbt {
-                    SignScreen(tx: builtTx, psbt: psbt)
-                }
-            }
+        }
+        .navigationDestination(item: $builtTx) { txPsbt in
+            SignScreen(tx: txPsbt.tx, psbt: txPsbt.psbt)
         }
     }
 
@@ -228,8 +242,7 @@ struct SendScreen: View {
             txBuilder = txBuilder.drainTo(script: wallet.payAddress!.scriptPubkey())
 
             let (tx, psbt) = try wallet.buildTx(txBuilder)
-            builtTx = wallet.createWalletTx(tx: tx)
-            self.psbt = psbt
+            builtTx = TxPsbt(tx: tx, psbt: psbt)
 
         } catch let error as FeeRateError {
             showError(error, "Invalid fee rate")
@@ -256,7 +269,7 @@ struct SignScreen: View {
 
     @Environment(\.dismiss) var dismiss
 
-    let tx: WalletTransaction
+    let tx: BitcoinDevKit.Transaction
 
     let psbt: Psbt
 
@@ -269,7 +282,7 @@ struct SignScreen: View {
     var body: some View {
         VStack {
             ScrollView {
-                TransactionDetailView(tx: tx)
+                TransactionDetailView(tx: wallet.createWalletTx(tx: tx))
             }
             HStack {
                 Spacer()
@@ -298,7 +311,7 @@ struct SignScreen: View {
                     Text("Your transaction has been successfully sent")
                         .font(.footnote)
                     Button {
-//                            dismiss()
+                        dismiss()
                         showSuccess = false
                     } label: {
                         Text("OK").padding(.horizontal)
@@ -308,6 +321,8 @@ struct SignScreen: View {
             }
             .padding(.all)
         }
+        .navigationTitle("Send Transaction Detail")
+
     }
 
     func onSign() {
@@ -325,7 +340,7 @@ struct SignScreen: View {
                 try await Task.sleep(nanoseconds: 1500000000)
                 self.loading = false
                 self.showSuccess = true
-                
+
             } catch let error as CreateTxError {
                 showError(error, "")
                 self.loading = false
