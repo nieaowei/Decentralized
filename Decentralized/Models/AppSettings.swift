@@ -16,7 +16,7 @@ class ServerUrl {
     var url: String
     var type: String
     var network: String
-    
+
     init(url: String, type: ServerType, network: Networks) {
         self.url = url
         self.type = type.rawValue
@@ -24,7 +24,7 @@ class ServerUrl {
     }
 }
 
-enum ServerType: String, CaseIterable, Identifiable, Codable {
+enum ServerType: String, CaseIterable, Identifiable, Codable, Equatable {
     case Esplora, Electrum
 
     var id: String {
@@ -35,6 +35,8 @@ enum ServerType: String, CaseIterable, Identifiable, Codable {
 @Observable
 class AppSettings {
     var enableNotifiaction: Bool = false
+    
+    var changed: Bool = false
 
     @ObservationIgnored
     @AppStorage("isFirst")
@@ -75,11 +77,11 @@ class AppSettings {
 var staticServerUrls: [ServerUrl] = [
     ServerUrl(url: "https://mempool.space/api", type: .Esplora, network: .bitcoin),
     ServerUrl(url: "https://blockstream.info/api", type: .Esplora, network: .bitcoin),
-    ServerUrl(url: "https://api.hiro.so", type: .Esplora,network: .bitcoin),
+    ServerUrl(url: "https://api.hiro.so", type: .Esplora, network: .bitcoin),
     ServerUrl(url: "https://btc-1.xverse.app", type: .Esplora, network: .bitcoin),
-    
+
     ServerUrl(url: "https://mempool.space/testnet/api", type: .Esplora, network: .testnet),
     ServerUrl(url: "https://blockstream.info/testnet/api", type: .Esplora, network: .testnet),
-    ServerUrl(url: "https://api.testnet.hiro.so", type: .Esplora,network: .testnet),
+    ServerUrl(url: "https://api.testnet.hiro.so", type: .Esplora, network: .testnet),
     ServerUrl(url: "https://btc-testnet.xverse.app", type: .Esplora, network: .testnet)
 ]

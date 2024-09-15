@@ -66,6 +66,9 @@
         }
       }
     },
+    "Apply" : {
+
+    },
     "Balance" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -141,9 +144,6 @@
         }
       }
     },
-    "Development" : {
-
-    },
     "Enabled" : {
       "localizations" : {
         "zh-Hans" : {
@@ -163,6 +163,9 @@
           }
         }
       }
+    },
+    "Export Mnemonic" : {
+
     },
     "Extract Hex" : {
       "localizations" : {
@@ -195,9 +198,6 @@
           }
         }
       }
-    },
-    "First Start" : {
-
     },
     "ID" : {
       "shouldTranslate" : false
@@ -283,6 +283,9 @@
           }
         }
       }
+    },
+    "Notifaction" : {
+
     },
     "Notification" : {
       "localizations" : {
@@ -406,6 +409,9 @@
     "Send Transaction Detail" : {
 
     },
+    "Server" : {
+
+    },
     "Server Type" : {
       "localizations" : {
         "zh-Hans" : {
@@ -477,6 +483,7 @@
       }
     },
     "Touch ID" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {

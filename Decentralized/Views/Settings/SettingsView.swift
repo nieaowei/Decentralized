@@ -10,38 +10,108 @@ import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
+
     var body: some View {
-        WalletSettingsView()
+        TabView {
+            Tab("Server", systemImage: "server.rack") {
+                ServerSettings()
+            }
+            Tab("Notifaction", systemImage: "bell.badge") {
+                NotificationSettings()
+            }
+            Tab("Wallet", systemImage: "dollarsign.circle") {
+                WalletSettings()
+            }
+//            Tab("Safe", systemImage: "lock.shield") {
+//                ServerSettings()
+//            }
+        }
+        .scenePadding()
+    }
+}
+
+struct WalletSettings: View {
+    var body: some View {
+        Form {
+            Section {
+                LabeledContent("Export Mnemonic") {
+                    Button("Export Mnemonic") {}
+                }
+                LabeledContent("Reset Wallet") {
+                    Button("Reset Wallet") {}
+                }
+            }
+        }
+        .formStyle(.grouped)
     }
 }
 
 struct ServerSettings: View {
-    var body: some View {
-        Text("")
-    }
-}
-
-struct WalletSettingsView: View {
-    @Environment(WalletStore.self) var wallet: WalletStore
-
-    @Environment(AppSettings.self) private var settings: AppSettings
-    @Environment(\.showError) private var showError
-    @Environment(\.dismissWindow) private var dismissWindow
-
-    @Environment(\.modelContext) private var ctx
-
-    @State var checkTask: Date = .init()
-    private var timer: Publishers.Autoconnect<Timer.TimerPublisher>
-
-    @State var isDevelopment = false
+    @Environment(AppSettings.self) var settings: AppSettings
 
     @State var network: Networks = .bitcoin
     @State var serverUrl: String = "https://mempool.space/api"
     @State var serverType: ServerType = .Esplora
 
+    var body: some View {
+        Form {
+            Section {
+                Picker(selection: $network) {
+                    ForEach(Networks.allCases) { net in
+                        Text(net.rawValue)
+                            .tag(net)
+                    }
+                } label: {
+                    Text("Network")
+                }
+                Picker("Server Type", selection: $serverType) {
+                    ForEach(ServerType.allCases) { t in
+                        Text(verbatim: "\(t)").tag(t)
+                    }
+                }
+                ServerUrlPicker(selection: $serverUrl, serverType: serverType, network: network)
+            }
+            .sectionActions {
+                Button(action: onApply) {
+                    Text("Apply").padding(.horizontal)
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .onAppear {
+            network = settings.network
+            serverUrl = settings.serverUrl
+        }
+        .onChange(of: network) {
+            serverUrl = staticServerUrls.first(where: { u in
+                u.network == network.rawValue && u.type == serverType.rawValue
+            })!.url
+        }
+        .onChange(of: serverType) {
+            serverUrl = staticServerUrls.first(where: { u in
+                u.network == network.rawValue && u.type == serverType.rawValue
+            })!.url
+        }
+    }
+
+    func onApply() {
+        DispatchQueue.main.async{
+            settings.network = network
+            settings.serverUrl = serverUrl
+            settings.serverType = serverType
+            settings.changed = !settings.changed // ???  the update cannot be triggered without here
+        }
+    }
+}
+
+struct NotificationSettings: View {
+    @Environment(AppSettings.self) private var settings: AppSettings
+
+    @State var checkTask: Date = .init()
+    private var timer: Publishers.Autoconnect<Timer.TimerPublisher>
+
     init() {
         self.timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
-
     }
 
     var body: some View {
@@ -65,86 +135,8 @@ struct WalletSettingsView: View {
             .task(id: checkTask) {
                 await settings.getEnableNotifiaction()
             }
-
-            Section {
-                Picker(selection: $network) {
-                    ForEach(Networks.allCases) { net in
-                        Text(net.rawValue)
-                            .tag(net)
-                    }
-                } label: {
-                    Text("Network")
-                        .onTapGesture(count: 5) {
-                            isDevelopment = !isDevelopment
-                        }
-                }
-
-                Picker("Server Type", selection: settings.$serverType) {
-                    ForEach(ServerType.allCases) { t in
-                        Text(verbatim: "\(t)").tag(t)
-                    }
-                }
-
-                ServerUrlPicker(selection: $serverUrl, serverType: serverType, network: network)
-            }
-
-            Section {
-                Toggle("Touch ID", isOn: settings.$enableTouchID)
-            }
-
-            HStack {
-                Button(action: onReset) {
-                    Text("Reset Wallet")
-                }
-                .controlSize(.large)
-                .buttonStyle(BorderedButtonStyle())
-                .foregroundColor(.red)
-            }
-            if isDevelopment {
-                Section("Development") {
-                    Toggle("First Start", isOn: settings.$isFirst)
-                }
-            }
         }
         .formStyle(.grouped)
-        .onAppear {
-            logger.info("Settings Appear")
-            network = settings.network
-            serverUrl = settings.serverUrl
-        }
-        .onDisappear {
-            logger.info("Settings Disappear")
-        }
-        .onAppear {
-            if settings.isFirst {
-                settings.isFirst = false
-                for i in staticServerUrls {
-                    ctx.insert(i)
-                }
-                try! ctx.save()
-            }
-        }
-        .onChange(of: network) {
-            serverUrl = staticServerUrls.first(where: { u in
-                u.network == network.rawValue && u.type == serverType.rawValue
-            })!.url
-        }
-        .onChange(of: serverType) {
-            serverUrl = staticServerUrls.first(where: { u in
-                u.network == network.rawValue && u.type == serverType.rawValue
-            })!.url
-        }
-    }
-
-    func onReset() {
-        do {
-            try wallet.delete()
-            try ctx.delete(model: Contact.self)
-            settings.isOnBoarding = true
-            dismissWindow()
-        } catch {
-            showError(error, "Delete")
-        }
     }
 }
 
