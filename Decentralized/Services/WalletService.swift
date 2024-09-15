@@ -13,6 +13,7 @@ import OSLog
 enum WalletError: Error {
     case walletNotFound
     case storeNotFound
+    case signError
     case blockchainConfigNotFound
     case noOutput
 }
@@ -180,7 +181,6 @@ class WalletService {
 
     func createWallet(words: String?, mode: WalletMode) throws {
         var words12: String
-
 
         if let words = words, !words.isEmpty {
             words12 = words
@@ -385,12 +385,12 @@ class WalletService {
                 amount: Amount.fromSat(fromSat: amount)
             )
             .feeRate(feeRate: FeeRate.fromSatPerVb(satPerVb: feeRate))
-            .drainTo(script: payAddress!.scriptPubkey())
+            .drainTo(script: self.payAddress!.scriptPubkey())
             .finish(wallet: wallet)
         return txBuilder
     }
 
-     func signAndBroadcast(psbt: Psbt) throws {
+    func signAndBroadcast(psbt: Psbt) throws {
         guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
         let isSigned = try wallet.sign(psbt: psbt)
         if isSigned {
@@ -402,12 +402,14 @@ class WalletService {
         }
     }
 
-    func sign(_ psbt: Psbt) throws -> (Bool, Psbt) {
+    func sign(_ psbt: Psbt) throws -> Psbt {
         guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
 
         let ok = try wallet.sign(psbt: psbt)
-
-        return (ok, psbt)
+        if !ok {
+            throw WalletError.signError
+        }
+        return psbt
     }
 
     func inspector(inspectedCount: UInt64, total: UInt64) {
@@ -453,6 +455,16 @@ class WalletService {
 
     func sentAndReceived(_ tx: BitcoinDevKit.Transaction) -> SentAndReceivedValues {
         self.payWallet!.sentAndReceived(tx: tx)
+    }
+
+    func broadcast(_ tx: BitcoinDevKit.Transaction) throws -> String {
+        let txid = try self.syncClient.broadcast(tx)
+
+        self.payWallet!.applyUnconfirmedTxs(txAndLastSeens: [TransactionAndLastSeen(tx: tx, lastSeen: UInt64(Date().timeIntervalSince1970))])
+//        self.logger.info("Insert Tx ")
+        let _ = try self.payWallet!.persist(connection: self.payConn!)
+
+        return txid
     }
 }
 

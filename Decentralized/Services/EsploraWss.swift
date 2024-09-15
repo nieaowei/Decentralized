@@ -46,7 +46,7 @@ class EsploraWss {
         status = .connecting
         if let handleStatus = handleStatus {
             Task {
-                handleStatus(status)
+                handleStatus(.connecting)
             }
         }
 
@@ -87,7 +87,15 @@ class EsploraWss {
         let message = URLSessionWebSocketTask.Message.string(message)
         webSocketTask.send(message) { error in
             if let error = error {
+                self.disconnect()
+                
                 self.logger.error("Sending message: \(error)")
+                self.status = .disconnected
+                if let handleStatus = self.handleStatus {
+                    Task {
+                        handleStatus(.disconnected)
+                    }
+                }
             }
         }
     }
@@ -134,6 +142,7 @@ class EsploraWss {
             switch result {
             case .failure(let error):
                 self.logger.error("Receiving message: \(error)")
+                self.disconnect()
                 self.status = .disconnected
                 if let handleStatus = handleStatus {
                     Task {

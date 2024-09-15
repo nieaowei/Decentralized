@@ -9,16 +9,17 @@ import Foundation
 
 extension Date {
     func commonFormat() -> String {
-        self.ISO8601Format(.iso8601(timeZone: .gmt, dateTimeSeparator: .space))
+        self.ISO8601Format(.iso8601(timeZone: .current, dateTimeSeparator: .space))
     }
 
     func dateFormat() -> String {
-        self.ISO8601Format(.iso8601(timeZone: .gmt, dateTimeSeparator: .space))
+        self.ISO8601Format(.iso8601(timeZone: .current, dateTimeSeparator: .space))
     }
 
     func monDayFormat() -> String {
         let fs = DateFormatter()
         fs.dateFormat = "MM-dd"
+        fs.locale = Locale.current
         return fs.string(from: self)
     }
 }

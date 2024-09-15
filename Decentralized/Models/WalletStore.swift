@@ -161,19 +161,21 @@ class WalletStore {
     }
     
     @MainActor
-    func updateStatus(status: SyncStatus) {
+    func updateStatus(_ status: SyncStatus) {
         syncStatus = status
     }
     
     func sync() async throws {
-        do {
-            await updateStatus(status: .syncing)
-            try await wallet.sync()
-            await updateStatus(status: .synced)
-            await load()
-        } catch {
-            await updateStatus(status: .error(error.localizedDescription))
-            throw error
+        if await self.syncStatus != .syncing{
+            do {
+                await updateStatus(.syncing)
+                try await wallet.sync()
+                await updateStatus(.synced)
+                await load()
+            } catch {
+                await updateStatus(.error(error.localizedDescription))
+                throw error
+            }
         }
     }
     
@@ -193,11 +195,15 @@ class WalletStore {
         return try wallet.buildAndSignTx(tx)
     }
     
-    func sign(_ psbt: Psbt) throws -> (Bool, Psbt) {
+    func sign(_ psbt: Psbt) throws -> Psbt {
         try wallet.sign(psbt)
     }
     
     func createWalletTx(tx: BitcoinDevKit.Transaction) -> WalletTransaction {
         WalletTransaction(walletService: wallet, inner: CanonicalTx(transaction: tx, chainPosition: ChainPosition.unconfirmed(timestamp: 0)))
+    }
+    
+    func broadcast(_ tx: BitcoinDevKit.Transaction) throws -> String{
+        try self.wallet.broadcast(tx)
     }
 }

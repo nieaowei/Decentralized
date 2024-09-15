@@ -387,9 +387,6 @@
     "sats/vB" : {
       "shouldTranslate" : false
     },
-    "Se" : {
-
-    },
     "Send" : {
       "localizations" : {
         "zh-Hans" : {
@@ -460,6 +457,7 @@
       }
     },
     "Test" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {

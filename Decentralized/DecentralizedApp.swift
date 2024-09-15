@@ -6,6 +6,7 @@
 //
 
 import BitcoinDevKit
+import SwiftData
 import SwiftUI
 import UserNotifications
 
@@ -48,7 +49,14 @@ struct DecentralizedApp: App {
     @State private var errorWrapper: ErrorWrapper?
     @State var syncClient: SyncClient?
 
+    let modelContainer: ModelContainer
+
+    
+    
     init() {
+        let config = ModelConfiguration()
+        modelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, configurations: config)
+
         let syncClientInner = switch settings.serverType {
         case .Esplora:
             SyncClientInner.esplora(EsploraClient(url: settings.serverUrl))
@@ -79,7 +87,7 @@ struct DecentralizedApp: App {
             } else {
                 HomeView()
                     .sheet(item: $errorWrapper) { errorWrapper in
-                        VStack{
+                        VStack {
                             Text(errorWrapper.guidance)
                                 .font(.title3)
                             Text(errorWrapper.error.localizedDescription)
@@ -103,7 +111,8 @@ struct DecentralizedApp: App {
             errorWrapper = ErrorWrapper(error: error, guidance: guidance)
         }
 
-        .modelContainer(for: Contact.self)
+        .modelContainer(modelContainer)
+        
         // Replace About Button Action
         .commands {
             CommandGroup(replacing: CommandGroupPlacement.appInfo) {
@@ -138,13 +147,13 @@ struct DecentralizedApp: App {
             SettingsView()
                 .containerBackground(.thickMaterial, for: .window)
                 .scaledToFit()
+                .modelContainer(modelContainer)
         }
         .environment(settings)
         .environment(wallet)
     }
-    
-    
-    func updateSyncClientInner() -> Void {
+
+    func updateSyncClientInner() {
         let syncClientInner = switch settings.serverType {
         case .Esplora:
             SyncClientInner.esplora(EsploraClient(url: settings.serverUrl))

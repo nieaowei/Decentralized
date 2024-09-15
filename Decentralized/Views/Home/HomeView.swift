@@ -23,7 +23,7 @@ struct HomeDetailView: View {
                 TransactionView()
                     .navigationTitle(dest.title)
             case .send(let selected):
-                SendView(selectedOutpoints: selected)
+                SendScreen(selectedOutpoints: selected)
                     .navigationTitle(dest.title)
             case .contacts:
                 ContactView()
@@ -96,7 +96,7 @@ struct HomeView: View {
                 Text("\(wallet.balance.displayBtc)")
                 SyncStateView(synced: wallet.syncStatus)
                     .onTapGesture {
-                        wallet.syncStatus = .syncing
+                        wallet.updateStatus(.notStarted)
                     }
                 WssStatusView(status: wss.status)
             }
@@ -144,7 +144,7 @@ struct HomeView: View {
                     }
                 }
             }
-            if !isFirst && wallet.syncStatus == .syncing {
+            if !isFirst && wallet.syncStatus == .notStarted {
                 do {
                     try await wallet.sync()
                 } catch {
@@ -153,7 +153,7 @@ struct HomeView: View {
             }
         }
         .task(id: wss.event) {
-            wallet.syncStatus = .syncing
+            wallet.updateStatus(.notStarted)
         }
     }
 }

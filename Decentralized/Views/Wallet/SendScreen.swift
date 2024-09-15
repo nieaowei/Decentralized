@@ -35,7 +35,7 @@ struct SendUtxo: Identifiable {
     }
 }
 
-struct SendView: View {
+struct SendScreen: View {
     @Environment(WalletStore.self) var wallet: WalletStore
     @Environment(WssStore.self) var wss: WssStore
     @Environment(SyncClient.self) var syncClient: SyncClient
@@ -51,13 +51,6 @@ struct SendView: View {
     @State var enableRbf: Bool = true
 
     @State var showUtxosSelector: Bool = false
-    @State var gotoSendDetail: Bool = false
-
-    @State
-    var showBroadcast: Bool = false
-
-    @State
-    var loading: Bool = false
 
     @State var builtTx: WalletTransaction? = nil
     @State var txBuilder: TxBuilder = .init()
@@ -199,49 +192,10 @@ struct SendView: View {
                     rate = wss.fastFee
                 }
             }
-            .navigationDestination(isPresented: $gotoSendDetail) {
-                if let builtTx = builtTx {
-                    TransactionDetailView1(tx: builtTx) {
-                        HStack {
-                            Spacer()
-                            Button {
-                                showBroadcast = true
-                                gotoSendDetail = false
-                                onSign()
-                            } label: {
-                                Text("Sign")
-                                    .padding(.horizontal)
-                            }
-                            .primary()
-                        }
-                        .padding(.all)
-                    }
+            .navigationDestination(item: $builtTx) { builtTx in
+                if let psbt = psbt {
+                    SignScreen(tx: builtTx, psbt: psbt)
                 }
-            }
-            .sheet(isPresented: $showBroadcast) {
-                VStack {
-                    if loading {
-                        ProgressView()
-                    } else {
-                        VStack(spacing: 20) {
-                            Image(systemName: "checkmark.circle")
-                                .resizable()
-                                .frame(width: 64, height: 64)
-                                .foregroundStyle(.green)
-                            Text("Payment Sent")
-                                .font(.title2)
-                            Text("Your transaction has been successfully sent")
-                                .font(.footnote)
-                            Button {
-                                showBroadcast = false
-                            } label: {
-                                Text("OK").padding(.horizontal)
-                            }
-                            .primary()
-                        }
-                    }
-                }
-                .padding(.all)
             }
         }
     }
@@ -271,42 +225,18 @@ struct SendView: View {
 
         do {
             txBuilder = try txBuilder.feeRate(feeRate: FeeRate.fromSatPerVb(satPerVb: UInt64(rate)))
-
             txBuilder = txBuilder.drainTo(script: wallet.payAddress!.scriptPubkey())
+
             let (tx, psbt) = try wallet.buildTx(txBuilder)
             builtTx = wallet.createWalletTx(tx: tx)
             self.psbt = psbt
-            gotoSendDetail = true
+
+        } catch let error as FeeRateError {
+            showError(error, "Invalid fee rate")
         } catch let error as CreateTxError {
-            showError(error, "")
+            showError(error, "Create tranactions error")
         } catch {
             showError(error, "")
-        }
-    }
-
-    func onSign() {
-        self.showBroadcast = true
-        self.loading = true
-        
-        Task {
-            do {
-                let ok = try wallet.sign(psbt!)
-
-                let tx = try psbt!.extractTx()
-                wss.subscribe([.transaction(tx.id)])
-
-                let _ = try self.syncClient.broadcast(tx)
-                try await Task.sleep(nanoseconds: 1500000000)
-
-                self.loading = false
-
-            } catch let error as CreateTxError {
-                showError(error, "")
-                self.loading = false
-            } catch {
-                showError(error, "")
-                self.loading = false
-            }
         }
     }
 
@@ -319,8 +249,23 @@ struct SendView: View {
     }
 }
 
-struct SignView1: View {
+struct SignScreen: View {
+    @Environment(WalletStore.self) var wallet: WalletStore
+    @Environment(WssStore.self) var wss: WssStore
+    @Environment(\.showError) var showError
+
+    @Environment(\.dismiss) var dismiss
+
     let tx: WalletTransaction
+
+    let psbt: Psbt
+
+    @State
+    var showSuccess: Bool = false
+
+    @State
+    var loading: Bool = false
+
     var body: some View {
         VStack {
             ScrollView {
@@ -328,13 +273,66 @@ struct SignView1: View {
             }
             HStack {
                 Spacer()
-                Button {} label: {
-                    Text("Test")
+                Button {
+                    onSign()
+                } label: {
+                    Text("Sign")
                         .padding(.horizontal)
                 }
                 .primary()
             }
             .padding(.all)
+        }
+        .sheet(isPresented: $loading) {
+            ProgressView()
+        }
+        .sheet(isPresented: $showSuccess) {
+            VStack {
+                VStack(spacing: 20) {
+                    Image(systemName: "checkmark.circle")
+                        .resizable()
+                        .frame(width: 64, height: 64)
+                        .foregroundStyle(.green)
+                    Text("Payment Sent")
+                        .font(.title2)
+                    Text("Your transaction has been successfully sent")
+                        .font(.footnote)
+                    Button {
+//                            dismiss()
+                        showSuccess = false
+                    } label: {
+                        Text("OK").padding(.horizontal)
+                    }
+                    .primary()
+                }
+            }
+            .padding(.all)
+        }
+    }
+
+    func onSign() {
+        loading = true
+
+        Task {
+            do {
+                let psbt = try wallet.sign(psbt)
+
+                let tx = try psbt.extractTx()
+                wss.subscribe([.transaction(tx.id)])
+
+                let _ = try self.wallet.broadcast(tx)
+                self.wallet.load()
+                try await Task.sleep(nanoseconds: 1500000000)
+                self.loading = false
+                self.showSuccess = true
+                
+            } catch let error as CreateTxError {
+                showError(error, "")
+                self.loading = false
+            } catch {
+                showError(error, "")
+                self.loading = false
+            }
         }
     }
 }

@@ -12,24 +12,27 @@ struct QRCodeView: View {
     let filter = CIFilter.qrCodeGenerator()
     let data: String?
 
+    var size: CGFloat = 100
+    
+
     var body: some View {
         if let data = data {
             if let qrCodeImage = generateQRCode(from: data) {
                 Image(nsImage: qrCodeImage)
                     .interpolation(.none)
                     .resizable()
-                    .frame(width: 100, height: 100)
+                    .frame(width: size, height: size)
             } else {
                 Image(systemName: "exclamationmark.triangle")
                     .interpolation(.none)
                     .resizable()
-                    .frame(width: 100, height: 100)
+                    .frame(width: size, height: size)
             }
         } else {
             Image(systemName: "exclamationmark.triangle")
                 .interpolation(.none)
                 .resizable()
-                .frame(width: 100, height: 100)
+                .frame(width: size, height: size)
         }
     }
 
