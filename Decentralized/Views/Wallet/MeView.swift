@@ -11,6 +11,7 @@ import SwiftUI
 struct MeView: View {
     @Environment(WalletStore.self) var wallet: WalletStore
 
+    @State var showQR: String?
     var body: some View {
         ScrollView {
             VStack {
@@ -33,6 +34,9 @@ struct MeView: View {
                     },
                     GroupedLabeledContent("QR") {
                         QRCodeView(data: wallet.payAddress?.description)
+                            .onTapGesture {
+                                showQR = wallet.payAddress?.description
+                            }
                     }
                 ])
                 GroupedBox("OrdinalsWallet", items: [
@@ -41,11 +45,25 @@ struct MeView: View {
                     },
                     GroupedLabeledContent("QR") {
                         QRCodeView(data: wallet.ordiAddress?.description)
+                            .onTapGesture {
+                                showQR = wallet.ordiAddress?.description
+                            }
                     }
                 ])
                 Spacer()
             }
             .padding(.vertical)
+        }
+
+        .sheet(item: $showQR) { qr in
+            VStack{
+                QRCodeView(data: qr,size: 180)
+                Button("OK"){
+                    showQR = nil
+                }
+                .primary()
+            }
+            .padding(.all)
         }
     }
 }
