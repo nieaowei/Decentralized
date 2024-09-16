@@ -66,6 +66,9 @@
         }
       }
     },
+    "App First" : {
+
+    },
     "Apply" : {
 
     },
@@ -144,6 +147,9 @@
         }
       }
     },
+    "Development" : {
+
+    },
     "Enabled" : {
       "localizations" : {
         "zh-Hans" : {
@@ -163,6 +169,9 @@
           }
         }
       }
+    },
+    "Erase" : {
+
     },
     "Export Mnemonic" : {
 
@@ -431,6 +440,9 @@
           }
         }
       }
+    },
+    "ServerUrl Model" : {
+
     },
     "Sign" : {
       "extractionState" : "manual",

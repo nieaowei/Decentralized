@@ -158,6 +158,7 @@ struct DecentralizedApp: App {
             SettingsView()
                 .windowResizeBehavior(.enabled)
                 .modelContainer(mainModelContainer)
+                
         }
         .environment(settings)
         .environment(wallet)
