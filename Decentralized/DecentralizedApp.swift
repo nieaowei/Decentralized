@@ -53,6 +53,8 @@ struct DecentralizedApp: App {
     let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, configurations: ModelConfiguration())
 
     init() {
+        logger.info("App Init")
+
         let settings = AppSettings()
 
         let syncClientInner = switch settings.serverType {
@@ -60,6 +62,8 @@ struct DecentralizedApp: App {
             SyncClientInner.esplora(EsploraClient(url: settings.serverUrl))
         case .Electrum:
             SyncClientInner.electrum(try! ElectrumClient(url: settings.serverUrl))
+        case .EsploraWss:
+            fatalError()
         }
 
         let syncClient = SyncClient(inner: syncClientInner)
@@ -67,7 +71,7 @@ struct DecentralizedApp: App {
         let walletService = WalletService(network: settings.network.toBdkNetwork(), syncClient: syncClient)
 
         _settings = State(wrappedValue: settings)
-        _wss = State(wrappedValue: .init())
+        _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
         _syncClient = State(wrappedValue: syncClient)
         _wallet = State(wrappedValue: WalletStore(wallet: walletService))
     }
@@ -87,20 +91,23 @@ struct DecentralizedApp: App {
             } else {
                 HomeView()
                     .onChange(of: settings.serverType) {
-                        print("Change")
-
+                        logger.info("serverType Change")
                         updateSyncClientInner()
                     }
                     .onChange(of: settings.serverUrl) {
-                        print("Change")
-
+                        logger.info("serverUrl Change")
                         updateSyncClientInner()
                     }
                     .onChange(of: settings.network) {
+                        logger.info("network Change")
                         updateWallet()
                     }
-                    .onChange(of: settings.changed) { _, _ in
-                        print("Change")
+                    .onChange(of: settings.changed) {
+                        logger.info("settings Change")
+                    }
+                    .onChange(of: settings.wssUrl) {
+                        logger.info("wssUrl Change")
+                        updateWss()
                     }
 
                     .sheet(item: $errorWrapper) { errorWrapper in
@@ -127,7 +134,6 @@ struct DecentralizedApp: App {
         .environment(\.showError) { error, guidance in
             errorWrapper = ErrorWrapper(error: error, guidance: guidance)
         }
-//        .environment(\.loading, false)
         .modelContainer(mainModelContainer)
 
         // Replace About Button Action
@@ -158,7 +164,6 @@ struct DecentralizedApp: App {
             SettingsView()
                 .windowResizeBehavior(.enabled)
                 .modelContainer(mainModelContainer)
-                
         }
         .environment(settings)
         .environment(wallet)
@@ -172,11 +177,17 @@ struct DecentralizedApp: App {
             SyncClientInner.esplora(EsploraClient(url: settings.serverUrl))
         case .Electrum:
             SyncClientInner.electrum(try! ElectrumClient(url: settings.serverUrl))
+        case .EsploraWss:
+            fatalError()
         }
         syncClient.inner = syncClientInner
     }
-    
-    func updateWallet(){
+
+    func updateWss() {
+        wss.updateUrl(settings.wssUrl )
+    }
+
+    func updateWallet() {
         wallet = WalletStore(wallet: WalletService(network: settings.network.toBdkNetwork(), syncClient: syncClient))
     }
 }

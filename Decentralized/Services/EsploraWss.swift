@@ -11,8 +11,6 @@ import Observation
 import OSLog
 
 class EsploraWss {
-    static let shared: EsploraWss = .init()
-
     enum Status {
         case connected, disconnected, connecting
     }
@@ -32,31 +30,64 @@ class EsploraWss {
 
     var handleStatus: ((_ status: Status) -> Void)?
 
-    var status: Status = .disconnected
+    private let logger: Logger = .init(subsystem: "app.decentralized", category: "wss")
 
-    let logger: Logger = .init(subsystem: "app.decentralized", category: "wss")
+    private var reconnectAttempts = 0
+    private let maxReconnectAttempts = 5
+    private let reconnectDelay = 2.0 // 初始重连延迟时间
+    private var isCanceled = false
+    
+    private var url: URL
 
-    init() {
+    init(url: URL) {
         self.urlSession = URLSession(configuration: .default)
-        let url = URL(string: "wss://mempool.space/testnet/api/v1/ws")!
+        self.url = url
         self.webSocketTask = urlSession.webSocketTask(with: url)
     }
 
-    func connect() {
-        status = .connecting
-        if let handleStatus = handleStatus {
-            Task {
-                handleStatus(.connecting)
-            }
-        }
+    deinit {
+        self.disconnect()
+    }
 
+    func connect() {
+        webSocketTask = urlSession.webSocketTask(with: url)
+        updateStatus(.connecting)
         webSocketTask.resume()
         wantStats()
         receiveMessage()
     }
 
+    func updateStatus(_ status: Status) {
+        if let handleStatus = handleStatus {
+            Task {
+                handleStatus(status)
+            }
+        }
+    }
+
+    func reconnect() {
+        if isCanceled{
+            logger.info("\(self.url) Canceled")
+            return
+        }
+        
+        guard reconnectAttempts < maxReconnectAttempts else {
+            logger.info("The count of attempts has reached the maximum")
+            updateStatus(.disconnected)
+            return
+        }
+
+        DispatchQueue.global().asyncAfter(deadline: .now() + reconnectDelay * pow(2.0, Double(reconnectAttempts))) {
+            self.logger.info("Try reconnect to \(self.reconnectAttempts + 1)")
+            self.reconnectAttempts += 1
+            self.connect()
+        }
+    }
+
     func disconnect() {
+        isCanceled = true
         webSocketTask.cancel(with: .goingAway, reason: nil)
+        updateStatus(.disconnected)
     }
 
     func subscribe(datas: [EsploraWss.Data]) {
@@ -87,24 +118,18 @@ class EsploraWss {
         let message = URLSessionWebSocketTask.Message.string(message)
         webSocketTask.send(message) { error in
             if let error = error {
-                self.disconnect()
-                
                 self.logger.error("Sending message: \(error)")
-                self.status = .disconnected
-                if let handleStatus = self.handleStatus {
-                    Task {
-                        handleStatus(.disconnected)
-                    }
-                }
+                self.updateStatus(.disconnected)
+                self.reconnect()
             }
         }
     }
-    
-    private func handleMessage(_ text: String){
+
+    private func handleMessage(_ text: String) {
         do {
             let msg = try Message(text)
             for tx in msg.addressTransactions {
-                if let handle = self.handleNewTx {
+                if let handle = handleNewTx {
                     Task {
                         handle(tx)
                     }
@@ -112,20 +137,20 @@ class EsploraWss {
             }
 
             for tx in msg.addressRemovedTransactions {
-                if let handle = self.handleRemovedTx {
+                if let handle = handleRemovedTx {
                     Task {
                         handle(tx)
                     }
                 }
             }
-            if let handle = self.handleFees {
+            if let handle = handleFees {
                 Task {
                     handle(msg.fees)
                 }
             }
 
             if !msg.txConfirmed.isEmpty {
-                if let handle = self.handleConfirmedTx {
+                if let handle = handleConfirmedTx {
                     Task {
                         handle(msg.txConfirmed)
                     }
@@ -133,7 +158,7 @@ class EsploraWss {
             }
 
         } catch {
-            self.logger.error("\(error)")
+            logger.error("\(error)")
         }
     }
 
@@ -142,32 +167,24 @@ class EsploraWss {
             switch result {
             case .failure(let error):
                 self.logger.error("Receiving message: \(error)")
-                self.disconnect()
-                self.status = .disconnected
-                if let handleStatus = handleStatus {
-                    Task {
-                        handleStatus(status)
-                    }
-                }
+                self.updateStatus(.disconnected)
+                self.reconnect()
                 return
             case .success(let message):
+
+                self.updateStatus(.connected)
+
                 switch message {
                 case .string(let text):
-                    self.status = .connected
-                    DispatchQueue.global(qos: .background).async{
+                    DispatchQueue.global(qos: .background).async {
                         self.handleMessage(text)
                     }
 
                 case .data(let data):
                     self.logger.info("Received binary data: \(data)")
-                
+
                 @unknown default:
                     fatalError()
-                }
-                if let handleStatus = handleStatus {
-                    Task {
-                        handleStatus(status)
-                    }
                 }
                 self.receiveMessage()
             }

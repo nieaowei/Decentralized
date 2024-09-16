@@ -419,7 +419,7 @@ class WalletService {
     }
 
     func inspector(inspectedCount: UInt64, total: UInt64) {
-        print(inspectedCount, total)
+//        print(inspectedCount, total)
     }
 
     func sync() async throws {

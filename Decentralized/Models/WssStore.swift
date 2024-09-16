@@ -12,18 +12,18 @@ import SwiftUI
 class WssStore {
     enum Event: Equatable {
         static func == (lhs: WssStore.Event, rhs: WssStore.Event) -> Bool {
-            if  case let WssStore.Event.newTx(a) = lhs {
-                if  case let WssStore.Event.newTx(b) = rhs {
+            if case let WssStore.Event.newTx(a) = lhs {
+                if case let WssStore.Event.newTx(b) = rhs {
                     return a.id == b.id
                 }
             }
-            if  case let WssStore.Event.txConfirmed(a) = lhs {
-                if  case let WssStore.Event.txConfirmed(b) = rhs {
+            if case let WssStore.Event.txConfirmed(a) = lhs {
+                if case let WssStore.Event.txConfirmed(b) = rhs {
                     return a == b
                 }
             }
-            if  case let WssStore.Event.txRemoved(a) = lhs {
-                if  case let WssStore.Event.txRemoved(b) = rhs {
+            if case let WssStore.Event.txRemoved(a) = lhs {
+                if case let WssStore.Event.txRemoved(b) = rhs {
                     return a.id == b.id
                 }
             }
@@ -35,7 +35,7 @@ class WssStore {
         case txRemoved(EsploraTx)
     }
     
-    private let wss: EsploraWss = .shared
+    private var  wss: EsploraWss
     
     @MainActor
     var status: EsploraWss.Status = .disconnected
@@ -44,7 +44,8 @@ class WssStore {
     @MainActor
     var event: Event?
     
-    init() {
+    init(url: URL) {
+        wss = EsploraWss(url: url)
         wss.handleStatus = handleStatus
         wss.handleFees = handleFees
         wss.handleNewTx = handleNewTx
@@ -52,8 +53,24 @@ class WssStore {
         wss.handleRemovedTx = handleRemovedTx
     }
     
+    func updateUrl(_ url: String){
+        wss.disconnect()
+        
+        wss = EsploraWss(url: URL(string: url)!)
+        wss.handleStatus = handleStatus
+        wss.handleFees = handleFees
+        wss.handleNewTx = handleNewTx
+        wss.handleConfirmedTx = handleConfirmedTx
+        wss.handleRemovedTx = handleRemovedTx
+        self.connect()
+    }
+    
     func connect() {
         wss.connect()
+    }
+    
+    func disconnect() {
+        wss.disconnect()
     }
     
     func subscribe(_ datas: [EsploraWss.Data]) {
@@ -68,7 +85,7 @@ class WssStore {
     
     func handleFees(fees: Fees) {
         DispatchQueue.main.async {
-            if fees.fastestFee != 0{
+            if fees.fastestFee != 0 {
                 self.fastFee = fees.fastestFee
             }
         }

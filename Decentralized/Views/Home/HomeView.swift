@@ -83,12 +83,12 @@ struct HomeView: View {
                     }
                 }
             }
-            .onChange(of: route, initial: true) {
-                print("route: \(route)")
-            }
-            .onChange(of: routes, initial: true) {
-                print("routes:\(routes)")
-            }
+//            .onChange(of: route, initial: true) {
+//                print("route: \(route)")
+//            }
+//            .onChange(of: routes, initial: true) {
+//                print("routes:\(routes)")
+//            }
         }
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {

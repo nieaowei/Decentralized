@@ -254,6 +254,7 @@
       }
     },
     "Mnemonic" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -432,6 +433,7 @@
       }
     },
     "Server Url" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -593,6 +595,7 @@
       }
     },
     "Wallet Type" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {

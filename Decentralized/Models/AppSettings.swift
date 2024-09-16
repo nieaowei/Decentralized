@@ -25,7 +25,7 @@ class ServerUrl {
 }
 
 enum ServerType: String, CaseIterable, Identifiable, Codable, Equatable {
-    case Esplora, Electrum
+    case Esplora, Electrum, EsploraWss
 
     var id: String {
         self.rawValue
@@ -60,6 +60,10 @@ class AppSettings {
     @ObservationIgnored
     @AppStorage("serverUrl")
     var serverUrl: String = "https://mempool.space/api"
+    
+    @ObservationIgnored
+    @AppStorage("wssUrl")
+    var wssUrl: String = "wss://mempool.space/api/v1/ws"
 
     @ObservationIgnored
     @AppStorage("isOnBoarding")
@@ -92,6 +96,7 @@ var staticServerUrls: [ServerUrl] = {
         ServerUrl(url: "https://blockstream.info/signet/api", type: .Esplora, network: .signet),
         ServerUrl(url: "https://btc-signet.xverse.app", type: .Esplora, network: .signet),
 
+        // Electrum
 //        ServerUrl(url: "ssl://electrum.blockstream.info:50002", type: .Electrum, network: .bitcoin),
         ServerUrl(url: "ssl://fulcrum.sethforprivacy.com:50002", type: .Electrum, network: .bitcoin),
         ServerUrl(url: "ssl://bitcoin.lu.ke:50002", type: .Electrum, network: .bitcoin),
@@ -100,7 +105,16 @@ var staticServerUrls: [ServerUrl] = {
 //        ServerUrl(url: "ssl://electrum.bitaroo.net:50002", type: .Electrum, network: .bitcoin),
 //        ServerUrl(url: "ssl://electrum.diynodes.com:50002", type: .Electrum, network: .bitcoin),
 
-        ServerUrl(url: "ssl://electrum.blockstream.info:60002", type: .Electrum, network: .testnet)
+        ServerUrl(url: "ssl://electrum.blockstream.info:60002", type: .Electrum, network: .testnet),
+        
+        
+        // Wss
+        ServerUrl(url: "wss://mempool.space/api/v1/ws", type: .EsploraWss, network: .bitcoin),
+        ServerUrl(url: "wss://bitcoin.lu.ke/api/v1/ws", type: .EsploraWss, network: .bitcoin),
+        
+        ServerUrl(url: "wss://mempool.space/testnet/api/v1/ws", type: .EsploraWss, network: .testnet)
+        
+
     ]
 
     let mempoolUrls = [
@@ -122,6 +136,17 @@ var staticServerUrls: [ServerUrl] = {
     ]
     for url in electrumUrls {
         serverUrls.append(ServerUrl(url: "ssl://electrum.\(url):50002", type: .Electrum, network: .bitcoin))
+    }
+    
+    let wssUrls = [
+        "blockstream.info",
+        "emzy.de",
+        "bitaroo.net",
+        "diynodes.com"
+    ]
+    
+    for url in wssUrls {
+        serverUrls.append(ServerUrl(url: "wss://mempool.\(url)/api/v1/wss", type: .EsploraWss, network: .bitcoin))
     }
 
     return serverUrls
