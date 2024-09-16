@@ -28,7 +28,7 @@ struct ServerSettings: View {
                     Text("Network")
                 }
                 Picker("Server Type", selection: $serverType) {
-                    ForEach(ServerType.allCases) { t in
+                    ForEach([ServerType.Esplora, ServerType.Electrum]) { t in
                         Text(verbatim: "\(t)").tag(t)
                     }
                 }
