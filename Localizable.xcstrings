@@ -5,22 +5,22 @@
       "shouldTranslate" : false
     },
     "%@" : {
-
+      "shouldTranslate" : false
     },
     "%d" : {
-
+      "shouldTranslate" : false
     },
     "%lld sats/vB" : {
-
+      "shouldTranslate" : false
     },
     "%llu kB" : {
-
+      "shouldTranslate" : false
     },
     "%llu kvB" : {
-
+      "shouldTranslate" : false
     },
     "%llu kWu" : {
-
+      "shouldTranslate" : false
     },
     "%llu sats" : {
       "extractionState" : "stale",
@@ -31,10 +31,11 @@
             "value" : "%llu 聪"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "%u" : {
-
+      "shouldTranslate" : false
     },
     "About" : {
       "localizations" : {
@@ -67,10 +68,17 @@
       }
     },
     "App First" : {
-
+      "shouldTranslate" : false
     },
     "Apply" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用"
+          }
+        }
+      }
     },
     "Balance" : {
       "extractionState" : "manual",
@@ -123,19 +131,15 @@
         }
       }
     },
-    "copy_address" : {
-      "extractionState" : "stale",
+    "Creating" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "复制地址"
+            "value" : "创建中"
           }
         }
       }
-    },
-    "Creating" : {
-
     },
     "Date" : {
       "localizations" : {
@@ -148,7 +152,14 @@
       }
     },
     "Development" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开发者"
+          }
+        }
+      }
     },
     "Enabled" : {
       "localizations" : {
@@ -171,10 +182,24 @@
       }
     },
     "Erase" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除"
+          }
+        }
+      }
     },
     "Export Mnemonic" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出助记词"
+          }
+        }
+      }
     },
     "Extract Hex" : {
       "localizations" : {
@@ -253,17 +278,6 @@
         }
       }
     },
-    "Mnemonic" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "助记词"
-          }
-        }
-      }
-    },
     "Name" : {
       "localizations" : {
         "zh-Hans" : {
@@ -293,9 +307,6 @@
           }
         }
       }
-    },
-    "Notifaction" : {
-
     },
     "Notification" : {
       "localizations" : {
@@ -353,7 +364,14 @@
       "shouldTranslate" : false
     },
     "Payment Sent" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "付款已发送"
+          }
+        }
+      }
     },
     "PayWallet" : {
       "extractionState" : "manual",
@@ -417,10 +435,24 @@
       }
     },
     "Send Transaction Detail" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交易发送详情"
+          }
+        }
+      }
     },
     "Server" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器"
+          }
+        }
+      }
     },
     "Server Type" : {
       "localizations" : {
@@ -432,19 +464,8 @@
         }
       }
     },
-    "Server Url" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "服务器地址"
-          }
-        }
-      }
-    },
     "ServerUrl Model" : {
-
+      "shouldTranslate" : false
     },
     "Sign" : {
       "extractionState" : "manual",
@@ -485,17 +506,6 @@
         }
       }
     },
-    "Test" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "测试"
-          }
-        }
-      }
-    },
     "Touch ID" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -518,7 +528,14 @@
       }
     },
     "Transaction Detail" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交易详情"
+          }
+        }
+      }
     },
     "Transaction Removed" : {
       "localizations" : {
@@ -563,6 +580,7 @@
       }
     },
     "Version 1.0.0" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -594,19 +612,15 @@
         }
       }
     },
-    "Wallet Type" : {
-      "extractionState" : "stale",
+    "Your transaction has been successfully sent" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "钱包类型"
+            "value" : "您的交易已成功发送"
           }
         }
       }
-    },
-    "Your transaction has been successfully sent" : {
-
     }
   },
   "version" : "1.0"

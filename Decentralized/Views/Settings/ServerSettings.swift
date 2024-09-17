@@ -20,7 +20,7 @@ struct ServerSettings: View {
         Form {
             Section {
                 Picker(selection: $network) {
-                    ForEach([Networks.bitcoin, Networks.testnet]) { net in
+                    ForEach([Networks.bitcoin, Networks.testnet, Networks.testnet4, Networks.signet]) { net in
                         Text(net.rawValue)
                             .tag(net)
                     }

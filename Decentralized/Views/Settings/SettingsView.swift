@@ -18,7 +18,7 @@ struct SettingsView: View {
             Tab("Server", systemImage: "server.rack") {
                 ServerSettings()
             }
-            Tab("Notifaction", systemImage: "bell.badge") {
+            Tab("Notification", systemImage: "bell.badge") {
                 NotificationSettings()
             }
             Tab("Wallet", systemImage: "dollarsign.circle") {

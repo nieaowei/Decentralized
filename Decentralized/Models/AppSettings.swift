@@ -92,6 +92,9 @@ var staticServerUrls: [ServerUrl] = {
         ServerUrl(url: "https://blockstream.info/testnet/api", type: .Esplora, network: .testnet),
         ServerUrl(url: "https://btc-testnet.xverse.app", type: .Esplora, network: .testnet),
 
+        ServerUrl(url: "https://mempool.space/testnet4/api", type: .Esplora, network: .testnet4),
+
+        
         ServerUrl(url: "https://mempool.space/signet/api", type: .Esplora, network: .signet),
         ServerUrl(url: "https://blockstream.info/signet/api", type: .Esplora, network: .signet),
         ServerUrl(url: "https://btc-signet.xverse.app", type: .Esplora, network: .signet),
@@ -107,13 +110,20 @@ var staticServerUrls: [ServerUrl] = {
 
         ServerUrl(url: "ssl://electrum.blockstream.info:60002", type: .Electrum, network: .testnet),
         
+        ServerUrl(url: "ssl://mempool.space:40002", type: .Electrum, network: .testnet4),
+
         
         // Wss
         ServerUrl(url: "wss://mempool.space/api/v1/ws", type: .EsploraWss, network: .bitcoin),
         ServerUrl(url: "wss://bitcoin.lu.ke/api/v1/ws", type: .EsploraWss, network: .bitcoin),
         
-        ServerUrl(url: "wss://mempool.space/testnet/api/v1/ws", type: .EsploraWss, network: .testnet)
+        ServerUrl(url: "wss://mempool.space/testnet/api/v1/ws", type: .EsploraWss, network: .testnet),
+        ServerUrl(url: "wss://mempool.emzy.de/testnet/api/v1/ws", type: .EsploraWss, network: .testnet),
         
+        ServerUrl(url: "wss://mempool.space/testnet4/api/v1/ws", type: .EsploraWss, network: .testnet4),
+
+
+        ServerUrl(url: "wss://mempool.space/signet/api/v1/ws", type: .EsploraWss, network: .signet)
 
     ]
 

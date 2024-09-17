@@ -68,7 +68,7 @@ struct DecentralizedApp: App {
 
         let syncClient = SyncClient(inner: syncClientInner)
 
-        let walletService = WalletService(network: settings.network.toBdkNetwork(), syncClient: syncClient)
+        let walletService = WalletService(network: settings.network, syncClient: syncClient)
 
         _settings = State(wrappedValue: settings)
         _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
@@ -90,6 +90,9 @@ struct DecentralizedApp: App {
                     }
             } else {
                 HomeView()
+                    .onAppear{
+                        wss.connect()
+                    }
                     .onChange(of: settings.serverType) {
                         logger.info("serverType Change")
                         updateSyncClientInner()
@@ -188,6 +191,6 @@ struct DecentralizedApp: App {
     }
 
     func updateWallet() {
-        wallet = WalletStore(wallet: WalletService(network: settings.network.toBdkNetwork(), syncClient: syncClient))
+        wallet = WalletStore(wallet: WalletService(network: settings.network, syncClient: syncClient))
     }
 }

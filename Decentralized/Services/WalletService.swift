@@ -98,7 +98,7 @@ class WalletSyncScriptInspector: SyncScriptInspector {
 class WalletService {
     private let keyService: KeyService = .shared
 
-    private var network: Network
+    private var network: Networks
 
     private var payWallet: Wallet?
     private var payConn: Connection?
@@ -113,7 +113,7 @@ class WalletService {
     private let logger: Logger = AppLogger(cat: "WalletService")
 
     init(
-        network: Network,
+        network: Networks,
         syncClient: SyncClient
     ) {
         self.network = network
@@ -178,7 +178,7 @@ class WalletService {
         let mnemonic = try Mnemonic.fromString(mnemonic: words)
 
         let paySecretKey = DescriptorSecretKey(
-            network: network,
+            network: network.toBdkNetwork(),
             mnemonic: mnemonic,
             password: nil
         )
@@ -188,13 +188,13 @@ class WalletService {
             Descriptor.newBip49(
                 secretKey: paySecretKey,
                 keychain: .external,
-                network: self.network
+                network: self.network.toBdkNetwork()
             )
         case .peek:
             Descriptor.newBip86(
                 secretKey: paySecretKey,
                 keychain: .external,
-                network: self.network
+                network: self.network.toBdkNetwork()
             )
         }
 
@@ -203,25 +203,25 @@ class WalletService {
             Descriptor.newBip49(
                 secretKey: paySecretKey,
                 keychain: .internal,
-                network: self.network
+                network: self.network.toBdkNetwork()
             )
         case .peek:
             Descriptor.newBip86(
                 secretKey: paySecretKey,
                 keychain: .internal,
-                network: self.network
+                network: self.network.toBdkNetwork()
             )
         }
 
         let ordiDescriptor = Descriptor.newBip86(
             secretKey: paySecretKey,
             keychain: .external,
-            network: self.network
+            network: self.network.toBdkNetwork()
         )
         let ordiChangeDescriptor = Descriptor.newBip86(
             secretKey: paySecretKey,
             keychain: .internal,
-            network: self.network
+            network: self.network.toBdkNetwork()
         )
 
         return (payDescriptor, payChangeDescriptor, ordiDescriptor, ordiChangeDescriptor)
@@ -240,7 +240,7 @@ class WalletService {
         let (payDescriptor, payChangeDescriptor, ordiDescriptor, ordiChangeDescriptor) = try createDescriptor(words: words12, mode: mode)
 
         let documentsDirectoryURL = FileManager.default.getDocumentsDirectoryPath()
-        let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_\(self.network.description).sqlite")
+        let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_\(self.network.rawValue).sqlite")
         let payPersistenceBackendPath = payWalletDataDirectoryURL.path
         self.logger.info("PayDB URl:\(payPersistenceBackendPath)")
 
@@ -251,11 +251,11 @@ class WalletService {
         let payWallet = try Wallet(
             descriptor: payDescriptor,
             changeDescriptor: payChangeDescriptor,
-            network: self.network,
+            network: self.network.toCustomNetwork(),
             connection: payDb
         )
 
-        let ordiWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("ordi_\(self.network.description).sqlite")
+        let ordiWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("ordi_\(self.network.rawValue).sqlite")
         let ordiPersistenceBackendPath = ordiWalletDataDirectoryURL.path
 
         let ordiDb = try! Connection(path: ordiPersistenceBackendPath)
@@ -265,7 +265,7 @@ class WalletService {
         let ordiWallet = try Wallet(
             descriptor: ordiDescriptor,
             changeDescriptor: ordiChangeDescriptor,
-            network: self.network,
+            network: self.network.toCustomNetwork(),
             connection: ordiDb
         )
 
@@ -301,7 +301,7 @@ class WalletService {
     private func loadWallet(mode: WalletMode, payDescriptor: Descriptor, payChangeDesc: Descriptor, ordiDescriptor: Descriptor, ordiChangeDesc: Descriptor) throws {
         let documentsDirectoryURL = FileManager.default.getDocumentsDirectoryPath()
 
-        let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_\(self.network.description).sqlite")
+        let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_\(self.network.rawValue).sqlite")
         let payPersistenceBackendPath = payWalletDataDirectoryURL.path
 
         let db = try Connection(path: payPersistenceBackendPath)
@@ -312,7 +312,7 @@ class WalletService {
             connection: db
         )
 
-        let ordiWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("ordi_\(self.network.description).sqlite")
+        let ordiWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("ordi_\(self.network.rawValue).sqlite")
         let ordiPersistenceBackendPath = ordiWalletDataDirectoryURL.path
         let ordiDb = try Connection(path: ordiPersistenceBackendPath)
 
@@ -339,10 +339,10 @@ class WalletService {
     func loadWalletFromBackup() throws {
         let backupInfo = try keyService.getBackupInfo()
 
-        self.logger.info("loadWalletFromBackup: \(self.network.description)")
+        self.logger.info("loadWalletFromBackup: \(self.network.rawValue)")
 
-        if !FileManager.default.fileExists(atPath: FileManager.default.getDocumentsDirectoryPath().appendingPathComponent("pay_\(self.network.description).sqlite").path) {
-            self.logger.info("Load Create: \(self.network.description)")
+        if !FileManager.default.fileExists(atPath: FileManager.default.getDocumentsDirectoryPath().appendingPathComponent("pay_\(self.network.rawValue).sqlite").path) {
+            self.logger.info("Load Create: \(self.network.rawValue)")
             try self.createWallet(words: backupInfo.mnemonic, mode: backupInfo.mode)
             return
         }
@@ -383,7 +383,7 @@ class WalletService {
         -> Psbt
     {
         guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
-        let script = try Address(address: address, network: self.network)
+        let script = try Address(address: address, network: self.network.toBdkNetwork())
             .scriptPubkey()
         let txBuilder = try TxBuilder()
             .addRecipient(

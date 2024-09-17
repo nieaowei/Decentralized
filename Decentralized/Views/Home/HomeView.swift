@@ -107,6 +107,7 @@ struct HomeView: View {
                 logger.info("active")
             }
         }
+        
         .task {
             do {
                 if isFirst {
@@ -115,12 +116,6 @@ struct HomeView: View {
                 }
             } catch {
                 showError(error, "Sync Retry")
-            }
-        }
-        .task(id: wss.status) {
-            if wss.status == .disconnected {
-                logger.info("Wss connetting")
-                wss.connect()
             }
         }
         .task(id: wss.status) {

@@ -58,11 +58,7 @@ class EsploraWss {
     }
 
     func updateStatus(_ status: Status) {
-        if let handleStatus = handleStatus {
-            Task {
-                handleStatus(status)
-            }
-        }
+        handleStatus?(status)
     }
 
     func reconnect() {

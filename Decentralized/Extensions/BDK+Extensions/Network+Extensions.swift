@@ -8,9 +8,12 @@
 import BitcoinDevKit
 import Foundation
 
+// typealias Networks = CustomNetwork
+
 enum Networks: String, Codable, CaseIterable, Identifiable {
     case bitcoin
     case testnet
+    case testnet4
     case signet
     case regtest
 
@@ -24,6 +27,23 @@ enum Networks: String, Codable, CaseIterable, Identifiable {
             .bitcoin
         case .testnet:
             .testnet
+        case .testnet4:
+            .testnet
+        case .signet:
+            .signet
+        case .regtest:
+            .regtest
+        }
+    }
+
+    func toCustomNetwork() -> CustomNetwork {
+        switch self {
+        case .bitcoin:
+            .bitcoin
+        case .testnet:
+            .testnet
+        case .testnet4:
+            .testnet4
         case .signet:
             .signet
         case .regtest:

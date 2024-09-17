@@ -21,8 +21,8 @@ struct AboutView: View {
                 Text(verbatim: "Decentralized")
                     .font(.largeTitle)
                     .fontDesign(.rounded)
-                Text("Version 1.0.0")
-                
+                Text("Version \(Bundle.main.infoDictionary!["CFBundleShortVersionString"] ?? "")")
+                Text("Build \(Bundle.main.infoDictionary!["CFBundleVersion"] ?? "")")
             }
         }
         .padding(.all)
