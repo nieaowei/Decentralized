@@ -51,7 +51,7 @@ class AppSettings {
 
     @ObservationIgnored
     @AppStorage("network")
-    var network: Networks = .testnet
+    var network: Networks = .bitcoin
 
     @ObservationIgnored
     @AppStorage("severType")

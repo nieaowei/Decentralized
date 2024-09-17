@@ -169,7 +169,7 @@ class EsploraWss {
             case .success(let message):
 
                 self.updateStatus(.connected)
-
+                self.reconnectAttempts = 0
                 switch message {
                 case .string(let text):
                     DispatchQueue.global(qos: .background).async {

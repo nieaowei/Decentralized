@@ -174,7 +174,7 @@ class WalletService {
         return wallet.getTxout(outpoint: op)
     }
 
-    private func createDescriptor(words: String, mode: WalletMode) throws -> (Descriptor, Descriptor, Descriptor, Descriptor) {
+    private func createDescriptor(words: String, mode: WalletMode) throws -> (Descriptor,  Descriptor) {
         let mnemonic = try Mnemonic.fromString(mnemonic: words)
 
         let paySecretKey = DescriptorSecretKey(
@@ -198,36 +198,21 @@ class WalletService {
             )
         }
 
-        let payChangeDescriptor = switch mode {
-        case .xverse:
-            Descriptor.newBip49(
-                secretKey: paySecretKey,
-                keychain: .internal,
-                network: self.network.toBdkNetwork()
-            )
-        case .peek:
-            Descriptor.newBip86(
-                secretKey: paySecretKey,
-                keychain: .internal,
-                network: self.network.toBdkNetwork()
-            )
-        }
+       
 
         let ordiDescriptor = Descriptor.newBip86(
             secretKey: paySecretKey,
             keychain: .external,
             network: self.network.toBdkNetwork()
         )
-        let ordiChangeDescriptor = Descriptor.newBip86(
-            secretKey: paySecretKey,
-            keychain: .internal,
-            network: self.network.toBdkNetwork()
-        )
-
-        return (payDescriptor, payChangeDescriptor, ordiDescriptor, ordiChangeDescriptor)
+      
+        return (payDescriptor,  ordiDescriptor)
     }
 
     func createWallet(words: String?, mode: WalletMode) throws {
+        
+        try deleteWallet()
+        
         var words12: String
 
         if let words = words, !words.isEmpty {
@@ -237,7 +222,7 @@ class WalletService {
             words12 = mnemonic.description
         }
 
-        let (payDescriptor, payChangeDescriptor, ordiDescriptor, ordiChangeDescriptor) = try createDescriptor(words: words12, mode: mode)
+        let (payDescriptor, ordiDescriptor ) = try createDescriptor(words: words12, mode: mode)
 
         let documentsDirectoryURL = FileManager.default.getDocumentsDirectoryPath()
         let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_\(self.network.rawValue).sqlite")
@@ -248,9 +233,8 @@ class WalletService {
 
         self.logger.info("Read OK")
 
-        let payWallet = try Wallet(
+        let payWallet = try Wallet.createSingle(
             descriptor: payDescriptor,
-            changeDescriptor: payChangeDescriptor,
             network: self.network.toCustomNetwork(),
             connection: payDb
         )
@@ -262,9 +246,8 @@ class WalletService {
 
         self.logger.info("OrdiDB URl:\(ordiPersistenceBackendPath)")
 
-        let ordiWallet = try Wallet(
+        let ordiWallet = try Wallet.createSingle(
             descriptor: ordiDescriptor,
-            changeDescriptor: ordiChangeDescriptor,
             network: self.network.toCustomNetwork(),
             connection: ordiDb
         )
@@ -298,7 +281,7 @@ class WalletService {
         try self.keyService.saveBackupInfo(backupInfo)
     }
 
-    private func loadWallet(mode: WalletMode, payDescriptor: Descriptor, payChangeDesc: Descriptor, ordiDescriptor: Descriptor, ordiChangeDesc: Descriptor) throws {
+    private func loadWallet(mode: WalletMode, payDescriptor: Descriptor, ordiDescriptor: Descriptor) throws {
         let documentsDirectoryURL = FileManager.default.getDocumentsDirectoryPath()
 
         let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_\(self.network.rawValue).sqlite")
@@ -308,7 +291,7 @@ class WalletService {
 
         let payWallet = try Wallet.load(
             descriptor: payDescriptor,
-            changeDescriptor: payChangeDesc,
+            changeDescriptor: nil,
             connection: db
         )
 
@@ -318,7 +301,7 @@ class WalletService {
 
         let ordiWallet = try Wallet.load(
             descriptor: ordiDescriptor,
-            changeDescriptor: ordiChangeDesc,
+            changeDescriptor: nil,
             connection: ordiDb
         )
 
@@ -347,9 +330,9 @@ class WalletService {
             return
         }
 
-        let (payDescriptor, payChangeDescriptor, ordiDescriptor, ordiChangeDescriptor) = try createDescriptor(words: backupInfo.mnemonic, mode: backupInfo.mode)
+        let (payDescriptor, ordiDescriptor) = try createDescriptor(words: backupInfo.mnemonic, mode: backupInfo.mode)
 
-        try self.loadWallet(mode: backupInfo.mode, payDescriptor: payDescriptor, payChangeDesc: payChangeDescriptor, ordiDescriptor: ordiDescriptor, ordiChangeDesc: ordiChangeDescriptor)
+        try self.loadWallet(mode: backupInfo.mode, payDescriptor: payDescriptor,  ordiDescriptor: ordiDescriptor)
     }
 
     func deleteWallet() throws {
@@ -429,6 +412,7 @@ class WalletService {
         let syncRequest = try wallet.startSyncWithRevealedSpks().inspectSpks(inspector: WalletSyncScriptInspector(updateProgress: self.inspector)).build()
 
         self.logger.info("Syning")
+        
         let update = try syncClient.sync(syncRequest)
 
         self.logger.info("Update")

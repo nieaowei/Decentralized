@@ -124,7 +124,7 @@ struct HomeView: View {
                 if wallet.syncStatus == .synced { // Track tx after Syned
                     for tx in wallet.transactions {
                         if !tx.isComfirmed {
-                            wss.subscribe([.transaction("tx.id")])
+                            wss.subscribe([.transaction(tx.id)])
                         }
                     }
                 }
