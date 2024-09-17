@@ -1,6 +1,15 @@
 {
-  "originHash" : "379830b20f63c3bd19e6bfff9ae222a55b14462ed8f412dc2335d2fff2755362",
+  "originHash" : "c4eefe43b69872bd9a10cf03384b33e56e75de99c0614e9310a99768b6524443",
   "pins" : [
+    {
+      "identity" : "bdk-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nieaowei/bdk-swift",
+      "state" : {
+        "branch" : "1.0.0-beta2",
+        "revision" : "83105a8a2d013e3fe6baccf93cfb064acef6e512"
+      }
+    },
     {
       "identity" : "keychainaccess",
       "kind" : "remoteSourceControl",

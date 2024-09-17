@@ -47,6 +47,12 @@ struct WalletTransaction: Identifiable, Hashable {
         inner.transaction.isExplicitlyRbf()
     }
     
+//    var isRBF:Bool{
+//        inputs.contains { txin in
+//            txin.previousOutput
+//        }
+//    }
+//    
     var lockTime: UInt32 {
         inner.transaction.lockTime()
     }
