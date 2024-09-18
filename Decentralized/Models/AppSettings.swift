@@ -39,7 +39,9 @@ class AppSettings {
 
     var changed: Bool = false
 
-    var accentColor: Color = .orange
+    var accentColor: Color{
+        network.accentColor
+    }
 
     @ObservationIgnored
     @AppStorage("isFirst")

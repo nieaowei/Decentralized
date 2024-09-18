@@ -54,7 +54,6 @@ struct DecentralizedApp: App {
         let settings = AppSettings()
         logger.info("App Init \(settings.serverUrl)")
         _settings = State(wrappedValue: settings)
-        
     }
 
     var body: some Scene {
@@ -70,7 +69,6 @@ struct DecentralizedApp: App {
                     .sheet(item: $errorWrapper) { errorWrapper in
                         Text(errorWrapper.error.localizedDescription)
                     }
-                   
                     
             }else{
                 HomeView(settings)
@@ -148,7 +146,7 @@ struct DecentralizedApp: App {
                 }
                 .onChange(of: settings.network, initial: true) {
                     logger.info("AccentColor switching")
-                    settings.accentColor = settings.network.accentColor
+//                    settings.accentColor = settings.network.accentColor
                 }
         }
         .environment(settings)
