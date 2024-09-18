@@ -11,7 +11,6 @@ struct WalletSettings: View {
     @Environment(AppSettings.self) private var settings: AppSettings
     @Environment(\.showError) private var showError
     @Environment(\.dismissWindow) private var dismissWindow
-    @Environment(WalletStore.self) var wallet: WalletStore
 
     @Environment(\.modelContext) private var ctx
 
@@ -33,7 +32,7 @@ struct WalletSettings: View {
 
     func onReset() {
         do {
-            try wallet.delete()
+            try WalletService.deleteAllWallet()
             try ctx.delete(model: Contact.self)
             settings.isOnBoarding = true
             dismissWindow()

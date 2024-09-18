@@ -1,6 +1,5 @@
 //
 //  BDKService.swift
-//  BTCt
 //
 //  Created by Nekilc on 2024/5/24.
 //
@@ -9,14 +8,6 @@ import BitcoinDevKit
 import Foundation
 import Observation
 import OSLog
-
-enum WalletError: Error {
-    case walletNotFound
-    case storeNotFound
-    case signError
-    case blockchainConfigNotFound
-    case noOutput
-}
 
 enum WalletMode: String, Codable, CaseIterable {
     case xverse
@@ -63,9 +54,15 @@ enum SyncClientInner {
     func sync(_ syncRequest: SyncRequest) throws -> Update {
         return switch self {
         case .esplora(let esploraClient):
-            try esploraClient.sync(syncRequest: syncRequest, parallelRequests: 10)
+            try {
+                logger.info("esplora sync")
+                return try esploraClient.sync(syncRequest: syncRequest, parallelRequests: 10)
+            }()
         case .electrum(let electrumClient):
-            try electrumClient.sync(syncRequest: syncRequest, batchSize: 10, fetchPrevTxouts: true)
+            try {
+                logger.info("electrum sync")
+                return try electrumClient.sync(syncRequest: syncRequest, batchSize: 10, fetchPrevTxouts: true)
+            }()
         }
     }
 
@@ -95,84 +92,81 @@ class WalletSyncScriptInspector: SyncScriptInspector {
     }
 }
 
-class WalletService {
+enum WalletError: Error {
+    case walletNotFound
+    case storeNotFound
+    case signError
+    case blockchainConfigNotFound
+    case noOutput
+}
+
+struct WalletService {
     private var network: Networks
-
-    private var payWallet: Wallet?
-    private var payConn: Connection?
-    private var payAddress: Address?
-
-    private var ordiWallet: Wallet?
-    private var ordiConn: Connection?
-    private var ordiAddress: Address?
-
     private let syncClient: SyncClient
+
+    private var payWallet: Wallet
+    private var payConn: Connection
+    private var payAddress: Address
+
+    private var ordiWallet: Wallet
+    private var ordiConn: Connection
+    private var ordiAddress: Address
 
     private let logger: Logger = AppLogger(cat: "WalletService")
 
     init(
+        words: String,
+        mode: WalletMode,
         network: Networks,
         syncClient: SyncClient
-    ) {
+    ) throws {
         self.network = network
         self.syncClient = syncClient
+        ((self.payWallet, self.payConn, self.payAddress), (self.ordiWallet, self.ordiConn, self.ordiAddress)) = try WalletService.create(words: words, mode: mode, network: network)
     }
 
-    func nextPayAddress() throws -> AddressInfo {
-        guard let wallet = self.payWallet else {
-            throw WalletError.walletNotFound
-        }
+    init(
+        network: Networks,
+        syncClient: SyncClient
+    ) throws {
+        self.network = network
+        self.syncClient = syncClient
+        ((self.payWallet, self.payConn, self.payAddress), (self.ordiWallet, self.ordiConn, self.ordiAddress)) = try WalletService.loadWalletFromBackup(network: network)
+    }
 
-        return wallet.revealNextAddress(keychain: .external)
+    private func nextPayAddress() -> AddressInfo {
+        return self.payWallet.revealNextAddress(keychain: .external)
     }
 
     func getPayAddress() -> Address {
-        return self.payAddress!
+        return self.payAddress
     }
 
     func getOrdiAddress() -> Address {
-        return self.ordiAddress!
+        return self.ordiAddress
     }
 
-    func getBalance() throws -> Balance {
-        guard let wallet = self.payWallet else {
-            throw WalletError.walletNotFound
-        }
-        return wallet.balance()
+    func getBalance() -> Balance {
+        return self.payWallet.balance()
     }
 
-    func getTransactions() throws -> [CanonicalTx] {
-        guard let wallet = self.payWallet else {
-            throw WalletError.walletNotFound
-        }
-        let transactions = wallet.transactions()
-        return transactions
+    func getTransactions() -> [CanonicalTx] {
+        return self.payWallet.transactions()
     }
 
-    func getUtxos() throws -> [LocalOutput] {
-        guard let wallet = self.payWallet else {
-            throw WalletError.walletNotFound
-        }
-
-        return wallet.listUnspent()
+    func getUtxos() -> [LocalOutput] {
+        return self.payWallet.listUnspent()
     }
 
-    func getOutputs() throws -> [LocalOutput] {
-        guard let wallet = self.payWallet else {
-            throw WalletError.walletNotFound
-        }
-
-        return wallet.listOutput()
+    func getOutputs() -> [LocalOutput] {
+        return self.payWallet.listOutput()
     }
 
-    func getTxOut(op: OutPoint) throws -> TxOut? {
-        guard let wallet = self.payWallet else {
-            throw WalletError.walletNotFound
-        }
-        return wallet.getTxout(outpoint: op)
+    func getTxOut(op: OutPoint) -> TxOut? {
+        return self.payWallet.getTxout(outpoint: op)
     }
 
-    private func createDescriptor(words: String, mode: WalletMode) throws -> (Descriptor, Descriptor) {
+    private static func createDescriptor(words: String, mode: WalletMode, network: Networks) throws -> (Descriptor, Descriptor) {
         let mnemonic = try Mnemonic.fromString(mnemonic: words)
 
         let paySecretKey = DescriptorSecretKey(
@@ -186,28 +180,26 @@ class WalletService {
             Descriptor.newBip49(
                 secretKey: paySecretKey,
                 keychain: .external,
-                network: self.network.toBdkNetwork()
+                network: network.toBdkNetwork()
             )
         case .peek:
             Descriptor.newBip86(
                 secretKey: paySecretKey,
                 keychain: .external,
-                network: self.network.toBdkNetwork()
+                network: network.toBdkNetwork()
             )
         }
 
         let ordiDescriptor = Descriptor.newBip86(
             secretKey: paySecretKey,
             keychain: .external,
-            network: self.network.toBdkNetwork()
+            network: network.toBdkNetwork()
         )
 
         return (payDescriptor, ordiDescriptor)
     }
 
-    func createWallet(words: String?, mode: WalletMode) throws {
-        try self.deleteWallet()
-
+     static func create(words: String?, mode: WalletMode, network: Networks) throws -> ((Wallet, Connection, Address), (Wallet, Connection, Address)) {
         var words12: String
 
         if let words = words, !words.isEmpty {
@@ -217,37 +209,31 @@ class WalletService {
             words12 = mnemonic.description
         }
 
-        let (payDescriptor, ordiDescriptor) = try createDescriptor(words: words12, mode: mode)
+        let (payDescriptor, ordiDescriptor) = try createDescriptor(words: words12, mode: mode, network: network)
 
         let documentsDirectoryURL = FileManager.default.getDocumentsDirectoryPath()
-        let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_\(self.network.rawValue).sqlite")
+        let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_\(network.rawValue).sqlite")
         let payPersistenceBackendPath = payWalletDataDirectoryURL.path
-        self.logger.info("PayDB URl:\(payPersistenceBackendPath)")
 
         let payDb = try Connection(path: payPersistenceBackendPath)
 
-        self.logger.info("Read OK")
-
         let payWallet = try Wallet.createSingle(
             descriptor: payDescriptor,
-            network: self.network.toCustomNetwork(),
+            network: network.toCustomNetwork(),
             connection: payDb
         )
 
-        let ordiWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("ordi_\(self.network.rawValue).sqlite")
+        let ordiWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("ordi_\(network.rawValue).sqlite")
         let ordiPersistenceBackendPath = ordiWalletDataDirectoryURL.path
 
         let ordiDb = try! Connection(path: ordiPersistenceBackendPath)
 
-        self.logger.info("OrdiDB URl:\(ordiPersistenceBackendPath)")
-
         let ordiWallet = try Wallet.createSingle(
             descriptor: ordiDescriptor,
-            network: self.network.toCustomNetwork(),
+            network: network.toCustomNetwork(),
             connection: ordiDb
         )
 
-        self.logger.info("Peek Address")
         let payAddress = payWallet.peekAddress(keychain: .external, index: 0).address
         _ = payWallet.revealAddressesTo(keychain: .external, index: 0)
         var ordiAddress = ordiWallet.peekAddress(keychain: .external, index: 0).address
@@ -261,24 +247,19 @@ class WalletService {
 
         _ = try ordiWallet.persist(connection: ordiDb)
 
-        self.payWallet = payWallet
-        self.ordiWallet = ordiWallet
-        self.payAddress = payAddress
-        self.ordiAddress = ordiAddress
-        self.payConn = payDb
-        self.ordiConn = ordiDb
-
         let backupInfo = BackupInfo(
             mnemonic: words12,
             mode: mode
         )
         try KeyChainService.saveBackupInfo(backupInfo)
+
+        return ((payWallet, payDb, payAddress), (ordiWallet, ordiDb, ordiAddress))
     }
 
-    private func loadWallet(mode: WalletMode, payDescriptor: Descriptor, ordiDescriptor: Descriptor) throws {
+    private static func loadWallet(mode: WalletMode, network: Networks, payDescriptor: Descriptor, ordiDescriptor: Descriptor) throws -> ((Wallet, Connection, Address), (Wallet, Connection, Address)) {
         let documentsDirectoryURL = FileManager.default.getDocumentsDirectoryPath()
 
-        let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_\(self.network.rawValue).sqlite")
+        let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_\(network.rawValue).sqlite")
         let payPersistenceBackendPath = payWalletDataDirectoryURL.path
 
         let db = try Connection(path: payPersistenceBackendPath)
@@ -289,7 +270,7 @@ class WalletService {
             connection: db
         )
 
-        let ordiWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("ordi_\(self.network.rawValue).sqlite")
+        let ordiWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("ordi_\(network.rawValue).sqlite")
         let ordiPersistenceBackendPath = ordiWalletDataDirectoryURL.path
         let ordiDb = try Connection(path: ordiPersistenceBackendPath)
 
@@ -305,50 +286,34 @@ class WalletService {
             ordiAddr = ordiWallet.peekAddress(keychain: .external, index: 1).address
         }
 
-        self.payWallet = payWallet
-        self.ordiWallet = ordiWallet
-        self.payAddress = payAddr
-        self.ordiAddress = ordiAddr
-        self.payConn = db
-        self.ordiConn = ordiDb
+        return ((payWallet, db, payAddr), (ordiWallet, ordiDb, ordiAddr))
     }
 
-    func loadWalletFromBackup() throws {
+    private static func loadWalletFromBackup(network: Networks) throws -> ((Wallet, Connection, Address), (Wallet, Connection, Address)) {
         let backupInfo = try KeyChainService.getBackupInfo()
 
-        self.logger.info("loadWalletFromBackup: \(self.network.rawValue)")
-
-        if !FileManager.default.fileExists(atPath: FileManager.default.getDocumentsDirectoryPath().appendingPathComponent("pay_\(self.network.rawValue).sqlite").path) {
-            self.logger.info("Load Create: \(self.network.rawValue)")
-            try self.createWallet(words: backupInfo.mnemonic, mode: backupInfo.mode)
-            return
+        if !FileManager.default.fileExists(atPath: FileManager.default.getDocumentsDirectoryPath().appendingPathComponent("pay_\(network.rawValue).sqlite").path) {
+            return try self.create(words: backupInfo.mnemonic, mode: backupInfo.mode, network: network)
         }
 
-        let (payDescriptor, ordiDescriptor) = try createDescriptor(words: backupInfo.mnemonic, mode: backupInfo.mode)
+        let (payDescriptor, ordiDescriptor) = try createDescriptor(words: backupInfo.mnemonic, mode: backupInfo.mode, network: network)
 
-        try self.loadWallet(mode: backupInfo.mode, payDescriptor: payDescriptor, ordiDescriptor: ordiDescriptor)
+        return try self.loadWallet(mode: backupInfo.mode, network: network, payDescriptor: payDescriptor, ordiDescriptor: ordiDescriptor)
     }
 
-    func deleteWallet() throws {
-//        if let bundleID = Bundle.main.bundleIdentifier {
-//            UserDefaults.standard.removePersistentDomain(forName: bundleID)
-//        }
+    static func deleteAllWallet() throws {
         try KeyChainService.deleteBackupInfo()
         try FileManager.default.deleteAllContentsInDocumentsDirectory()
     }
 
     func buildTx(_ tx: TxBuilder) throws -> (BitcoinDevKit.Transaction, Psbt) {
-        guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
-
-        let psbt = try tx.finish(wallet: wallet)
+        let psbt = try tx.finish(wallet: self.payWallet)
         return try (psbt.extractTx(), psbt)
     }
 
     func buildAndSignTx(_ tx: TxBuilder) throws -> (BitcoinDevKit.Transaction, Psbt) {
-        guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
-
-        let psbt = try tx.finish(wallet: wallet)
-        let ok = try wallet.sign(psbt: psbt)
+        let psbt = try tx.finish(wallet: self.payWallet)
+        let ok = try payWallet.sign(psbt: psbt)
         if !ok {
             print("SIgn error")
         }
@@ -359,7 +324,6 @@ class WalletService {
     func buildTransaction(address: String, amount: UInt64, feeRate: UInt64) throws
         -> Psbt
     {
-        guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
         let script = try Address(address: address, network: self.network.toBdkNetwork())
             .scriptPubkey()
         let txBuilder = try TxBuilder()
@@ -368,14 +332,13 @@ class WalletService {
                 amount: Amount.fromSat(fromSat: amount)
             )
             .feeRate(feeRate: FeeRate.fromSatPerVb(satPerVb: feeRate))
-            .drainTo(script: self.payAddress!.scriptPubkey())
-            .finish(wallet: wallet)
+            .drainTo(script: self.payAddress.scriptPubkey())
+            .finish(wallet: self.payWallet)
         return txBuilder
     }
 
     func signAndBroadcast(psbt: Psbt) throws {
-        guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
-        let isSigned = try wallet.sign(psbt: psbt)
+        let isSigned = try payWallet.sign(psbt: psbt)
         if isSigned {
             let transaction = try psbt.extractTx()
             let client = self.syncClient
@@ -386,9 +349,7 @@ class WalletService {
     }
 
     func sign(_ psbt: Psbt) throws -> Psbt {
-        guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
-
-        let ok = try wallet.sign(psbt: psbt)
+        let ok = try payWallet.sign(psbt: psbt)
         if !ok {
             throw WalletError.signError
         }
@@ -396,32 +357,25 @@ class WalletService {
     }
 
     func inspector(inspectedCount: UInt64, total: UInt64) {
-//        print(inspectedCount, total)
+        //        print(inspectedCount, total)
     }
 
     func sync() async throws {
-        guard let wallet = self.payWallet else { throw WalletError.walletNotFound }
-        guard let payConn = self.payConn else { throw WalletError.walletNotFound }
-
-        let syncRequest = try wallet.startSyncWithRevealedSpks().inspectSpks(inspector: WalletSyncScriptInspector(updateProgress: self.inspector)).build()
+        let syncRequest = try payWallet.startSyncWithRevealedSpks().inspectSpks(inspector: WalletSyncScriptInspector(updateProgress: self.inspector)).build()
 
         self.logger.info("Syning")
 
         let update = try syncClient.sync(syncRequest)
 
         self.logger.info("Update")
-        try wallet.applyUpdate(update: update)
+        try self.payWallet.applyUpdate(update: update)
         self.logger.info("Persist")
-        _ = try wallet.persist(connection: payConn)
-
-        // TODO: Do i need to do this next step of setting wallet to wallet again?
-        // prob not
-        self.payWallet = wallet
+        _ = try self.payWallet.persist(connection: self.payConn)
     }
 
     func calculateFee(_ tx: BitcoinDevKit.Transaction) -> UInt64 {
         do {
-            let fee = try self.payWallet!.calculateFee(tx: tx)
+            let fee = try self.payWallet.calculateFee(tx: tx)
             return fee.toSat()
         } catch {
             return 0
@@ -430,7 +384,7 @@ class WalletService {
 
     func calculateFeeRate(_ tx: BitcoinDevKit.Transaction) -> UInt64 {
         do {
-            let feeRate = try self.payWallet!.calculateFeeRate(tx: tx)
+            let feeRate = try self.payWallet.calculateFeeRate(tx: tx)
             return feeRate.toSatPerVbCeil()
         } catch {
             return 0
@@ -438,15 +392,14 @@ class WalletService {
     }
 
     func sentAndReceived(_ tx: BitcoinDevKit.Transaction) -> SentAndReceivedValues {
-        self.payWallet!.sentAndReceived(tx: tx)
+        self.payWallet.sentAndReceived(tx: tx)
     }
 
     func broadcast(_ tx: BitcoinDevKit.Transaction) throws -> String {
         let txid = try self.syncClient.broadcast(tx)
 
-        self.payWallet!.applyUnconfirmedTxs(txAndLastSeens: [TransactionAndLastSeen(tx: tx, lastSeen: UInt64(Date().timeIntervalSince1970))])
-//        self.logger.info("Insert Tx ")
-        let _ = try self.payWallet!.persist(connection: self.payConn!)
+        self.payWallet.applyUnconfirmedTxs(txAndLastSeens: [TransactionAndLastSeen(tx: tx, lastSeen: UInt64(Date().timeIntervalSince1970))])
+        let _ = try self.payWallet.persist(connection: self.payConn)
 
         return txid
     }

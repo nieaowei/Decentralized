@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct OnBoradingView: View {
-    @Environment(WalletStore.self) var wallet: WalletStore
+    @Environment(AppSettings.self) var settings
 
     @State var mnemonic: String = ""
     @State var mode: WalletMode = .xverse
@@ -45,9 +45,9 @@ struct OnBoradingView: View {
                     Button {
                         do {
                             loading = true
-                            try wallet.create(words: mnemonic, mode: mode)
-                            wallet.load()
+                            let _ = try WalletService.create(words: mnemonic, mode: mode, network: settings.network)
                             isOnboarding = false
+
                         } catch {}
                     } label: {
                         Text("Enter")

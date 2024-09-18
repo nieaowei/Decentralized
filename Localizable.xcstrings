@@ -603,6 +603,9 @@
         }
       }
     },
+    "Welcome" : {
+
+    },
     "Your transaction has been successfully sent" : {
       "localizations" : {
         "zh-Hans" : {

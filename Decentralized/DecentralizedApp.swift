@@ -43,44 +43,25 @@ struct DecentralizedApp: App {
     @Environment(\.openWindow) private var openWindow
 
     @State var settings: AppSettings
-    @State var wallet: WalletStore
-    @State var wss: WssStore
+    
     @State private var errorWrapper: ErrorWrapper?
-    @State var syncClient: SyncClient
+    
     @State var loading: Bool = false
 
     let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, configurations: ModelConfiguration())
 
     init() {
-
         let settings = AppSettings()
-        
         logger.info("App Init \(settings.serverUrl)")
-
-
-        let syncClientInner = switch settings.serverType {
-        case .Esplora:
-            SyncClientInner.esplora(EsploraClient(url: settings.serverUrl))
-        case .Electrum:
-            SyncClientInner.electrum(try! ElectrumClient(url: settings.serverUrl))
-        case .EsploraWss:
-            fatalError()
-        }
-
-        let syncClient = SyncClient(inner: syncClientInner)
-
-        let walletService = WalletService(network: settings.network, syncClient: syncClient)
-
         _settings = State(wrappedValue: settings)
-        _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
-        _syncClient = State(wrappedValue: syncClient)
-        _wallet = State(wrappedValue: WalletStore(wallet: walletService))
+        
     }
 
     var body: some Scene {
         WindowGroup {
-            if isOnBoarding {
+            if isOnBoarding{
                 OnBoradingView()
+                    .tint(settings.accentColor)
                     .toolbar(removing: .title)
                     .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
                     .containerBackground(.thickMaterial, for: .window)
@@ -89,31 +70,11 @@ struct DecentralizedApp: App {
                     .sheet(item: $errorWrapper) { errorWrapper in
                         Text(errorWrapper.error.localizedDescription)
                     }
-            } else {
-                HomeView()
-                    .onAppear{
-                        wss.connect()
-                    }
-                    .onChange(of: settings.serverType) {
-                        logger.info("serverType Change")
-                        updateSyncClientInner()
-                    }
-                    .onChange(of: settings.serverUrl) {
-                        logger.info("serverUrl Change")
-                        updateSyncClientInner()
-                    }
-                    .onChange(of: settings.network) {
-                        logger.info("network Change")
-                        updateWallet()
-                    }
-                    .onChange(of: settings.changed) {
-                        logger.info("settings Change")
-                    }
-                    .onChange(of: settings.wssUrl) {
-                        logger.info("wssUrl Change")
-                        updateWss()
-                    }
-
+                   
+                    
+            }else{
+                HomeView(settings)
+                    .tint(settings.accentColor)
                     .sheet(item: $errorWrapper) { errorWrapper in
                         VStack {
                             Text(errorWrapper.guidance)
@@ -129,12 +90,10 @@ struct DecentralizedApp: App {
                         }
                         .padding(.all)
                     }
+                   
             }
         }
-        .environment(wss)
-        .environment(wallet)
         .environment(settings)
-        .environment(syncClient)
         .environment(\.showError) { error, guidance in
             errorWrapper = ErrorWrapper(error: error, guidance: guidance)
         }
@@ -151,6 +110,19 @@ struct DecentralizedApp: App {
             }
         }
 
+        Window("Welcome", id: "welcom") {
+            OnBoradingView()
+                .toolbar(removing: .title)
+                .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+                .containerBackground(.thickMaterial, for: .window)
+                .windowMinimizeBehavior(.disabled)
+                .windowResizeBehavior(.disabled)
+                .sheet(item: $errorWrapper) { errorWrapper in
+                    Text(errorWrapper.error.localizedDescription)
+                }
+        }
+        .environment(settings)
+
         // Custom About
         Window("About", id: "about") {
             AboutView()
@@ -159,6 +131,7 @@ struct DecentralizedApp: App {
                 .containerBackground(.thickMaterial, for: .window)
                 .windowMinimizeBehavior(.disabled)
                 .windowResizeBehavior(.disabled)
+                .tint(settings.accentColor)
         }
         .windowResizability(.contentSize)
         .restorationBehavior(.disabled)
@@ -168,30 +141,20 @@ struct DecentralizedApp: App {
             SettingsView()
                 .windowResizeBehavior(.enabled)
                 .modelContainer(mainModelContainer)
+                .tint(settings.accentColor)
+                .onChange(of: settings.changed) {
+//                    logger.info("AccentColor switching")
+//                    settings.accentColor = settings.network.accentColor
+                }
+                .onChange(of: settings.network, initial: true) {
+                    logger.info("AccentColor switching")
+                    settings.accentColor = settings.network.accentColor
+                }
         }
         .environment(settings)
-        .environment(wallet)
         .windowIdealSize(.fitToContent)
         .windowResizability(.contentSize)
     }
 
-    func updateSyncClientInner() {
-        let syncClientInner = switch settings.serverType {
-        case .Esplora:
-            SyncClientInner.esplora(EsploraClient(url: settings.serverUrl))
-        case .Electrum:
-            SyncClientInner.electrum(try! ElectrumClient(url: settings.serverUrl))
-        case .EsploraWss:
-            fatalError()
-        }
-        syncClient.inner = syncClientInner
-    }
 
-    func updateWss() {
-        wss.updateUrl(settings.wssUrl )
-    }
-
-    func updateWallet() {
-        wallet = WalletStore(wallet: WalletService(network: settings.network, syncClient: syncClient))
-    }
 }

@@ -7,6 +7,7 @@
 
 import BitcoinDevKit
 import Foundation
+import SwiftUI
 
 // typealias Networks = CustomNetwork
 
@@ -19,6 +20,21 @@ enum Networks: String, Codable, CaseIterable, Identifiable {
 
     var id: String {
         self.rawValue
+    }
+    
+    var accentColor:Color{
+        switch self {
+        case .bitcoin:
+                .orange
+        case .testnet:
+                .green
+        case .testnet4:
+                .green
+        case .signet:
+                .purple
+        case .regtest:
+                .yellow
+        }
     }
 
     func toBdkNetwork() -> Network {
@@ -50,6 +66,8 @@ enum Networks: String, Codable, CaseIterable, Identifiable {
             .regtest
         }
     }
+    
+    
 }
 
 extension Network {

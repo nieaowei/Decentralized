@@ -4,6 +4,7 @@
 //  Created by Nekilc on 2024/5/27.
 //
 
+import BitcoinDevKit
 import SwiftUI
 
 struct HomeDetailView: View {
@@ -44,18 +45,34 @@ struct HomeDetailView: View {
 
 struct HomeView: View {
     @Environment(\.scenePhase) private var scenePhase
-
     @Environment(AppSettings.self) var settings
-    @Environment(WssStore.self) var wss: WssStore
-    @Environment(WalletStore.self) var wallet: WalletStore
     @Environment(\.showError) private var showError
-    
+
+    @State var syncClient: SyncClient
+    @State var wss: WssStore
+    @State var wallet: WalletStore
     @State var isFirst: Bool = true
 
     @State var showPop: Bool = false
     @State var route: Route = .wallet(.me)
     @State var routes: [Route] = [.wallet(.me)]
-    
+
+    init(_ settings: AppSettings) {
+        let syncClientInner = switch settings.serverType {
+        case .Esplora:
+            SyncClientInner.esplora(EsploraClient(url: settings.serverUrl))
+        case .Electrum:
+            SyncClientInner.electrum(try! ElectrumClient(url: settings.serverUrl))
+        case .EsploraWss:
+            fatalError()
+        }
+
+        let syncClient = SyncClient(inner: syncClientInner)
+        let walletService = try! WalletService(network: settings.network, syncClient: .init(inner: syncClientInner))
+        _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
+        _syncClient = State(wrappedValue: syncClient)
+        _wallet = State(wrappedValue: WalletStore(wallet: walletService))
+    }
 
     var body: some View {
         NavigationSplitView {
@@ -93,15 +110,16 @@ struct HomeView: View {
                         wallet.updateStatus(.notStarted)
                     }
                 WssStatusView(status: wss.status)
-                Text(settings.network.rawValue)
             }
         }
+        .environment(wallet)
+        .environment(syncClient)
+        .environment(wss)
         .onChange(of: scenePhase) {
             if scenePhase == ScenePhase.active {
                 logger.info("active")
             }
         }
-        
         .task {
             do {
                 if isFirst {
@@ -145,6 +163,48 @@ struct HomeView: View {
         .task(id: wss.event) {
             wallet.updateStatus(.notStarted)
         }
+        .onAppear {
+            wss.connect()
+        }
+//        .onChange(of: settings.serverType) {
+//            logger.info("serverType Change")
+//            updateSyncClientInner()
+//        }
+        .onChange(of: settings.serverUrl) {
+            logger.info("serverUrl Change")
+            updateSyncClientInner()
+        }
+        .onChange(of: settings.network) {
+            logger.info("network Change")
+            updateWallet()
+        }
+        .onChange(of: settings.changed) {
+            logger.info("settings Change")
+        }
+        .onChange(of: settings.wssUrl) {
+            logger.info("wssUrl Change")
+            updateWss()
+        }
+    }
+
+    func updateSyncClientInner() {
+        let syncClientInner = switch settings.serverType {
+        case .Esplora:
+            SyncClientInner.esplora(EsploraClient(url: settings.serverUrl))
+        case .Electrum:
+            SyncClientInner.electrum(try! ElectrumClient(url: settings.serverUrl))
+        case .EsploraWss:
+            fatalError()
+        }
+        syncClient.inner = syncClientInner
+    }
+
+    func updateWss() {
+        wss.updateUrl(settings.wssUrl)
+    }
+
+    func updateWallet() {
+        wallet = WalletStore(wallet: try! WalletService(network: settings.network, syncClient: syncClient))
     }
 }
 

@@ -52,7 +52,7 @@ struct WalletTransaction: Identifiable, Hashable {
 //            txin.previousOutput
 //        }
 //    }
-//    
+//
     var lockTime: UInt32 {
         inner.transaction.lockTime()
     }
@@ -123,7 +123,7 @@ class WalletStore {
         case synced
     }
     
-    let wallet: WalletService
+    var wallet: WalletService
     
     @MainActor
     var balance: Amount = .fromSat(fromSat: 0)
@@ -144,29 +144,23 @@ class WalletStore {
     init(wallet: WalletService) {
         self.wallet = wallet
         DispatchQueue.main.async {
-            try? wallet.loadWalletFromBackup()
-
             self.load()
         }
     }
     
-    func getTxOut(_ op: OutPoint) throws -> TxOut? {
-        return try wallet.getTxOut(op: op)
+    func getTxOut(_ op: OutPoint) -> TxOut? {
+        return wallet.getTxOut(op: op)
     }
     
     @MainActor
     func load() {
-        do {
-            balance = try wallet.getBalance().total
-            payAddress = wallet.getPayAddress()
-            ordiAddress = wallet.getOrdiAddress()
-            transactions = try wallet.getTransactions().map { ctx in
-                WalletTransaction(walletService: wallet, inner: ctx)
-            }
-            utxos = try wallet.getUtxos()
-        } catch {
-            print(error)
+        balance = wallet.getBalance().total
+        payAddress = wallet.getPayAddress()
+        ordiAddress = wallet.getOrdiAddress()
+        transactions = wallet.getTransactions().map { ctx in
+            WalletTransaction(walletService: wallet, inner: ctx)
         }
+        utxos = wallet.getUtxos()
     }
     
     @MainActor
@@ -175,7 +169,7 @@ class WalletStore {
     }
     
     func sync() async throws {
-        if await self.syncStatus != .syncing{
+        if await syncStatus != .syncing {
             do {
                 await updateStatus(.syncing)
                 try await wallet.sync()
@@ -188,12 +182,8 @@ class WalletStore {
         }
     }
     
-    func create(words: String, mode: WalletMode) throws {
-        try wallet.createWallet(words: words, mode: mode)
-    }
-    
     func delete() throws {
-        try wallet.deleteWallet()
+        try WalletService.deleteAllWallet()
     }
     
     func buildTx(_ tx: TxBuilder) throws -> (BitcoinDevKit.Transaction, Psbt) {
@@ -212,7 +202,7 @@ class WalletStore {
         WalletTransaction(walletService: wallet, inner: CanonicalTx(transaction: tx, chainPosition: ChainPosition.unconfirmed(timestamp: 0)))
     }
     
-    func broadcast(_ tx: BitcoinDevKit.Transaction) throws -> String{
-        try self.wallet.broadcast(tx)
+    func broadcast(_ tx: BitcoinDevKit.Transaction) throws -> String {
+        try wallet.broadcast(tx)
     }
 }

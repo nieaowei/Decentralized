@@ -20,14 +20,6 @@ struct TransactionDetailView: View {
     @State
     var inputs: [TxOutRow] = []
 
-//    @MainActor
-//    let action: Action
-//
-//    init(tx: WalletTransaction, @ViewBuilder action: () -> Action ) {
-//        self.tx = tx
-//        self.action = action()
-//    }
-
     var outputs: [TxOutRow] {
         tx.outputs.map { out in
             TxOutRow(inner: out)

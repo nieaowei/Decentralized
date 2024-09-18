@@ -39,7 +39,7 @@ class AppSettings {
 
     var changed: Bool = false
 
-    var accentColor: Color = .blue
+    var accentColor: Color = .orange
 
     @ObservationIgnored
     @AppStorage("isFirst")
