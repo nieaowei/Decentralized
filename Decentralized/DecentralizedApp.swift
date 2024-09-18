@@ -31,7 +31,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        // 处理通知响应
         completionHandler()
     }
 }
@@ -53,9 +52,11 @@ struct DecentralizedApp: App {
     let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, configurations: ModelConfiguration())
 
     init() {
-        logger.info("App Init")
 
         let settings = AppSettings()
+        
+        logger.info("App Init \(settings.serverUrl)")
+
 
         let syncClientInner = switch settings.serverType {
         case .Esplora:

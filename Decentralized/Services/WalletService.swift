@@ -96,8 +96,6 @@ class WalletSyncScriptInspector: SyncScriptInspector {
 }
 
 class WalletService {
-    private let keyService: KeyService = .shared
-
     private var network: Networks
 
     private var payWallet: Wallet?
@@ -174,7 +172,7 @@ class WalletService {
         return wallet.getTxout(outpoint: op)
     }
 
-    private func createDescriptor(words: String, mode: WalletMode) throws -> (Descriptor,  Descriptor) {
+    private func createDescriptor(words: String, mode: WalletMode) throws -> (Descriptor, Descriptor) {
         let mnemonic = try Mnemonic.fromString(mnemonic: words)
 
         let paySecretKey = DescriptorSecretKey(
@@ -198,21 +196,18 @@ class WalletService {
             )
         }
 
-       
-
         let ordiDescriptor = Descriptor.newBip86(
             secretKey: paySecretKey,
             keychain: .external,
             network: self.network.toBdkNetwork()
         )
-      
-        return (payDescriptor,  ordiDescriptor)
+
+        return (payDescriptor, ordiDescriptor)
     }
 
     func createWallet(words: String?, mode: WalletMode) throws {
-        
-        try deleteWallet()
-        
+        try self.deleteWallet()
+
         var words12: String
 
         if let words = words, !words.isEmpty {
@@ -222,7 +217,7 @@ class WalletService {
             words12 = mnemonic.description
         }
 
-        let (payDescriptor, ordiDescriptor ) = try createDescriptor(words: words12, mode: mode)
+        let (payDescriptor, ordiDescriptor) = try createDescriptor(words: words12, mode: mode)
 
         let documentsDirectoryURL = FileManager.default.getDocumentsDirectoryPath()
         let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_\(self.network.rawValue).sqlite")
@@ -277,8 +272,7 @@ class WalletService {
             mnemonic: words12,
             mode: mode
         )
-
-        try self.keyService.saveBackupInfo(backupInfo)
+        try KeyChainService.saveBackupInfo(backupInfo)
     }
 
     private func loadWallet(mode: WalletMode, payDescriptor: Descriptor, ordiDescriptor: Descriptor) throws {
@@ -320,7 +314,7 @@ class WalletService {
     }
 
     func loadWalletFromBackup() throws {
-        let backupInfo = try keyService.getBackupInfo()
+        let backupInfo = try KeyChainService.getBackupInfo()
 
         self.logger.info("loadWalletFromBackup: \(self.network.rawValue)")
 
@@ -332,14 +326,14 @@ class WalletService {
 
         let (payDescriptor, ordiDescriptor) = try createDescriptor(words: backupInfo.mnemonic, mode: backupInfo.mode)
 
-        try self.loadWallet(mode: backupInfo.mode, payDescriptor: payDescriptor,  ordiDescriptor: ordiDescriptor)
+        try self.loadWallet(mode: backupInfo.mode, payDescriptor: payDescriptor, ordiDescriptor: ordiDescriptor)
     }
 
     func deleteWallet() throws {
 //        if let bundleID = Bundle.main.bundleIdentifier {
 //            UserDefaults.standard.removePersistentDomain(forName: bundleID)
 //        }
-        try self.keyService.deleteBackupInfo()
+        try KeyChainService.deleteBackupInfo()
         try FileManager.default.deleteAllContentsInDocumentsDirectory()
     }
 
@@ -412,7 +406,7 @@ class WalletService {
         let syncRequest = try wallet.startSyncWithRevealedSpks().inspectSpks(inspector: WalletSyncScriptInspector(updateProgress: self.inspector)).build()
 
         self.logger.info("Syning")
-        
+
         let update = try syncClient.sync(syncRequest)
 
         self.logger.info("Update")

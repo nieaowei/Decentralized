@@ -144,7 +144,7 @@ class WalletStore {
     init(wallet: WalletService) {
         self.wallet = wallet
         DispatchQueue.main.async {
-            try! wallet.loadWalletFromBackup()
+            try? wallet.loadWalletFromBackup()
 
             self.load()
         }

@@ -79,22 +79,16 @@ struct HomeView: View {
                         routes = []
                     } else {
                         guard let index = routes.firstIndex(where: { $0 == route }) else { return }
-                        routes = Array(routes.prefix(upTo: index + 1))
+                        routes = Array(routes.prefix(index + 1))
                     }
                 }
             }
-//            .onChange(of: route, initial: true) {
-//                print("route: \(route)")
-//            }
-//            .onChange(of: routes, initial: true) {
-//                print("routes:\(routes)")
-//            }
         }
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Text("\(wss.fastFee) sats/vB")
                 Text("\(wallet.balance.displayBtc)")
-                SyncStateView(synced: wallet.syncStatus)
+                WalletSyncStatusView(synced: wallet.syncStatus)
                     .onTapGesture {
                         wallet.updateStatus(.notStarted)
                     }
@@ -205,7 +199,7 @@ struct SiderbarView: View {
     }
 }
 
-struct SyncStateView: View {
+struct WalletSyncStatusView: View {
     var synced: WalletStore.SyncStatus
     var body: some View {
         Image(systemName: sign().0)

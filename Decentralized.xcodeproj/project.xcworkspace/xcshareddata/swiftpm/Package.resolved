@@ -1,5 +1,5 @@
 {
-  "originHash" : "c4eefe43b69872bd9a10cf03384b33e56e75de99c0614e9310a99768b6524443",
+  "originHash" : "4d0c62263a63caef4b481f0203a788d829c005bc5f54fe15eb16fb218bfb81a7",
   "pins" : [
     {
       "identity" : "bdk-swift",
@@ -8,15 +8,6 @@
       "state" : {
         "branch" : "1.0.0-beta2",
         "revision" : "83105a8a2d013e3fe6baccf93cfb064acef6e512"
-      }
-    },
-    {
-      "identity" : "keychainaccess",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/kishikawakatsumi/KeychainAccess",
-      "state" : {
-        "branch" : "master",
-        "revision" : "e0c7eebc5a4465a3c4680764f26b7a61f567cdaf"
       }
     }
   ],

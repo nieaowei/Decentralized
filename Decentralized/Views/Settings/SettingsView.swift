@@ -24,9 +24,9 @@ struct SettingsView: View {
             Tab("Wallet", systemImage: "dollarsign.circle") {
                 WalletSettings()
             }
-//            Tab("Safe", systemImage: "lock.shield") {
-//                ServerSettings()
-//            }
+            Tab("Safe", systemImage: "lock.shield") {
+                SafeSettingsView()
+            }
             Tab("Development", systemImage: "hammer") {
                 DevelopmentSettings()
             }

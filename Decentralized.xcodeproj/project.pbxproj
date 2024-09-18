@@ -15,7 +15,6 @@
 		1542476B2C80598500EA1376 /* BitcoinDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1542476A2C80598500EA1376 /* BitcoinDevKit */; };
 		1542476D2C81174700EA1376 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 1542476C2C81174700EA1376 /* README.md */; };
 		154247732C81709800EA1376 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 154247722C81709800EA1376 /* Localizable.xcstrings */; };
-		15BFEAE02C3EAE3700EDE0B4 /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 15BFEADF2C3EAE3700EDE0B4 /* KeychainAccess */; };
 		15F6DBB92C9A26D700F98D72 /* BitcoinDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 15F6DBB82C9A26D700F98D72 /* BitcoinDevKit */; };
 		15F6DBBB2C9A275900F98D72 /* BitcoinDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 15F6DBBA2C9A275900F98D72 /* BitcoinDevKit */; };
 /* End PBXBuildFile section */
@@ -103,7 +102,6 @@
 				15F6DBBB2C9A275900F98D72 /* BitcoinDevKit in Frameworks */,
 				151E97FD2C49FD62001DA0E2 /* BitcoinDevKit in Frameworks */,
 				1542476B2C80598500EA1376 /* BitcoinDevKit in Frameworks */,
-				15BFEAE02C3EAE3700EDE0B4 /* KeychainAccess in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -194,7 +192,6 @@
 			);
 			name = Decentralized;
 			packageProductDependencies = (
-				15BFEADF2C3EAE3700EDE0B4 /* KeychainAccess */,
 				151E97FC2C49FD62001DA0E2 /* BitcoinDevKit */,
 				1542476A2C80598500EA1376 /* BitcoinDevKit */,
 				15F6DBB82C9A26D700F98D72 /* BitcoinDevKit */,
@@ -260,7 +257,6 @@
 			);
 			mainGroup = 15BFE9C32C3EACCE00EDE0B4;
 			packageReferences = (
-				15BFEADE2C3EAE3700EDE0B4 /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				153F3D4A2C9A462400586F2B /* XCRemoteSwiftPackageReference "bdk-swift" */,
 			);
 			productRefGroup = 15BFE9CD2C3EACCE00EDE0B4 /* Products */;
@@ -699,14 +695,6 @@
 				kind = branch;
 			};
 		};
-		15BFEADE2C3EAE3700EDE0B4 /* XCRemoteSwiftPackageReference "KeychainAccess" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/kishikawakatsumi/KeychainAccess";
-			requirement = {
-				branch = master;
-				kind = branch;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -722,11 +710,6 @@
 		1542476A2C80598500EA1376 /* BitcoinDevKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = BitcoinDevKit;
-		};
-		15BFEADF2C3EAE3700EDE0B4 /* KeychainAccess */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 15BFEADE2C3EAE3700EDE0B4 /* XCRemoteSwiftPackageReference "KeychainAccess" */;
-			productName = KeychainAccess;
 		};
 		15F6DBB82C9A26D700F98D72 /* BitcoinDevKit */ = {
 			isa = XCSwiftPackageProductDependency;
