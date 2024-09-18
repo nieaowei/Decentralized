@@ -5,6 +5,7 @@
 //
 
 import BitcoinDevKit
+import LocalAuthentication
 import SwiftUI
 
 struct HomeDetailView: View {
@@ -57,6 +58,12 @@ struct HomeView: View {
     @State var route: Route = .wallet(.me)
     @State var routes: [Route] = [.wallet(.me)]
 
+    @State
+    @MainActor
+    var isAuth: Bool = false
+    
+    var authCtx: LAContext = .init()
+
     init(_ settings: AppSettings) {
         let syncClientInner = switch settings.serverType {
         case .Esplora:
@@ -72,122 +79,143 @@ struct HomeView: View {
         _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
         _syncClient = State(wrappedValue: syncClient)
         _wallet = State(wrappedValue: WalletStore(wallet: walletService))
+        isAuth = !settings.enableTouchID
+    }
+
+    func recurseAuth() async {
+        do {
+            try await LARight().authorize(localizedReason: "Use TouchID to continue")
+            isAuth = true
+        } catch LAError.userCancel {
+            await recurseAuth()
+        } catch {}
     }
 
     var body: some View {
-        NavigationSplitView {
-            SiderbarView(route: $route)
-        }
-        detail: {
-            NavigationStack(path: $routes) {
-                HomeDetailView(route: route)
-                    .navigationDestination(for: Route.self) { route in
-                        HomeDetailView(route: route)
-                    }
-            }
-            .onNavigate { navType in
-                switch navType {
-                case .push(let route):
-                    routes.append(route)
-                case .goto(let route):
-                    self.route = route
-                case .unwind(let route):
-                    if route == .wallet(.me) {
-                        routes = []
-                    } else {
-                        guard let index = routes.firstIndex(where: { $0 == route }) else { return }
-                        routes = Array(routes.prefix(index + 1))
+        if settings.enableTouchID && !isAuth {
+            VStack {}
+                .onAppear {
+                    Task {
+                        await recurseAuth()
                     }
                 }
+        } else {
+            NavigationSplitView {
+                SiderbarView(route: $route)
             }
-        }
-        .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
-                Text("\(wss.fastFee) sats/vB")
-                Text("\(wallet.balance.displayBtc)")
-                WalletSyncStatusView(synced: wallet.syncStatus)
-                    .onTapGesture {
-                        wallet.updateStatus(.notStarted)
-                    }
-                WssStatusView(status: wss.status)
-            }
-        }
-        .environment(wallet)
-        .environment(syncClient)
-        .environment(wss)
-        .onChange(of: scenePhase) {
-            if scenePhase == ScenePhase.active {
-                logger.info("active")
-            }
-        }
-        .task {
-            do {
-                if isFirst {
-                    try await wallet.sync()
-                    isFirst = false
+            detail: {
+                NavigationStack(path: $routes) {
+                    HomeDetailView(route: route)
+                        .navigationDestination(for: Route.self) { route in
+                            HomeDetailView(route: route)
+                        }
                 }
-            } catch {
-                showError(error, "Sync Retry")
-            }
-        }
-        .task(id: wss.status) {
-            if wss.status == .connected {
-                wss.subscribe([.address(wallet.payAddress?.description ?? "")])
-                if wallet.syncStatus == .synced { // Track tx after Syned
-                    for tx in wallet.transactions {
-                        if !tx.isComfirmed {
-                            wss.subscribe([.transaction(tx.id)])
+                .onNavigate { navType in
+                    switch navType {
+                    case .push(let route):
+                        routes.append(route)
+                    case .goto(let route):
+                        self.route = route
+                    case .unwind(let route):
+                        if route == .wallet(.me) {
+                            routes = []
+                        } else {
+                            guard let index = routes.firstIndex(where: { $0 == route }) else { return }
+                            routes = Array(routes.prefix(index + 1))
                         }
                     }
                 }
             }
-        }
-        .task(id: wallet.syncStatus) {
-            if wallet.syncStatus == .synced {
-                if wss.status == .connected {
-                    for tx in wallet.transactions {
-                        if !tx.isComfirmed {
-                            wss.subscribe([.transaction(tx.id)])
+            .toolbar {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    Text("\(wss.fastFee) sats/vB")
+                    Text("\(wallet.balance.displayBtc)")
+                    WalletSyncStatusView(synced: wallet.syncStatus)
+                        .onTapGesture {
+                            wallet.updateStatus(.notStarted)
                         }
-                    }
+                    WssStatusView(status: wss.status)
                 }
             }
-            if !isFirst && wallet.syncStatus == .notStarted {
+            .environment(wallet)
+            .environment(syncClient)
+            .environment(wss)
+            .onChange(of: scenePhase) {
+                if scenePhase == ScenePhase.active {
+                    logger.info("active")
+                }
+            }
+            .task {
                 do {
-                    try await wallet.sync()
+                    if isFirst {
+                        try await wallet.sync()
+                        isFirst = false
+                    }
                 } catch {
                     showError(error, "Sync Retry")
                 }
             }
-        }
-        .task(id: wss.event) {
-            wallet.updateStatus(.notStarted)
-        }
-        .onAppear {
-            wss.connect()
-        }
-//        .onChange(of: settings.serverType) {
-//            logger.info("serverType Change")
-//            updateSyncClientInner()
-//        }
-        .onChange(of: settings.serverUrl) {
-            logger.info("serverUrl Change")
-            updateSyncClientInner()
-        }
-        .onChange(of: settings.network) {
-            logger.info("network Change")
-            updateWallet()
-        }
-        .onChange(of: settings.changed) {
-            logger.info("settings Change")
-        }
-        .onChange(of: settings.wssUrl) {
-            logger.info("wssUrl Change")
-            updateWss()
+            .task(id: wss.status) {
+                if wss.status == .connected {
+                    wss.subscribe([.address(wallet.payAddress?.description ?? "")])
+                    if wallet.syncStatus == .synced { // Track tx after Syned
+                        for tx in wallet.transactions {
+                            if !tx.isComfirmed {
+                                wss.subscribe([.transaction(tx.id)])
+                            }
+                        }
+                    }
+                }
+            }
+            .task(id: wallet.syncStatus) {
+                if wallet.syncStatus == .synced {
+                    if wss.status == .connected {
+                        for tx in wallet.transactions {
+                            if !tx.isComfirmed {
+                                wss.subscribe([.transaction(tx.id)])
+                            }
+                        }
+                    }
+                }
+                if !isFirst && wallet.syncStatus == .notStarted {
+                    do {
+                        try await wallet.sync()
+                    } catch {
+                        showError(error, "Sync Retry")
+                    }
+                }
+            }
+            .task(id: wss.event) {
+                wallet.updateStatus(.notStarted)
+            }
+            .onAppear {
+                wss.connect()
+            }
+
+            //        .onChange(of: settings.serverType) {
+            //            logger.info("serverType Change")
+            //            updateSyncClientInner()
+            //        }
+            .onChange(of: settings.serverUrl) {
+                logger.info("serverUrl Change")
+                updateSyncClientInner()
+            }
+            .onChange(of: settings.network) {
+                logger.info("network Change")
+                updateWallet()
+            }
+            .onChange(of: settings.changed) {
+                logger.info("settings Change")
+            }
+            .onChange(of: settings.wssUrl) {
+                logger.info("wssUrl Change")
+                updateWss()
+            }
         }
     }
 
     func updateSyncClientInner() {
+        logger.info("updateSyncClientInner: \(settings.serverUrl)")
         let syncClientInner = switch settings.serverType {
         case .Esplora:
             SyncClientInner.esplora(EsploraClient(url: settings.serverUrl))
@@ -204,6 +232,7 @@ struct HomeView: View {
     }
 
     func updateWallet() {
+        updateSyncClientInner()
         wallet = WalletStore(wallet: try! WalletService(network: settings.network, syncClient: syncClient))
     }
 }

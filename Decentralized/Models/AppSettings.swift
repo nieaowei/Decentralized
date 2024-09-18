@@ -9,6 +9,7 @@ import Foundation
 import SwiftData
 import SwiftUI
 import UserNotifications
+import LocalAuthentication
 
 @Model
 class ServerUrl {
