@@ -49,7 +49,7 @@ struct TransactionDetailView: View {
                 HSplitView {
                     Table(of: TxOutRow.self) {
                         TableColumn("Address") { vout in
-                            Text(verbatim: "\(vout.address(network: settings.network.toBdkNetwork()) ?? "")")
+                            Text(verbatim: "\(try! vout.address(network: settings.network.toBdkNetwork()))")
                                 .truncationMode(.middle)
                         }
                         TableColumn("Value") { vout in
@@ -63,7 +63,7 @@ struct TransactionDetailView: View {
                     .truncationMode(.middle)
                     Table(of: TxOutRow.self) {
                         TableColumn("Address") { vout in
-                            Text(verbatim: "\(vout.address(network: settings.network.toBdkNetwork()) ?? "")")
+                            Text(verbatim: "\(try! vout.address(network: settings.network.toBdkNetwork()))")
                                 .truncationMode(.middle)
                         }
                         TableColumn("Value") { vout in
@@ -126,7 +126,6 @@ struct TransactionDetailView: View {
     }
 }
 
-
 /// Cause in cpu 100%
 struct TransactionDetailView1<Action: View>: View {
     @Environment(WalletStore.self) var wallet: WalletStore
@@ -154,8 +153,8 @@ struct TransactionDetailView1<Action: View>: View {
     }
 
     var body: some View {
-        VStack{
-            ScrollView{
+        VStack {
+            ScrollView {
                 VStack {
                     GroupedBox([
                         Text("\(tx.changeAmount.displayBtc)")
@@ -178,7 +177,7 @@ struct TransactionDetailView1<Action: View>: View {
                         HSplitView {
                             Table(of: TxOutRow.self) {
                                 TableColumn("Address") { vout in
-                                    Text(verbatim: "\(vout.address(network: settings.network.toBdkNetwork()) ?? "")")
+                                    Text(verbatim: "\(try! vout.address(network: settings.network.toBdkNetwork()))")
                                         .truncationMode(.middle)
                                 }
                                 TableColumn("Value") { vout in
@@ -192,7 +191,7 @@ struct TransactionDetailView1<Action: View>: View {
                             .truncationMode(.middle)
                             Table(of: TxOutRow.self) {
                                 TableColumn("Address") { vout in
-                                    Text(verbatim: "\(vout.address(network: settings.network.toBdkNetwork()) ?? "")")
+                                    Text(verbatim: "\(try! vout.address(network: settings.network.toBdkNetwork()))")
                                         .truncationMode(.middle)
                                 }
                                 TableColumn("Value") { vout in
@@ -237,7 +236,7 @@ struct TransactionDetailView1<Action: View>: View {
     func fetchOutputs() {
         do {
             for txin in tx.inputs {
-                if let txout = try wallet.getTxOut(txin.previousOutput) {
+                if let txout = wallet.getTxOut(txin.previousOutput) {
                     inputs.append(TxOutRow(inner: txout))
                 } else {
                     let (txid, vout) = (txin.previousOutput.txid, txin.previousOutput.vout)

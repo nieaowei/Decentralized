@@ -26,6 +26,10 @@ extension Amount {
     static func + (left: Amount, right: Amount) -> Amount {
         return Amount.fromSat(fromSat: left.toSat() + right.toSat())
     }
+    
+    static func - (left: Amount, right: Amount) -> Amount {
+        return Amount.fromSat(fromSat: left.toSat() - right.toSat())
+    }
 }
 
 extension Double {

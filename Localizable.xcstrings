@@ -267,6 +267,9 @@
         }
       }
     },
+    "Max" : {
+
+    },
     "Me" : {
       "extractionState" : "manual",
       "localizations" : {

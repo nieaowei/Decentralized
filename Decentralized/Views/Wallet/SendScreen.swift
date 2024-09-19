@@ -6,36 +6,43 @@
 //
 
 import BitcoinDevKit
+import LocalAuthentication
 import SwiftData
 import SwiftUI
 
-struct Output: Identifiable {
-    var id = UUID()
-    var address: String
-    var value: Double
-}
-
-struct SendUtxo: Identifiable {
-    public var outpoint: OutPoint
-    public var txout: TxOut
-    public var isSpent: Bool
-    public var deleteable: Bool = true
-    public var id: String {
-        "\(outpoint.txid):\(outpoint.vout)"
-    }
-
-    public var displayBtcValue: String {
-        Amount.fromSat(fromSat: txout.value).displayBtc
-    }
-
-    init(lo: LocalOutput) {
-        self.outpoint = lo.outpoint
-        self.txout = lo.txout
-        self.isSpent = lo.isSpent
-    }
-}
-
 struct SendScreen: View {
+    struct Output: Identifiable {
+        var id = UUID()
+        var address: String
+        var value: Double
+    }
+
+    struct Utxo: Identifiable {
+        public var id: String {
+            "\(outpoint.txid):\(outpoint.vout)"
+        }
+
+        public var outpoint: OutPoint
+        public var txout: TxOut
+        public var isSpent: Bool = true
+        public var deleteable: Bool = true
+
+        public var displayBtcValue: String {
+            Amount.fromSat(fromSat: txout.value).displayBtc
+        }
+
+        init(lo: LocalOutput) {
+            self.outpoint = lo.outpoint
+            self.txout = lo.txout
+            self.isSpent = lo.isSpent
+        }
+
+        init(outpoint: OutPoint, txout: TxOut) {
+            self.outpoint = outpoint
+            self.txout = txout
+        }
+    }
+
     struct TxPsbt: Hashable {
         let tx: BitcoinDevKit.Transaction
         let psbt: Psbt
@@ -57,15 +64,14 @@ struct SendScreen: View {
 
     @State var showUtxosSelector: Bool = false
 
-    @State var txBuilder: TxBuilder = .init()
-    @State var psbt: Psbt? = nil
+//    @State var psbt: Psbt? = nil
     @State var builtTx: TxPsbt? = nil
 
-    var inputs: [SendUtxo] {
-        return wallet.utxos.filter { lo in
-            selectedOutpoints.contains(lo.id)
-        }.map { lo in
-            SendUtxo(lo: lo)
+    var inputs: [Utxo] {
+        wallet.utxos.reduce(into: [Utxo]()) { partialResult, lo in
+            if selectedOutpoints.contains(lo.id) {
+                partialResult.append(Utxo(lo: lo))
+            }
         }
     }
 
@@ -75,11 +81,20 @@ struct SendScreen: View {
         }
     }
 
+    var outputTotal: Amount {
+        outputs.reduce(Amount.Zero) { partialResult, o in
+            partialResult + (try! Amount.fromBtc(fromBtc: o.value))
+        }
+    }
+    
+    @State var fee: Amount = .Zero
+
+
     var body: some View {
         VStack {
             HSplitView {
                 VStack {
-                    Table(of: SendUtxo.self) {
+                    Table(of: Utxo.self) {
                         TableColumn("OutPoint") { utxo in
                             Text(utxo.id).truncationMode(.middle)
                         }
@@ -90,7 +105,7 @@ struct SendScreen: View {
                                 .contextMenu {
                                     if o.deleteable {
                                         Button {
-                                            onDeleteUtxo(o.id)
+                                            onRemoveUtxo(o.id)
                                         } label: {
                                             Image(systemName: "trash")
                                             Text(verbatim: "Delete")
@@ -106,19 +121,14 @@ struct SendScreen: View {
                             Image(systemName: "plus")
                             Text(verbatim: "Add")
                         }
-                        Button {
-                            withAnimation {
-                                selectedOutpoints.removeAll()
-                            }
-                        } label: {
+                        Button(action: onRemoveAllUtxo) {
                             Image(systemName: "trash")
                             Text(verbatim: "Delete All")
                         }
                     }
                     .truncationMode(.middle)
-//                    Text("Selected: \(inputTotal.displayBtc)")
                 }
-
+                // Output
                 VStack {
                     Table(of: Binding<Output>.self) {
                         TableColumn("Address") { $o in
@@ -133,11 +143,13 @@ struct SendScreen: View {
                         }
                         TableColumn("Value") { $o in
                             HStack(spacing: 0) {
-                                TextField("", value: $o.value, format: .number)
+                                TextField("", value: $o.value, format: .number.precision(.fractionLength(8)))
                                     .textFieldStyle(.roundedBorder)
-                                Spacer()
                                 Text("BTC")
                                     .padding(.leading)
+                                Spacer()
+                                Button("Max", action: { onMax(o) })
+                                    .disabled(inputTotal.toSat() <= (outputTotal + fee).toSat())
                             }
                         }
                     } rows: {
@@ -158,9 +170,7 @@ struct SendScreen: View {
                     .truncationMode(.middle)
                     .contextMenu {
                         Button {
-                            withAnimation {
-                                outputs.append(Output(address: contacts.first?.addr ?? "", value: 0.001))
-                            }
+                            outputs.append(Output(address: contacts.first?.addr ?? "", value: 0.001))
                         } label: {
                             Image(systemName: "plus")
                             Text(verbatim: "Add")
@@ -179,26 +189,16 @@ struct SendScreen: View {
                         Text("sats/vB")
                     }
                     .frame(width: 150)
-
-                    Button(action: onBuild) {
-                        Text("Build")
-                            .padding(.horizontal)
-                    }
-                    .primary()
+                    PrimaryButton("Build", action: onBuild)
                 }
                 .padding(.all)
                 .sheet(isPresented: $showUtxosSelector, content: {
                     VStack {
                         UtxoSelector(selected: $selectedOutpoints, utxos: wallet.utxos)
                         HStack {
-                            Button {
+                            PrimaryButton("OK") {
                                 showUtxosSelector = false
-                            } label: {
-                                Text(verbatim: "OK")
-                                    .padding(.horizontal)
                             }
-                            .controlSize(.large)
-                            .buttonStyle(BorderedProminentButtonStyle())
                         }
                     }
                     .frame(minHeight: 300)
@@ -209,25 +209,30 @@ struct SendScreen: View {
                 }
             }
         }
+
         .navigationDestination(item: $builtTx) { txPsbt in
             SignScreen(tx: txPsbt.tx, psbt: txPsbt.psbt)
         }
     }
 
-    func onBuild() {
-        txBuilder = TxBuilder()
+    func build(_ change: Output) throws -> TxPsbt {
+        var txBuilder = TxBuilder()
 
         for utxo in inputs {
             txBuilder = txBuilder.addUtxo(outpoint: utxo.outpoint)
         }
 
-        for o in outputs {
+        // setting receiver
+        let settedChange = outputs.reduce(into: false) { settedChange, o in
+            if o.id == change.id {
+                settedChange = true
+                return
+            }
             do {
-                let script = try Address(address: o.address, network: settings.network.toBdkNetwork())
-                    .scriptPubkey()
+                let script = try Address(address: o.address, network: settings.network.toBdkNetwork()).scriptPubkey()
                 txBuilder = try txBuilder.addRecipient(script: script, amount: Amount.fromBtc(fromBtc: o.value))
             } catch let error as AddressParseError {
-                showError(error, "")
+                showError(error, "\(o.address) is invalid")
             } catch let error as ParseAmountError {
                 showError(error, "")
             } catch {
@@ -235,29 +240,55 @@ struct SendScreen: View {
             }
         }
 
+        // all utxo to change
+        if settedChange && inputs.isEmpty {
+            for u in wallet.utxos {
+                txBuilder = txBuilder.addUtxo(outpoint: u.outpoint)
+            }
+        }
+
         txBuilder = txBuilder.enableRbf()
+        txBuilder = try txBuilder.feeRate(feeRate: FeeRate.fromSatPerVb(satPerVb: UInt64(rate)))
 
+        txBuilder = try txBuilder.drainTo(script: Address(address: change.address, network: settings.network.toBdkNetwork()).scriptPubkey())
+
+        let (tx, psbt) = try wallet.buildTx(txBuilder)
+
+        return TxPsbt(tx: tx, psbt: psbt)
+    }
+
+    func onMax(_ o: Output) {
         do {
-            txBuilder = try txBuilder.feeRate(feeRate: FeeRate.fromSatPerVb(satPerVb: UInt64(rate)))
-            txBuilder = txBuilder.drainTo(script: wallet.payAddress!.scriptPubkey())
-
-            let (tx, psbt) = try wallet.buildTx(txBuilder)
-            builtTx = TxPsbt(tx: tx, psbt: psbt)
-
-        } catch let error as FeeRateError {
-            showError(error, "Invalid fee rate")
-        } catch let error as CreateTxError {
-            showError(error, "Create tranactions error")
+            let psbt = try build(o)
+            outputs = psbt.tx.output().map { txout in
+                Output(address: try! txout.address(network: settings.network.toBdkNetwork()), value: Amount.fromSat(fromSat: txout.value).toBtc())
+            }
+            for txin in psbt.tx.input() {
+                selectedOutpoints.insert(txin.id)
+            }
+            fee = try Amount.fromSat(fromSat: psbt.psbt.fee())
         } catch {
-            showError(error, "")
+            print(error)
         }
     }
 
-    func onDeleteUtxo(_ id: String) {
+    func onBuild() {
+        do {
+            builtTx = try build(Output(address: wallet.payAddress!.description, value: 0))
+        } catch let error as FeeRateError {
+            showError(error, "Invalid fee rate")
+        } catch let error as CreateTxError {
+            showError(error, "Create transaction error")
+        } catch {
+            showError(error, "Create transaction error")
+        }
+    }
+
+    func onRemoveUtxo(_ id: String) {
         selectedOutpoints.remove(id)
     }
 
-    func onDeleteAllUtxo() {
+    func onRemoveAllUtxo() {
         selectedOutpoints.removeAll()
     }
 }
@@ -286,13 +317,7 @@ struct SignScreen: View {
             }
             HStack {
                 Spacer()
-                Button {
-                    onSign()
-                } label: {
-                    Text("Sign")
-                        .padding(.horizontal)
-                }
-                .primary()
+                PrimaryButton("Sign", action: onSign)
             }
             .padding(.all)
         }
@@ -310,19 +335,15 @@ struct SignScreen: View {
                         .font(.title2)
                     Text("Your transaction has been successfully sent")
                         .font(.footnote)
-                    Button {
+                    PrimaryButton("OK") {
                         dismiss()
                         showSuccess = false
-                    } label: {
-                        Text("OK").padding(.horizontal)
                     }
-                    .primary()
                 }
             }
             .padding(.all)
         }
         .navigationTitle("Send Transaction Detail")
-
     }
 
     func onSign() {

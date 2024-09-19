@@ -9,6 +9,7 @@ import SwiftUI
 
 struct OnBoradingView: View {
     @Environment(AppSettings.self) var settings
+    @Environment(\.openSettings) var openSettings
 
     @State var mnemonic: String = ""
     @State var mode: WalletMode = .xverse

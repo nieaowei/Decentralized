@@ -9,6 +9,7 @@ import SwiftUI
 
 struct WalletSettings: View {
     @Environment(AppSettings.self) private var settings: AppSettings
+
     @Environment(\.showError) private var showError
     @Environment(\.dismissWindow) private var dismissWindow
 
@@ -18,7 +19,10 @@ struct WalletSettings: View {
         Form {
             Section {
                 LabeledContent("Export Mnemonic") {
-                    Button("Export Mnemonic") {}
+                    Button("Export Mnemonic") {
+                        Task{
+                        }
+                    }
                 }
                 LabeledContent("Reset Wallet") {
                     Button("Reset Wallet") {

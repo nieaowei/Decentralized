@@ -15,8 +15,8 @@ extension TxIn: @retroactive Identifiable {
 }
 
 extension TxOut {
-    func address(network: Network) -> String? {
-        return try? Address.fromScript(script: self.scriptPubkey, network: network).description
+    func address(network: Network) throws -> String {
+        return try Address.fromScript(script: self.scriptPubkey, network: network).description
     }
 
     var amount: Amount {
@@ -25,14 +25,14 @@ extension TxOut {
 }
 
 struct TxOutRow: Identifiable {
-    let id: UUID = UUID()
+    let id: UUID = .init()
     let inner: TxOut
-    
-    func address(network: Network) -> String? {
-        return try? Address.fromScript(script: inner.scriptPubkey, network: network).description
+
+    func address(network: Network) throws -> String {
+        return try Address.fromScript(script: self.inner.scriptPubkey, network: network).description
     }
 
     var amount: Amount {
-        return Amount.fromSat(fromSat: inner.value)
+        return Amount.fromSat(fromSat: self.inner.value)
     }
 }

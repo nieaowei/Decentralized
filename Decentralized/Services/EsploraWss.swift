@@ -98,6 +98,7 @@ class EsploraWss {
         }
     }
 
+    // todo use struct
     private func trackAddress(_ address: String) {
         sendMessage("{\"track-address\":\"\(address)\"}")
     }

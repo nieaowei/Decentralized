@@ -166,6 +166,10 @@ struct WalletService {
         return self.payWallet.getTxout(outpoint: op)
     }
 
+    func isMine(script: Script) -> Bool {
+        return self.payWallet.isMine(script: script)
+    }
+
     private static func createDescriptor(words: String, mode: WalletMode, network: Networks) throws -> (Descriptor, Descriptor) {
         let mnemonic = try Mnemonic.fromString(mnemonic: words)
 
@@ -199,7 +203,7 @@ struct WalletService {
         return (payDescriptor, ordiDescriptor)
     }
 
-     static func create(words: String?, mode: WalletMode, network: Networks) throws -> ((Wallet, Connection, Address), (Wallet, Connection, Address)) {
+    static func create(words: String?, mode: WalletMode, network: Networks) throws -> ((Wallet, Connection, Address), (Wallet, Connection, Address)) {
         var words12: String
 
         if let words = words, !words.isEmpty {
