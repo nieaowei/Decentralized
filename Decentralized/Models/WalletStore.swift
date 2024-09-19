@@ -47,12 +47,21 @@ struct WalletTransaction: Identifiable, Hashable {
         inner.transaction.isExplicitlyRbf()
     }
     
-//    var isRBF:Bool{
-//        inputs.contains { txin in
-//            txin.previousOutput
-//        }
-//    }
-//
+    var isRBF: Bool {
+        inputs.contains { txin in
+            if let tx = walletService.getTxOut(op: txin.previousOutput), self.isExplicitlyRbf {
+                return walletService.isMine(script: tx.scriptPubkey)
+            }
+            return false
+        }
+    }
+    
+    var isCPFP: Bool {
+        outputs.contains { txout in
+            return walletService.isMine(script: txout.scriptPubkey)
+        }
+    }
+
     var lockTime: UInt32 {
         inner.transaction.lockTime()
     }

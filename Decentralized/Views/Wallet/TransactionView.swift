@@ -23,8 +23,12 @@ struct TransactionView: View {
                         Text(verbatim: tx.id)
                             .truncationMode(.middle)
 
-                        if tx.isExplicitlyRbf {
+                        if tx.isRBF {
                             Image(systemName: "r.circle")
+                                .foregroundColor(.green)
+                        }
+                        if tx.isCPFP {
+                            Image(systemName: "c.circle")
                                 .foregroundColor(.green)
                         }
                     }
@@ -34,12 +38,7 @@ struct TransactionView: View {
                 }
                 .width(min: 150, ideal: 150)
                 TableColumn("Date", value: \.timestamp) { item in
-                    let data = if item.isComfirmed {
-                        item.timestamp.toDate().commonFormat()
-                    } else {
-                        "Uncomfirmed"
-                    }
-                    Text(verbatim: data)
+                    Text(verbatim: item.isComfirmed ? item.timestamp.toDate().commonFormat() : "Uncomfirmed")
                 }
                 .width(min: 150, ideal: 150)
 
@@ -48,17 +47,19 @@ struct TransactionView: View {
                     TableRow(tx)
                         .contextMenu {
                             NavigationLink("Open Detail") {
-                                ScrollView{
+                                ScrollView {
                                     TransactionDetailView(tx: tx)
                                 }
                             }
                             if !tx.isComfirmed {
-                                NavigationLink("Child Pay For Parent") {
-                                    Button(action: {}, label: {
-                                        Text("Child Pay For Parent")
-                                    })
+                                if tx.isCPFP{
+                                    NavigationLink("Child Pay For Parent") {
+                                        Button(action: {}, label: {
+                                            Text("Child Pay For Parent")
+                                        })
+                                    }
                                 }
-                                if tx.isExplicitlyRbf {
+                                if tx.isRBF {
                                     NavigationLink("Replace By Fee") {
                                         Button(action: {}, label: {
                                             Text("Replace By Fee")
