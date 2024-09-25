@@ -157,6 +157,10 @@ struct WalletService {
     func getUtxos() -> [LocalOutput] {
         return self.payWallet.listUnspent()
     }
+    
+    func getAllUtxos() -> [LocalOutput] {
+        return self.payWallet.listOutput()
+    }
 
     func getOutputs() -> [LocalOutput] {
         return self.payWallet.listOutput()
@@ -164,6 +168,10 @@ struct WalletService {
 
     func getTxOut(op: OutPoint) -> TxOut? {
         return self.payWallet.getTxout(outpoint: op)
+    }
+    
+    func getUtxo(op: OutPoint) -> LocalOutput? {
+        return self.payWallet.getUtxo(outpoint: op)
     }
 
     func isMine(script: Script) -> Bool {
@@ -255,7 +263,7 @@ struct WalletService {
             mnemonic: words12,
             mode: mode
         )
-        try KeyChainService.saveBackupInfo(backupInfo)
+        let ok = try KeyChainService.saveBackupInfo(backupInfo)
 
         return ((payWallet, payDb, payAddress), (ordiWallet, ordiDb, ordiAddress))
     }

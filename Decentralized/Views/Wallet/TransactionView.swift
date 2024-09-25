@@ -23,11 +23,11 @@ struct TransactionView: View {
                         Text(verbatim: tx.id)
                             .truncationMode(.middle)
 
-                        if tx.isRBF {
+                        if tx.canRBF {
                             Image(systemName: "r.circle")
                                 .foregroundColor(.green)
                         }
-                        if tx.isCPFP {
+                        if tx.canCPFP {
                             Image(systemName: "c.circle")
                                 .foregroundColor(.green)
                         }
@@ -52,18 +52,14 @@ struct TransactionView: View {
                                 }
                             }
                             if !tx.isComfirmed {
-                                if tx.isCPFP{
+                                if tx.canCPFP {
                                     NavigationLink("Child Pay For Parent") {
-                                        Button(action: {}, label: {
-                                            Text("Child Pay For Parent")
-                                        })
+                                        SendScreen(isCPFP: true, selectedOutpoints: tx.cpfpOutputs)
                                     }
                                 }
-                                if tx.isRBF {
+                                if tx.canRBF {
                                     NavigationLink("Replace By Fee") {
-                                        Button(action: {}, label: {
-                                            Text("Replace By Fee")
-                                        })
+                                        SendScreen(isRBF: true, selectedOutpoints: Set(tx.inputs.map { $0.id }))
                                     }
                                 }
                             }

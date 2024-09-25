@@ -10,6 +10,9 @@
     "%d" : {
       "shouldTranslate" : false
     },
+    "%lf sats/vB" : {
+
+    },
     "%lld sats/vB" : {
       "shouldTranslate" : false
     },
@@ -33,6 +36,9 @@
         }
       },
       "shouldTranslate" : false
+    },
+    "%llu sats/vB" : {
+
     },
     "%u" : {
       "shouldTranslate" : false
@@ -66,6 +72,9 @@
           }
         }
       }
+    },
+    "Ancestors" : {
+
     },
     "App First" : {
       "shouldTranslate" : false
@@ -151,6 +160,12 @@
         }
       }
     },
+    "Deploy" : {
+
+    },
+    "Descendants" : {
+
+    },
     "Development" : {
       "localizations" : {
         "zh-Hans" : {
@@ -190,6 +205,9 @@
           }
         }
       }
+    },
+    "Esplora Sever" : {
+
     },
     "Export Mnemonic" : {
       "localizations" : {
@@ -280,6 +298,9 @@
           }
         }
       }
+    },
+    "Mint" : {
+
     },
     "Name" : {
       "localizations" : {
@@ -411,6 +432,9 @@
     "RBF" : {
       "shouldTranslate" : false
     },
+    "Reciver" : {
+
+    },
     "Replace By Fee" : {
       "shouldTranslate" : false
     },
@@ -512,6 +536,9 @@
         }
       }
     },
+    "Sync Sever" : {
+
+    },
     "Touch ID" : {
       "localizations" : {
         "zh-Hans" : {
@@ -562,6 +589,9 @@
           }
         }
       }
+    },
+    "Unconfirmed" : {
+
     },
     "Value" : {
       "localizations" : {

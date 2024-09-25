@@ -25,21 +25,23 @@ struct SendScreen: View {
         public var outpoint: OutPoint
         public var txout: TxOut
         public var isSpent: Bool = true
-        public var deleteable: Bool = true
+        public var deleteable: Bool
 
         public var displayBtcValue: String {
             Amount.fromSat(fromSat: txout.value).displayBtc
         }
 
-        init(lo: LocalOutput) {
+        init(lo: LocalOutput, deleteable: Bool = true) {
             self.outpoint = lo.outpoint
             self.txout = lo.txout
             self.isSpent = lo.isSpent
+            self.deleteable = deleteable
         }
 
-        init(outpoint: OutPoint, txout: TxOut) {
+        init(outpoint: OutPoint, txout: TxOut, deleteable: Bool = true) {
             self.outpoint = outpoint
             self.txout = txout
+            self.deleteable = deleteable
         }
     }
 
@@ -47,6 +49,10 @@ struct SendScreen: View {
         let tx: BitcoinDevKit.Transaction
         let psbt: Psbt
     }
+
+    var minFee: Amount = .Zero
+    var isRBF: Bool = false
+    var isCPFP: Bool = false
 
     @Environment(WalletStore.self) var wallet: WalletStore
     @Environment(WssStore.self) var wss: WssStore
@@ -64,11 +70,10 @@ struct SendScreen: View {
 
     @State var showUtxosSelector: Bool = false
 
-//    @State var psbt: Psbt? = nil
     @State var builtTx: TxPsbt? = nil
 
     var inputs: [Utxo] {
-        wallet.utxos.reduce(into: [Utxo]()) { partialResult, lo in
+        wallet.allUtxos.reduce(into: [Utxo]()) { partialResult, lo in
             if selectedOutpoints.contains(lo.id) {
                 partialResult.append(Utxo(lo: lo))
             }
@@ -86,9 +91,12 @@ struct SendScreen: View {
             partialResult + (try! Amount.fromBtc(fromBtc: o.value))
         }
     }
-    
+
     @State var fee: Amount = .Zero
 
+    var enableMax: Bool {
+        inputTotal.toSat() >= (outputTotal + fee).toSat() || inputs.isEmpty
+    }
 
     var body: some View {
         VStack {
@@ -104,9 +112,7 @@ struct SendScreen: View {
                             TableRow(o)
                                 .contextMenu {
                                     if o.deleteable {
-                                        Button {
-                                            onRemoveUtxo(o.id)
-                                        } label: {
+                                        Button { onRemoveUtxo(o.id) } label: {
                                             Image(systemName: "trash")
                                             Text(verbatim: "Delete")
                                         }
@@ -123,7 +129,7 @@ struct SendScreen: View {
                         }
                         Button(action: onRemoveAllUtxo) {
                             Image(systemName: "trash")
-                            Text(verbatim: "Delete All")
+                            Text(verbatim: "Remove All")
                         }
                     }
                     .truncationMode(.middle)
@@ -149,7 +155,7 @@ struct SendScreen: View {
                                     .padding(.leading)
                                 Spacer()
                                 Button("Max", action: { onMax(o) })
-                                    .disabled(inputTotal.toSat() <= (outputTotal + fee).toSat())
+                                    .disabled(!enableMax)
                             }
                         }
                     } rows: {
@@ -157,12 +163,10 @@ struct SendScreen: View {
                             TableRow(o)
                                 .contextMenu {
                                     Button {
-                                        withAnimation {
-                                            outputs.removeAll { $0.id == o.id }
-                                        }
+                                        onRemoveOutput(o.id)
                                     } label: {
                                         Image(systemName: "trash")
-                                        Text(verbatim: "Delete")
+                                        Text(verbatim: "Remove")
                                     }
                                 }
                         }
@@ -217,6 +221,7 @@ struct SendScreen: View {
 
     func build(_ change: Output) throws -> TxPsbt {
         var txBuilder = TxBuilder()
+        txBuilder = txBuilder.ordering(txOrdering: TxOrdering.untouched)
 
         for utxo in inputs {
             txBuilder = txBuilder.addUtxo(outpoint: utxo.outpoint)
@@ -290,6 +295,10 @@ struct SendScreen: View {
 
     func onRemoveAllUtxo() {
         selectedOutpoints.removeAll()
+    }
+
+    func onRemoveOutput(_ id: UUID) {
+        outputs.removeAll { $0.id == id }
     }
 }
 

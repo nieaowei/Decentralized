@@ -7,6 +7,7 @@
 
 import AppKit
 import BitcoinDevKit
+import SwiftData
 import SwiftUI
 
 struct TransactionDetailView: View {
@@ -14,8 +15,13 @@ struct TransactionDetailView: View {
     @Environment(SyncClient.self) var syncClient: SyncClient
     @Environment(\.showError) var showError
     @Environment(AppSettings.self) var settings: AppSettings
+    @Environment(\.modelContext) var ctx
 
     var tx: WalletTransaction
+
+    @State
+    @MainActor
+    var cpfpTx: CpfpChain? = nil
 
     @State
     var inputs: [TxOutRow] = []
@@ -43,9 +49,32 @@ struct TransactionDetailView: View {
                 GroupedLabeledContent("Fee") {
                     Text(verbatim: "\(tx.fee) sats")
                 },
-                GroupedLabeledContent("FeeRate") {
-                    Text(verbatim: "\((tx.fee) / (tx.vsize)) sats/vB")
+                GroupedLabeledContent("Fee Rate") {
+                    Text("\((tx.fee) / (tx.vsize)) sats/vB")
                 },
+                { if let cpfpTx = cpfpTx {
+                    return GroupedLabeledContent("Effective Fee Rate(CPFP)") {
+                        Text("\(cpfpTx.effectiveFeeRate) sats/vB")
+                    }
+                } else {
+                    return EmptyView()
+                }}(),
+                { if let cpfpTx = cpfpTx {
+                    return HSplitView {
+                        Table(cpfpTx.parents) {
+                            TableColumn("Ancestors", value: \.txid)
+                        }
+                        Table(cpfpTx.childs) {
+                            TableColumn("Descendants", value: \.txid)
+                        }
+                    }.frame(minHeight: 100)
+                } else {
+                    return EmptyView()
+                }}(),
+               
+            ])
+            
+            GroupedBox([
                 HSplitView {
                     Table(of: TxOutRow.self) {
                         TableColumn("Address") { vout in
@@ -100,13 +129,30 @@ struct TransactionDetailView: View {
         .task {
             fetchOutputs()
         }
+        .task {
+            do {
+                let id = tx.id
+                let p = #Predicate<CpfpChain> { chain in chain.txid == id }
+                let txs = try ctx.fetch(FetchDescriptor(predicate: p))
+                if !txs.isEmpty {
+                    cpfpTx = txs[0]
+                    return
+                }
+                let cpfp = try await CpfpChain.fetchChain(EsploraClient(url: "https://mempool.space/testnet4/api"), tx.id, nil)
+                cpfpTx = cpfp
+                
+                ctx.insert(cpfp)
+            } catch {
+                print(error)
+            }
+        }
         .navigationTitle("Transaction Detail")
     }
 
     func fetchOutputs() {
         do {
             for txin in tx.inputs {
-                if let txout = try wallet.getTxOut(txin.previousOutput) {
+                if let txout = wallet.getTxOut(txin.previousOutput) {
                     inputs.append(TxOutRow(inner: txout))
                 } else {
                     let (txid, vout) = (txin.previousOutput.txid, txin.previousOutput.vout)
@@ -119,12 +165,34 @@ struct TransactionDetailView: View {
                     }
                 }
             }
-
         } catch {
             showError(error, "")
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /// Cause in cpu 100%
 struct TransactionDetailView1<Action: View>: View {

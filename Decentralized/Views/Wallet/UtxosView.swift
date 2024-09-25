@@ -23,6 +23,14 @@ struct UtxosView: View {
                         .truncationMode(.middle)
                 }
                 TableColumn("Value", value: \.diplayBTCValue)
+                TableColumn("Date"){ utxo in
+                    switch utxo.confirmationTime{
+                    case .confirmed(let _height, let time):
+                        Text("\(time.toDate().commonFormat())")
+                    case .unconfirmed(let _lastSeen):
+                        Text("Unconfirmed")
+                    }
+                }
             }
             .onChange(of: sortOrder, initial: true) { _, sortOrder in
                 wallet.utxos.sort(using: sortOrder)

@@ -14,11 +14,12 @@ struct ServerSettings: View {
     @State var network: Networks = .bitcoin
     @State var serverType: ServerType = .Esplora
     @State var serverUrl: String = "https://mempool.space/api"
+    @State var esploraUrl: String = "https://mempool.space/api"
     @State var wssUrl: String = "wss://mempool.space/api/v1/wss"
 
     var body: some View {
         Form {
-            Section {
+            Section{
                 Picker(selection: $network) {
                     ForEach([Networks.bitcoin, Networks.testnet, Networks.testnet4, Networks.signet]) { net in
                         Text(net.rawValue)
@@ -27,6 +28,8 @@ struct ServerSettings: View {
                 } label: {
                     Text("Network")
                 }
+            }
+            Section("Sync Sever") {
                 Picker("Server Type", selection: $serverType) {
                     ForEach([ServerType.Esplora, ServerType.Electrum]) { t in
                         Text(verbatim: "\(t)").tag(t)
@@ -34,6 +37,10 @@ struct ServerSettings: View {
                 }
                 ServerUrlPicker("Server Url", selection: $serverUrl, serverType: serverType, network: network)
                 ServerUrlPicker("Websocket Url", selection: $wssUrl, serverType: .EsploraWss, network: network)
+            }
+            
+            Section("Esplora Sever") {
+                ServerUrlPicker("Server Url", selection: $esploraUrl, serverType: .Esplora, network: network)
             }
             .sectionActions {
                 Button(action: onApply) {

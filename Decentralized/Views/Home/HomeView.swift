@@ -39,6 +39,9 @@ struct HomeDetailView: View {
             case .sign:
                 SignView()
                     .navigationTitle(dest.title)
+            case .ordinal:
+                OrdinalMintScreen()
+                    .navigationTitle(dest.title)
             }
         }
     }

@@ -12,11 +12,11 @@ extension CreateTxError: LocalizedError {
     public var errorDescription: String? {
         return switch self {
         case .Descriptor(let errorMessage):
-            "Descriptor"
+            "Descriptor(\(errorMessage)"
         case .Policy(let errorMessage):
-            "Policy"
+            "Policy(\(errorMessage)"
         case .SpendingPolicyRequired(let kind):
-            "SpendingPolicyRequired"
+            "SpendingPolicyRequired(\(kind.debugDescription)"
         case .Version0:
             "Version0"
         case .Version1Csv:

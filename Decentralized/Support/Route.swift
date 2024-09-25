@@ -33,10 +33,11 @@ enum Route: Hashable {
         [.wallet(.me), .tools(.broadcast)]
     }
 }
-//enum TransactionRoute{
+
+// enum TransactionRoute{
 //    case main
 //    case detail
-//}
+// }
 
 enum WalletRoute: Hashable {
     case me, utxos, transactions, contacts
@@ -69,17 +70,18 @@ enum WalletRoute: Hashable {
 }
 
 enum ToolRoute: String, Hashable, CaseIterable {
-    case broadcast, sign
+    case broadcast, sign, ordinal
     // speedUp, cancelTx, monitor
 
     static var allCases: [ToolRoute] {
-        [.broadcast, .sign]
+        [.broadcast, .sign, .ordinal]
     }
 
     var title: String {
         switch self {
         case .broadcast: "Broadcast"
         case .sign: "Sign"
+        case .ordinal: "Ordinal"
         }
     }
 
@@ -87,14 +89,16 @@ enum ToolRoute: String, Hashable, CaseIterable {
         switch self {
         case .broadcast: "dot.radiowaves.left.and.right"
         case .sign: "square.and.pencil"
+        case .ordinal: "pencil"
         }
     }
 }
+
 //
-enum SendRoute: Hashable{
+enum SendRoute: Hashable {
     case main(selected: Set<String>)
     case detail(tx: WalletTransaction)
-    
+
 //    static var allCases: [SendRoute] {
 //        [.SendRoute, .detail(tx: <#T##WalletTransaction#>)]
 //    }

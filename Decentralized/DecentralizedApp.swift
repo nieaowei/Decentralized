@@ -42,23 +42,20 @@ struct DecentralizedApp: App {
     @AppStorage("isOnBoarding") var isOnBoarding: Bool = true
     @Environment(\.openWindow) private var openWindow
 
-    @State var settings: AppSettings
-    
-    @State private var errorWrapper: ErrorWrapper?
-    
-    @State var loading: Bool = false
+    let settings: AppSettings
+    let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, CpfpChain.self, configurations: ModelConfiguration())
 
-    let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, configurations: ModelConfiguration())
+    @State private var errorWrapper: ErrorWrapper?
 
     init() {
         let settings = AppSettings()
         logger.info("App Init \(settings.serverUrl)")
-        _settings = State(wrappedValue: settings)
+        self.settings = settings
     }
 
     var body: some Scene {
         WindowGroup {
-            if isOnBoarding{
+            if isOnBoarding {
                 OnBoradingView()
                     .tint(settings.accentColor)
                     .toolbar(removing: .title)
@@ -69,8 +66,8 @@ struct DecentralizedApp: App {
                     .sheet(item: $errorWrapper) { errorWrapper in
                         Text(errorWrapper.error.localizedDescription)
                     }
-                    
-            }else{
+
+            } else {
                 HomeView(settings)
                     .tint(settings.accentColor)
                     .sheet(item: $errorWrapper) { errorWrapper in
@@ -88,7 +85,6 @@ struct DecentralizedApp: App {
                         }
                         .padding(.all)
                     }
-                   
             }
         }
         .environment(settings)
@@ -140,19 +136,9 @@ struct DecentralizedApp: App {
                 .windowResizeBehavior(.enabled)
                 .modelContainer(mainModelContainer)
                 .tint(settings.accentColor)
-                .onChange(of: settings.changed) {
-//                    logger.info("AccentColor switching")
-//                    settings.accentColor = settings.network.accentColor
-                }
-                .onChange(of: settings.network, initial: true) {
-                    logger.info("AccentColor switching")
-//                    settings.accentColor = settings.network.accentColor
-                }
         }
         .environment(settings)
         .windowIdealSize(.fitToContent)
         .windowResizability(.contentSize)
     }
-
-
 }

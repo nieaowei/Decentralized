@@ -47,7 +47,7 @@ struct WalletTransaction: Identifiable, Hashable {
         inner.transaction.isExplicitlyRbf()
     }
     
-    var isRBF: Bool {
+    var canRBF: Bool {
         inputs.contains { txin in
             if let tx = walletService.getTxOut(op: txin.previousOutput), self.isExplicitlyRbf {
                 return walletService.isMine(script: tx.scriptPubkey)
@@ -56,9 +56,30 @@ struct WalletTransaction: Identifiable, Hashable {
         }
     }
     
-    var isCPFP: Bool {
+    var canCPFP: Bool {
         outputs.contains { txout in
-            return walletService.isMine(script: txout.scriptPubkey)
+            walletService.isMine(script: txout.scriptPubkey)
+        }
+    }
+    
+    var isCPFP: Bool {
+        inputs.contains { txin in
+            if let txOut = walletService.getTxOut(op: txin.previousOutput) {
+                if walletService.isMine(script: txOut.scriptPubkey) {
+                    return true
+                }
+            }
+            return false
+        }
+    }
+    
+    var cpfpOutputs: Set<String> {
+        return outputs.enumerated().reduce(Set()) { partialResult, result in
+            var partialResult = partialResult
+            if walletService.isMine(script: result.element.scriptPubkey) {
+                partialResult.insert("\(self.id):\(result.offset)")
+            }
+            return partialResult
         }
     }
 
@@ -121,6 +142,50 @@ struct WalletTransaction: Identifiable, Hashable {
     var fee: UInt64 {
         walletService.calculateFee(inner.transaction)
     }
+    
+    func chain(es: EsploraClient, txid: String) throws {
+        var parents: [Tx] = []
+        for txin in inputs {
+            let txInfo = try es.getTxInfo(txid: txid)
+            if txInfo.status.confirmed {
+                continue
+            }
+            parents.append(txInfo)
+        }
+    }
+    
+    func findParent(es: EsploraClient, txid: String) throws -> [Tx] {
+        let txInfo = try es.getTxInfo(txid: txid)
+        var parents: [Tx] = []
+
+        for vin in txInfo.vin {
+            let txInfo = try es.getTxInfo(txid: vin.txid)
+            if txInfo.status.confirmed {
+                continue
+            }
+            parents.append(txInfo)
+            let ancestors = try findParent(es: es, txid: vin.txid)
+            parents.append(contentsOf: ancestors)
+        }
+        return parents
+    }
+    
+    func findChild(es: EsploraClient, txid: String) throws -> [Tx] {
+        let txInfo = try es.getTxInfo(txid: txid)
+        var childs: [Tx] = []
+
+        for vout in txInfo.vout.indices {
+            let outputStatus = try es.getOutputStatus(txid: txid, index: UInt64(vout))
+            if !outputStatus.spent {
+                continue
+            }
+            let txInfo = try es.getTxInfo(txid: outputStatus.txid!)
+            childs.append(txInfo)
+            let ancestors = try findParent(es: es, txid: txInfo.txid)
+            childs.append(contentsOf: ancestors)
+        }
+        return childs
+    }
 }
 
 @Observable
@@ -146,6 +211,8 @@ class WalletStore {
     
     @MainActor
     var utxos: [LocalOutput] = []
+    @MainActor
+    var allUtxos: [LocalOutput] = []
     
     @MainActor
     var syncStatus: SyncStatus = .notStarted
@@ -170,6 +237,7 @@ class WalletStore {
             WalletTransaction(walletService: wallet, inner: ctx)
         }
         utxos = wallet.getUtxos()
+        allUtxos = wallet.getAllUtxos()
     }
     
     @MainActor

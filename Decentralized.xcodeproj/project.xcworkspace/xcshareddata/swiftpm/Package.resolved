@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/nieaowei/bdk-swift",
       "state" : {
-        "branch" : "1.0.0-beta2",
-        "revision" : "83105a8a2d013e3fe6baccf93cfb064acef6e512"
+        "branch" : "1.0.0-beta2e",
+        "revision" : "21ee4a65cb47b88c6ec115e2981d965698dd6188"
       }
     }
   ],
