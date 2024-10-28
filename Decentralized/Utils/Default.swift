@@ -6,6 +6,7 @@
 //
 
 import Foundation
+
 @propertyWrapper
 struct Default<T: DefaultValue> {
     var wrappedValue: T.Value

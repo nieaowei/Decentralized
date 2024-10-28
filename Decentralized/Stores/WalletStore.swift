@@ -5,7 +5,7 @@
 //  Created by Nekilc on 2024/9/2.
 //
 
-import BitcoinDevKit
+import DecentralizedFFI
 import Foundation
 import SwiftUI
 
@@ -15,7 +15,7 @@ struct WalletTransaction: Identifiable, Hashable {
     }
     
     static func ==(l: Self, r: Self) -> Bool {
-        return l.id == r.id
+        return l.id == r.id && l.inner.transaction == r.inner.transaction
     }
     
     private let walletService: WalletService
@@ -134,57 +134,17 @@ struct WalletTransaction: Identifiable, Hashable {
         } else {
             (true, recv.toSat() - sent.toSat())
         }
-        let changeBtc = Amount.fromSat(fromSat: change).toBtc()
+        let changeBtc = Amount.fromSat(sat: change).toBtc()
 
         return plus ? changeBtc : -changeBtc
     }
     
-    var fee: UInt64 {
+    var fee: Amount {
         walletService.calculateFee(inner.transaction)
     }
     
-    func chain(es: EsploraClient, txid: String) throws {
-        var parents: [Tx] = []
-        for txin in inputs {
-            let txInfo = try es.getTxInfo(txid: txid)
-            if txInfo.status.confirmed {
-                continue
-            }
-            parents.append(txInfo)
-        }
-    }
-    
-    func findParent(es: EsploraClient, txid: String) throws -> [Tx] {
-        let txInfo = try es.getTxInfo(txid: txid)
-        var parents: [Tx] = []
-
-        for vin in txInfo.vin {
-            let txInfo = try es.getTxInfo(txid: vin.txid)
-            if txInfo.status.confirmed {
-                continue
-            }
-            parents.append(txInfo)
-            let ancestors = try findParent(es: es, txid: vin.txid)
-            parents.append(contentsOf: ancestors)
-        }
-        return parents
-    }
-    
-    func findChild(es: EsploraClient, txid: String) throws -> [Tx] {
-        let txInfo = try es.getTxInfo(txid: txid)
-        var childs: [Tx] = []
-
-        for vout in txInfo.vout.indices {
-            let outputStatus = try es.getOutputStatus(txid: txid, index: UInt64(vout))
-            if !outputStatus.spent {
-                continue
-            }
-            let txInfo = try es.getTxInfo(txid: outputStatus.txid!)
-            childs.append(txInfo)
-            let ancestors = try findParent(es: es, txid: txInfo.txid)
-            childs.append(contentsOf: ancestors)
-        }
-        return childs
+    var feeRate: Double {
+        Double(fee.toSat()) / Double(vsize)
     }
 }
 
@@ -200,7 +160,7 @@ class WalletStore {
     var wallet: WalletService
     
     @MainActor
-    var balance: Amount = .fromSat(fromSat: 0)
+    var balance: Balance = .Zero
     @MainActor
     var payAddress: Address?
     @MainActor
@@ -230,7 +190,7 @@ class WalletStore {
     
     @MainActor
     func load() {
-        balance = wallet.getBalance().total
+        balance = wallet.getBalance()
         payAddress = wallet.getPayAddress()
         ordiAddress = wallet.getOrdiAddress()
         transactions = wallet.getTransactions().map { ctx in
@@ -243,6 +203,10 @@ class WalletStore {
     @MainActor
     func updateStatus(_ status: SyncStatus) {
         syncStatus = status
+    }
+    
+    func getUtxos() -> [LocalOutput] {
+        wallet.getUtxos()
     }
     
     func sync() async throws {
@@ -263,23 +227,27 @@ class WalletStore {
         try WalletService.deleteAllWallet()
     }
     
-    func buildTx(_ tx: TxBuilder) throws -> (BitcoinDevKit.Transaction, Psbt) {
-        return try wallet.buildTx(tx)
+    func finish(_ tx: TxBuilder) -> Result<Psbt, CreateTxError> {
+        wallet.finish(tx)
     }
     
-    func buildAndSignTx(_ tx: TxBuilder) throws -> (BitcoinDevKit.Transaction, Psbt) {
-        return try wallet.buildAndSignTx(tx)
+//    func buildAndSignTx(_ tx: TxBuilder) throws -> (DecentralizedFFI.Transaction, Psbt) {
+//        return try wallet.buildAndSignTx(tx)
+//    }
+    
+    func sign(_ psbt: Psbt, _ walletType: WalletType) -> Result<Bool, SignerError> {
+        wallet.sign(psbt, walletType: walletType)
     }
     
-    func sign(_ psbt: Psbt) throws -> Psbt {
-        try wallet.sign(psbt)
-    }
-    
-    func createWalletTx(tx: BitcoinDevKit.Transaction) -> WalletTransaction {
+    func createWalletTx(tx: DecentralizedFFI.Transaction) -> WalletTransaction {
         WalletTransaction(walletService: wallet, inner: CanonicalTx(transaction: tx, chainPosition: ChainPosition.unconfirmed(timestamp: 0)))
     }
     
-    func broadcast(_ tx: BitcoinDevKit.Transaction) throws -> String {
+    func broadcast(_ tx: DecentralizedFFI.Transaction) throws -> String {
         try wallet.broadcast(tx)
+    }
+    
+    func insertTxout(op: OutPoint, txout: TxOut) {
+        wallet.insertTxOut(op: op, txout: txout)
     }
 }

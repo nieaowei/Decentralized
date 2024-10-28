@@ -1,6 +1,6 @@
 //
 //  Button+Extensions.swift
-//  BTCt
+//  Decentralize
 //
 //  Created by Nekilc on 2024/5/26.
 //
@@ -14,6 +14,10 @@ extension Button {
             .controlSize(.large)
     }
    
+    func secondary() -> some View {
+        self.buttonStyle(BorderedButtonStyle())
+            .controlSize(.large)
+    }
 }
 
 

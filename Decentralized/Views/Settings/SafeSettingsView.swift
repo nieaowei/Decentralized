@@ -14,7 +14,7 @@ struct SafeSettingsView: View {
 
     var body: some View {
         Form {
-            Toggle("Touch ID", isOn: settings.$enableTouchID)
+            Toggle("Touch ID", isOn: $enableTouchID)
         }
         .formStyle(.grouped)
         .onAppear {

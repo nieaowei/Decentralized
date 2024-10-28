@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+//todo optimize
+
 struct GroupedBox: View {
     let items: [AnyView]
     var title: String? = nil

@@ -40,12 +40,16 @@ enum Route: Hashable {
 // }
 
 enum WalletRoute: Hashable {
-    case me, utxos, transactions, contacts
+    case me, utxos, contacts
+
+    case transactions(TransactionRoutes)
 
     case send(selected: Set<String>)
 
+    case sign
+
     static var allCases: [WalletRoute] {
-        [.me, .utxos, .transactions, .send(selected: .init()), .contacts]
+        [.me, .utxos, .transactions(.list), .send(selected: .init()), sign, .contacts]
     }
 
     var icon: String {
@@ -54,6 +58,7 @@ enum WalletRoute: Hashable {
         case .utxos: "bitcoinsign"
         case .transactions: "dollarsign"
         case .send: "paperplane"
+        case .sign: "square.and.pencil"
         case .contacts: "person.2"
         }
     }
@@ -64,32 +69,52 @@ enum WalletRoute: Hashable {
         case .utxos: "Utxos"
         case .transactions: "Transactions"
         case .send: "Send"
+        case .sign: "Sign"
         case .contacts: "Contacts"
         }
     }
 }
 
+enum TransactionRoutes: Hashable {
+    case list
+    case detail(tx: WalletTransaction)
+
+    var title: String {
+        switch self {
+        case .list: "Transactions"
+        case .detail: "Transaction Detail"
+        }
+    }
+
+//    var icon: String {
+//        switch self {
+//        case .list: "dot.radiowaves.left.and.right"
+//        case .detail: "square.and.pencil"
+//        }
+//    }
+}
+
 enum ToolRoute: String, Hashable, CaseIterable {
-    case broadcast, sign, ordinal
+    case broadcast, ordinal, mempoolMonitor
     // speedUp, cancelTx, monitor
 
     static var allCases: [ToolRoute] {
-        [.broadcast, .sign, .ordinal]
+        [.mempoolMonitor, .broadcast]
     }
 
     var title: String {
         switch self {
         case .broadcast: "Broadcast"
-        case .sign: "Sign"
         case .ordinal: "Ordinal"
+        case .mempoolMonitor: "Mempool"
         }
     }
 
     var icon: String {
         switch self {
         case .broadcast: "dot.radiowaves.left.and.right"
-        case .sign: "square.and.pencil"
         case .ordinal: "pencil"
+        case .mempoolMonitor: "leaf"
         }
     }
 }

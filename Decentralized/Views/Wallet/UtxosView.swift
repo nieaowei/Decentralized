@@ -5,7 +5,7 @@
 //  Created by Nekilc on 2024/5/23.
 //
 
-import BitcoinDevKit
+import DecentralizedFFI
 import SwiftUI
 
 struct UtxosView: View {
@@ -17,20 +17,31 @@ struct UtxosView: View {
 
     var body: some View {
         VStack {
-            Table(wallet.utxos, selection: $selected, sortOrder: $sortOrder) {
+            Table(of: LocalOutput.self, selection: $selected, sortOrder: $sortOrder) {
                 TableColumn("OutPoint") { utxo in
                     Text(verbatim: "\(utxo.id)")
                         .truncationMode(.middle)
                 }
-                TableColumn("Value", value: \.diplayBTCValue)
-                TableColumn("Date"){ utxo in
-                    switch utxo.confirmationTime{
-                    case .confirmed(let _height, let time):
+                TableColumn("Value", value: \.txout.value.formatted)
+                TableColumn("Date") { utxo in
+                    switch utxo.confirmationTime {
+                    case .confirmed(_, let time):
                         Text("\(time.toDate().commonFormat())")
-                    case .unconfirmed(let _lastSeen):
+                    case .unconfirmed(_):
                         Text("Unconfirmed")
                     }
                 }
+            } rows: {
+                ForEach(wallet.utxos){ utxo in
+                    TableRow(utxo)
+                        .contextMenu {
+                            Button("Copy OutPoint"){
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(utxo.id, forType: .string)
+                            }
+                        }
+                }
+                
             }
             .onChange(of: sortOrder, initial: true) { _, sortOrder in
                 wallet.utxos.sort(using: sortOrder)

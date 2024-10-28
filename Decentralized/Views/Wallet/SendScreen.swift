@@ -5,48 +5,57 @@
 //  Created by Nekilc on 2024/5/28.
 //
 
-import BitcoinDevKit
+import DecentralizedFFI
 import LocalAuthentication
 import SwiftData
 import SwiftUI
+import UniformTypeIdentifiers
+
+struct Recipient: Identifiable, Transferable, Codable {
+    var id: UUID = .init()
+    var address: String
+    var value: Double
+
+    static var draggableType = UTType(exportedAs: "app.decentralized.Recipient")
+
+    public static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(contentType: Self.draggableType)
+    }
+}
+
+struct SendUtxo: Identifiable, Transferable, Codable {
+
+    public var id: String {
+        "\(outpoint.txid):\(outpoint.vout)"
+    }
+
+    public var outpoint: OutPoint
+    public var txout: TxOut
+    public var isSpent: Bool = true
+    public var deleteable: Bool
+
+    init(lo: LocalOutput, deleteable: Bool = true) {
+        self.outpoint = lo.outpoint
+        self.txout = lo.txout
+        self.isSpent = lo.isSpent
+        self.deleteable = deleteable
+    }
+
+    init(outpoint: OutPoint, txout: TxOut, deleteable: Bool = true) {
+        self.outpoint = outpoint
+        self.txout = txout
+        self.deleteable = deleteable
+    }
+    static var draggableType = UTType(exportedAs: "app.decentralized.SendUtxo")
+
+    public static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(contentType: Self.draggableType)
+    }
+}
 
 struct SendScreen: View {
-    struct Output: Identifiable {
-        var id = UUID()
-        var address: String
-        var value: Double
-    }
-
-    struct Utxo: Identifiable {
-        public var id: String {
-            "\(outpoint.txid):\(outpoint.vout)"
-        }
-
-        public var outpoint: OutPoint
-        public var txout: TxOut
-        public var isSpent: Bool = true
-        public var deleteable: Bool
-
-        public var displayBtcValue: String {
-            Amount.fromSat(fromSat: txout.value).displayBtc
-        }
-
-        init(lo: LocalOutput, deleteable: Bool = true) {
-            self.outpoint = lo.outpoint
-            self.txout = lo.txout
-            self.isSpent = lo.isSpent
-            self.deleteable = deleteable
-        }
-
-        init(outpoint: OutPoint, txout: TxOut, deleteable: Bool = true) {
-            self.outpoint = outpoint
-            self.txout = txout
-            self.deleteable = deleteable
-        }
-    }
-
     struct TxPsbt: Hashable {
-        let tx: BitcoinDevKit.Transaction
+        let tx: DecentralizedFFI.Transaction
         let psbt: Psbt
     }
 
@@ -61,34 +70,30 @@ struct SendScreen: View {
     @Environment(\.navigate) var navigate
     @Environment(\.showError) var showError
 
-    @State var outputs: [Output] = []
-    @State var selectedOutpoints = Set<String>()
+    @State var outputs: [Recipient] = []
+    @State var selectedOutpointIds = Set<String>()
+
+//    @State var selectedOutpoints: [String] = []
 
     @Query var contacts: [Contact] = []
-    @State var rate: Int = 0
+    @State var rate: UInt64 = 0
     @State var enableRbf: Bool = true
 
     @State var showUtxosSelector: Bool = false
 
-    @State var builtTx: TxPsbt? = nil
+    @State var builtPsbt: Psbt? = nil
 
-    var inputs: [Utxo] {
-        wallet.allUtxos.reduce(into: [Utxo]()) { partialResult, lo in
-            if selectedOutpoints.contains(lo.id) {
-                partialResult.append(Utxo(lo: lo))
-            }
-        }
-    }
+    @State private var inputs: [SendUtxo] = []
 
     var inputTotal: Amount {
         inputs.reduce(Amount.Zero) { partialResult, u in
-            partialResult + Amount.fromSat(fromSat: u.txout.value)
+            partialResult + u.txout.value
         }
     }
 
     var outputTotal: Amount {
         outputs.reduce(Amount.Zero) { partialResult, o in
-            partialResult + (try! Amount.fromBtc(fromBtc: o.value))
+            partialResult + Amount.from(btc: o.value).unwrap()
         }
     }
 
@@ -102,14 +107,15 @@ struct SendScreen: View {
         VStack {
             HSplitView {
                 VStack {
-                    Table(of: Utxo.self) {
+                    Table(of: SendUtxo.self) {
                         TableColumn("OutPoint") { utxo in
                             Text(utxo.id).truncationMode(.middle)
                         }
-                        TableColumn("Value", value: \.displayBtcValue)
+                        TableColumn("Value", value: \.txout.value.formatted)
                     } rows: {
                         ForEach(inputs) { o in
                             TableRow(o)
+                                .draggable(o)
                                 .contextMenu {
                                     if o.deleteable {
                                         Button { onRemoveUtxo(o.id) } label: {
@@ -118,6 +124,15 @@ struct SendScreen: View {
                                         }
                                     }
                                 }
+                        }
+                        .dropDestination(for: SendUtxo.self) { index, recipients in
+                            guard let first = recipients.first, let firstRemoveIndex = self.inputs.firstIndex(where: { $0.id == first.id }) else { return }
+
+                            self.inputs.removeAll(where: { pokemon in
+                                recipients.contains(where: { insertPokemon in insertPokemon.id == pokemon.id })
+                            })
+
+                            self.inputs.insert(contentsOf: recipients, at: index > firstRemoveIndex ? (index - 1) : index)
                         }
                     }
                     .contextMenu {
@@ -136,16 +151,19 @@ struct SendScreen: View {
                 }
                 // Output
                 VStack {
-                    Table(of: Binding<Output>.self) {
+                    Table(of: Binding<Recipient>.self) {
                         TableColumn("Address") { $o in
-                            Picker("", selection: $o.address) {
-                                ForEach(contacts) { contact in
-                                    Text(verbatim: contact.addr)
-                                        .truncationMode(.middle)
-                                        .tag(contact.addr)
+                            HStack(spacing: 0) {
+                                Image(systemName: "arrow.up.arrow.down")
+                                    .draggable(o)
+                                Picker("", selection: $o.address) {
+                                    ForEach(contacts) { contact in
+                                        Text(verbatim: "\(contact.name):\(contact.addr)")
+                                            .tag(contact.addr)
+                                            .truncationMode(.middle)
+                                    }
                                 }
                             }
-                            .truncationMode(.middle)
                         }
                         TableColumn("Value") { $o in
                             HStack(spacing: 0) {
@@ -159,8 +177,8 @@ struct SendScreen: View {
                             }
                         }
                     } rows: {
-                        ForEach($outputs) { o in
-                            TableRow(o)
+                        ForEach($outputs) { $o in
+                            TableRow($o)
                                 .contextMenu {
                                     Button {
                                         onRemoveOutput(o.id)
@@ -170,14 +188,29 @@ struct SendScreen: View {
                                     }
                                 }
                         }
+                        .dropDestination(for: Recipient.self) { index, recipients in
+                            guard let first = recipients.first, let firstRemoveIndex = self.outputs.firstIndex(where: { $0.id == first.id }) else { return }
+
+                            self.outputs.removeAll(where: { pokemon in
+                                recipients.contains(where: { insertPokemon in insertPokemon.id == pokemon.id })
+                            })
+
+                            self.outputs.insert(contentsOf: recipients, at: index > firstRemoveIndex ? (index - 1) : index)
+                        }
                     }
                     .truncationMode(.middle)
                     .contextMenu {
                         Button {
-                            outputs.append(Output(address: contacts.first?.addr ?? "", value: 0.001))
+                            onAddOutput()
                         } label: {
                             Image(systemName: "plus")
                             Text(verbatim: "Add")
+                        }
+                        Button {
+                            onRemoveAllOutput()
+                        } label: {
+                            Image(systemName: "trash")
+                            Text(verbatim: "Remove All")
                         }
                     }
                 }
@@ -198,10 +231,18 @@ struct SendScreen: View {
                 .padding(.all)
                 .sheet(isPresented: $showUtxosSelector, content: {
                     VStack {
-                        UtxoSelector(selected: $selectedOutpoints, utxos: wallet.utxos)
+                        UtxoSelector(selected: $selectedOutpointIds, utxos: wallet.utxos)
                         HStack {
                             PrimaryButton("OK") {
-                                showUtxosSelector = false
+                                let added = selectedOutpointIds.reduce(into: [SendUtxo]()) { partialResult, id in
+                                    if let lo = wallet.allUtxos.first(where: { $0.id == id }), !inputs.contains(where: {$0.id == lo.id}) {
+                                        partialResult.append(SendUtxo(lo: lo))
+                                    }
+                                }
+                                withAnimation {
+                                    inputs.append(contentsOf: added)
+                                    showUtxosSelector = false
+                                }
                             }
                         }
                     }
@@ -213,13 +254,12 @@ struct SendScreen: View {
                 }
             }
         }
-
-        .navigationDestination(item: $builtTx) { txPsbt in
-            SignScreen(tx: txPsbt.tx, psbt: txPsbt.psbt)
+        .navigationDestination(item: $builtPsbt) { psbt in
+            SignScreen(unsignedPsbts: [.init(psbt: psbt)])
         }
     }
 
-    func build(_ change: Output) throws -> TxPsbt {
+    func build(_ change: Recipient) -> Result<Psbt, Error> {
         var txBuilder = TxBuilder()
         txBuilder = txBuilder.ordering(txOrdering: TxOrdering.untouched)
 
@@ -227,22 +267,22 @@ struct SendScreen: View {
             txBuilder = txBuilder.addUtxo(outpoint: utxo.outpoint)
         }
 
-        // setting receiver
+        // receiver
         let settedChange = outputs.reduce(into: false) { settedChange, o in
             if o.id == change.id {
                 settedChange = true
                 return
             }
-            do {
-                let script = try Address(address: o.address, network: settings.network.toBdkNetwork()).scriptPubkey()
-                txBuilder = try txBuilder.addRecipient(script: script, amount: Amount.fromBtc(fromBtc: o.value))
-            } catch let error as AddressParseError {
-                showError(error, "\(o.address) is invalid")
-            } catch let error as ParseAmountError {
-                showError(error, "")
-            } catch {
-                showError(error, "")
+            guard case .success(let addr) = Address.from(address: o.address, network: settings.network.toBitcoinNetwork()) else {
+                showError(nil, "\(o.address) is invalid")
+                return
             }
+            guard case .success(let amount) = Amount.from(btc: o.value) else {
+                showError(nil, "\(o.value) is invalid")
+                return
+            }
+
+            txBuilder = txBuilder.addRecipient(script: addr.scriptPubkey(), amount: amount)
         }
 
         // all utxo to change
@@ -252,133 +292,95 @@ struct SendScreen: View {
             }
         }
 
-        txBuilder = txBuilder.enableRbf()
-        txBuilder = try txBuilder.feeRate(feeRate: FeeRate.fromSatPerVb(satPerVb: UInt64(rate)))
+        let feeRate = FeeRate.from(satPerVb: UInt64(rate))
 
-        txBuilder = try txBuilder.drainTo(script: Address(address: change.address, network: settings.network.toBdkNetwork()).scriptPubkey())
+        guard case .success(let feeRate) = feeRate else {
+            return .failure(feeRate.err()!)
+        }
 
-        let (tx, psbt) = try wallet.buildTx(txBuilder)
+        txBuilder = txBuilder.feeRate(feeRate: feeRate)
 
-        return TxPsbt(tx: tx, psbt: psbt)
+        let changeAddr = Address.from(address: change.address, network: settings.network.toBitcoinNetwork())
+
+        guard case .success(let changeAddr) = changeAddr else {
+            return .failure(changeAddr.err()!)
+        }
+
+        txBuilder = txBuilder.drainTo(script: changeAddr.scriptPubkey())
+
+        let psbt = wallet.finish(txBuilder)
+
+        guard case .success(let psbt) = psbt else {
+            return .failure(psbt.err()!)
+        }
+
+        return .success(psbt)
     }
 
-    func onMax(_ o: Output) {
-        do {
-            let psbt = try build(o)
-            outputs = psbt.tx.output().map { txout in
-                Output(address: try! txout.address(network: settings.network.toBdkNetwork()), value: Amount.fromSat(fromSat: txout.value).toBtc())
+    func onMax(_ o: Recipient) {
+        let psbt = build(o)
+        guard case .success(let psbt) = psbt else { return }
+        let tx = psbt.extractTxUncheckedFeeRate()
+
+        outputs = tx.output().map { txout in
+            Recipient(address: txout.formattedScript(network: settings.network.toBitcoinNetwork()), value: txout.value.toBtc())
+        }
+        for txin in tx.input() {
+            if !inputs.contains(where: { $0.id == txin.id }) {
+                if let lo = wallet.allUtxos.first(where: { $0.id == txin.id }) {
+                    withAnimation {
+                        inputs.append(SendUtxo(lo: lo))
+                    }
+                   
+                }
             }
-            for txin in psbt.tx.input() {
-                selectedOutpoints.insert(txin.id)
-            }
-            fee = try Amount.fromSat(fromSat: psbt.psbt.fee())
-        } catch {
-            print(error)
+        }
+        let _ = Result {
+            try psbt.fee()
+        }.map { amount in
+            fee = amount
         }
     }
 
     func onBuild() {
-        do {
-            builtTx = try build(Output(address: wallet.payAddress!.description, value: 0))
-        } catch let error as FeeRateError {
-            showError(error, "Invalid fee rate")
-        } catch let error as CreateTxError {
-            showError(error, "Create transaction error")
-        } catch {
-            showError(error, "Create transaction error")
+        let _ = build(Recipient(address: wallet.payAddress!.description, value: 0)).inspect { psbt in
+            withAnimation {
+                builtPsbt = psbt
+            }
         }
     }
 
     func onRemoveUtxo(_ id: String) {
-        selectedOutpoints.remove(id)
+        withAnimation {
+            inputs.removeAll { i in
+                i.id == id
+            }
+        }
     }
 
     func onRemoveAllUtxo() {
-        selectedOutpoints.removeAll()
+        withAnimation {
+            inputs.removeAll()
+        }
+    }
+
+    func onAddOutput() {
+        withAnimation {
+            outputs.append(Recipient(address: contacts.first?.addr ?? "", value: 0.001))
+        }
     }
 
     func onRemoveOutput(_ id: UUID) {
-        outputs.removeAll { $0.id == id }
-    }
-}
-
-struct SignScreen: View {
-    @Environment(WalletStore.self) var wallet: WalletStore
-    @Environment(WssStore.self) var wss: WssStore
-    @Environment(\.showError) var showError
-
-    @Environment(\.dismiss) var dismiss
-
-    let tx: BitcoinDevKit.Transaction
-
-    let psbt: Psbt
-
-    @State
-    var showSuccess: Bool = false
-
-    @State
-    var loading: Bool = false
-
-    var body: some View {
-        VStack {
-            ScrollView {
-                TransactionDetailView(tx: wallet.createWalletTx(tx: tx))
-            }
-            HStack {
-                Spacer()
-                PrimaryButton("Sign", action: onSign)
-            }
-            .padding(.all)
+        withAnimation {
+            outputs.removeAll { $0.id == id }
         }
-        .sheet(isPresented: $loading) {
-            ProgressView()
-        }
-        .sheet(isPresented: $showSuccess) {
-            VStack {
-                VStack(spacing: 20) {
-                    Image(systemName: "checkmark.circle")
-                        .resizable()
-                        .frame(width: 64, height: 64)
-                        .foregroundStyle(.green)
-                    Text("Payment Sent")
-                        .font(.title2)
-                    Text("Your transaction has been successfully sent")
-                        .font(.footnote)
-                    PrimaryButton("OK") {
-                        dismiss()
-                        showSuccess = false
-                    }
-                }
-            }
-            .padding(.all)
-        }
-        .navigationTitle("Send Transaction Detail")
     }
 
-    func onSign() {
-        loading = true
-
-        Task {
-            do {
-                let psbt = try wallet.sign(psbt)
-
-                let tx = try psbt.extractTx()
-                wss.subscribe([.transaction(tx.id)])
-
-                let _ = try self.wallet.broadcast(tx)
-                self.wallet.load()
-                try await Task.sleep(nanoseconds: 1500000000)
-                self.loading = false
-                self.showSuccess = true
-
-            } catch let error as CreateTxError {
-                showError(error, "")
-                self.loading = false
-            } catch {
-                showError(error, "")
-                self.loading = false
-            }
+    func onRemoveAllOutput() {
+        withAnimation {
+            outputs.removeAll()
         }
+       
     }
 }
 

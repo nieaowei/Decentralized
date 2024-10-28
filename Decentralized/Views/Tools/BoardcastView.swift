@@ -5,7 +5,7 @@
 //  Created by Nekilc on 2024/7/19.
 //
 
-import BitcoinDevKit
+import DecentralizedFFI
 import SwiftUI
 
 
@@ -13,7 +13,7 @@ import SwiftUI
 struct BroadcastView: View {
     @State var sigedHex: String = ""
     @State var showTxid: String? = nil
-    @State var tx: BitcoinDevKit.Transaction? = nil
+    @State var tx: DecentralizedFFI.Transaction? = nil
 
     @State var errorMsg: String? = nil
     @State var showError: Bool = false
@@ -54,7 +54,7 @@ struct BroadcastView: View {
 
     func onExtract() {
         do {
-            tx = try BitcoinDevKit.Transaction(transactionBytes: sigedHex.hexStringToByteArray())
+            tx = try DecentralizedFFI.Transaction(transactionBytes: Data(sigedHex.hexStringToByteArray()))
         } catch {
             logger.error("\(error.localizedDescription)")
             errorMsg = "Invalid Transaction hex"

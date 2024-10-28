@@ -16,6 +16,7 @@ struct ServerSettings: View {
     @State var serverUrl: String = "https://mempool.space/api"
     @State var esploraUrl: String = "https://mempool.space/api"
     @State var wssUrl: String = "wss://mempool.space/api/v1/wss"
+    @State var enableCpfp: Bool = false
 
     var body: some View {
         Form {
@@ -39,8 +40,10 @@ struct ServerSettings: View {
                 ServerUrlPicker("Websocket Url", selection: $wssUrl, serverType: .EsploraWss, network: network)
             }
             
-            Section("Esplora Sever") {
-                ServerUrlPicker("Server Url", selection: $esploraUrl, serverType: .Esplora, network: network)
+            Section("CFPF Support") {
+                Toggle("Enable", isOn: $enableCpfp)
+                ServerUrlPicker("Esplora Url", selection: $esploraUrl, serverType: .Esplora, network: network)
+                    .disabled(!enableCpfp)
             }
             .sectionActions {
                 Button(action: onApply) {
@@ -53,6 +56,8 @@ struct ServerSettings: View {
             network = settings.network
             serverUrl = settings.serverUrl
             wssUrl = settings.wssUrl
+            esploraUrl = settings.esploraUrl
+            enableCpfp = settings.enableCpfp
         }
         .onChange(of: network) {
             serverUrl = staticServerUrls.first(where: { u in
@@ -61,6 +66,10 @@ struct ServerSettings: View {
 
             wssUrl = staticServerUrls.first(where: { u in
                 u.network == network.rawValue && u.type == ServerType.EsploraWss.rawValue
+            })!.url
+            
+            esploraUrl = staticServerUrls.first(where: { u in
+                u.network == network.rawValue && u.type == ServerType.Esplora.rawValue
             })!.url
         }
         .onChange(of: serverType) {
@@ -75,6 +84,8 @@ struct ServerSettings: View {
         settings.serverUrl = serverUrl
         settings.serverType = serverType
         settings.wssUrl = wssUrl
+        settings.esploraUrl = esploraUrl
+        settings.enableCpfp = enableCpfp
         settings.changed = !settings.changed // ???  the update cannot be triggered without here
     }
 }

@@ -5,7 +5,7 @@
 //  Created by Nekilc on 2024/5/22.
 //
 
-import BitcoinDevKit
+import DecentralizedFFI
 import SwiftData
 import SwiftUI
 import UserNotifications
@@ -43,14 +43,22 @@ struct DecentralizedApp: App {
     @Environment(\.openWindow) private var openWindow
 
     let settings: AppSettings
-    let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, CpfpChain.self, configurations: ModelConfiguration())
+    let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, CPFPChain.self, Ordinal.self, RuneInfo.self, configurations: ModelConfiguration())
+
+    let esploraClient: EsploraClientWrap
+    @State var wss: WssStore
 
     @State private var errorWrapper: ErrorWrapper?
 
     init() {
         let settings = AppSettings()
+        logger.info("App Init \(settings.network.rawValue)")
         logger.info("App Init \(settings.serverUrl)")
+
+        self.esploraClient = EsploraClientWrap(inner: EsploraClient(url: settings.esploraUrl))
         self.settings = settings
+        _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
+        self.mainModelContainer.mainContext.autosaveEnabled = true
     }
 
     var body: some Scene {
@@ -64,7 +72,11 @@ struct DecentralizedApp: App {
                     .windowMinimizeBehavior(.disabled)
                     .windowResizeBehavior(.disabled)
                     .sheet(item: $errorWrapper) { errorWrapper in
-                        Text(errorWrapper.error.localizedDescription)
+                        Text(errorWrapper.guidance)
+                            .font(.title3)
+                        if let error = errorWrapper.error {
+                            Text(error.localizedDescription)
+                        }
                     }
 
             } else {
@@ -74,7 +86,9 @@ struct DecentralizedApp: App {
                         VStack {
                             Text(errorWrapper.guidance)
                                 .font(.title3)
-                            Text(errorWrapper.error.localizedDescription)
+                            if let error = errorWrapper.error {
+                                Text(error.localizedDescription)
+                            }
                             Button {
                                 self.errorWrapper = nil
                             } label: {
@@ -88,6 +102,8 @@ struct DecentralizedApp: App {
             }
         }
         .environment(settings)
+        .environment(esploraClient)
+        .environment(wss)
         .environment(\.showError) { error, guidance in
             errorWrapper = ErrorWrapper(error: error, guidance: guidance)
         }
@@ -112,7 +128,9 @@ struct DecentralizedApp: App {
                 .windowMinimizeBehavior(.disabled)
                 .windowResizeBehavior(.disabled)
                 .sheet(item: $errorWrapper) { errorWrapper in
-                    Text(errorWrapper.error.localizedDescription)
+                    if let error = errorWrapper.error {
+                        Text(error.localizedDescription)
+                    }
                 }
         }
         .environment(settings)

@@ -9,11 +9,17 @@ import Foundation
 import SwiftData
 
 @Model
-class Contact {
-    @Attribute(.unique) var addr: String
+class Contact: Identifiable {
+    @Attribute(.unique)
+    var id: String
+
+    @Attribute(.unique)
+    var addr: String
+
     var name: String = ""
-    
+
     init(addr: String, name: String) {
+        self.id = addr
         self.addr = addr
         self.name = name
     }

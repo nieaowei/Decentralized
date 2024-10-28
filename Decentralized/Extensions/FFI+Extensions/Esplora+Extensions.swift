@@ -5,22 +5,26 @@
 //  Created by Nekilc on 2024/8/31.
 //
 
-import BitcoinDevKit
+import DecentralizedFFI
 
-extension BitcoinDevKit.Tx: @retroactive Identifiable {
+extension DecentralizedFFI.Tx: @retroactive Identifiable {
     public var id: String {
         self.txid
     }
+
+    public var feeRate: UInt64 {
+        self.fee.toSat() / (self.weight / 4)
+    }
 }
 
-extension BitcoinDevKit.PrevOut {
-    func address(network:Network) -> Address {
+extension PrevOut {
+    func address(network: Network) -> Address {
         return try! Address.fromScript(script: self.scriptpubkey, network: network)
     }
 }
 
-extension BitcoinDevKit.Vout{
-    func address(network:Network) -> Address {
+extension DecentralizedFFI.Vout {
+    func address(network: Network) -> Address {
         return try! Address.fromScript(script: self.scriptpubkey, network: network)
     }
 }

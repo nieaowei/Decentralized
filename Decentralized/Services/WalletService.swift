@@ -4,7 +4,7 @@
 //  Created by Nekilc on 2024/5/24.
 //
 
-import BitcoinDevKit
+import DecentralizedFFI
 import Foundation
 import Observation
 import OSLog
@@ -12,6 +12,11 @@ import OSLog
 enum WalletMode: String, Codable, CaseIterable {
     case xverse
     case peek
+}
+
+enum WalletType: String, Codable, CaseIterable {
+    case pay
+    case ordinal
 }
 
 @Observable
@@ -56,12 +61,12 @@ enum SyncClientInner {
         case .esplora(let esploraClient):
             try {
                 logger.info("esplora sync")
-                return try esploraClient.sync(syncRequest: syncRequest, parallelRequests: 10)
+                return try esploraClient.sync(request: syncRequest, parallelRequests: 10)
             }()
         case .electrum(let electrumClient):
             try {
                 logger.info("electrum sync")
-                return try electrumClient.sync(syncRequest: syncRequest, batchSize: 10, fetchPrevTxouts: true)
+                return try electrumClient.sync(request: syncRequest, batchSize: 10, fetchPrevTxouts: true)
             }()
         }
     }
@@ -76,21 +81,21 @@ enum SyncClientInner {
     }
 }
 
-class WalletSyncScriptInspector: SyncScriptInspector {
-    private let updateProgress: (UInt64, UInt64) -> Void
-    private var inspectedCount: UInt64 = 0
-    private var totalCount: UInt64 = 0
-
-    init(updateProgress: @escaping (UInt64, UInt64) -> Void) {
-        self.updateProgress = updateProgress
-    }
-
-    func inspect(script: Script, total: UInt64) {
-        self.totalCount = total
-        self.inspectedCount += 1
-        self.updateProgress(self.inspectedCount, self.totalCount)
-    }
-}
+// class WalletSyncScriptInspector: SyncScriptInspector {
+//    private let updateProgress: (UInt64, UInt64) -> Void
+//    private var inspectedCount: UInt64 = 0
+//    private var totalCount: UInt64 = 0
+//
+//    init(updateProgress: @escaping (UInt64, UInt64) -> Void) {
+//        self.updateProgress = updateProgress
+//    }
+//
+//    func inspect(script: Script, total: UInt64) {
+//        self.totalCount = total
+//        self.inspectedCount += 1
+//        self.updateProgress(self.inspectedCount, self.totalCount)
+//    }
+// }
 
 enum WalletError: Error {
     case walletNotFound
@@ -134,10 +139,6 @@ struct WalletService {
         ((self.payWallet, self.payConn, self.payAddress), (self.ordiWallet, self.ordiConn, self.ordiAddress)) = try WalletService.loadWalletFromBackup(network: network)
     }
 
-    private func nextPayAddress() -> AddressInfo {
-        return self.payWallet.revealNextAddress(keychain: .external)
-    }
-
     func getPayAddress() -> Address {
         return self.payAddress
     }
@@ -157,7 +158,7 @@ struct WalletService {
     func getUtxos() -> [LocalOutput] {
         return self.payWallet.listUnspent()
     }
-    
+
     func getAllUtxos() -> [LocalOutput] {
         return self.payWallet.listOutput()
     }
@@ -169,7 +170,7 @@ struct WalletService {
     func getTxOut(op: OutPoint) -> TxOut? {
         return self.payWallet.getTxout(outpoint: op)
     }
-    
+
     func getUtxo(op: OutPoint) -> LocalOutput? {
         return self.payWallet.getUtxo(outpoint: op)
     }
@@ -182,30 +183,30 @@ struct WalletService {
         let mnemonic = try Mnemonic.fromString(mnemonic: words)
 
         let paySecretKey = DescriptorSecretKey(
-            network: network.toBdkNetwork(),
+            network: network.toBitcoinNetwork(),
             mnemonic: mnemonic,
             password: nil
         )
 
         let payDescriptor = switch mode {
         case .xverse:
-            Descriptor.newBip49(
-                secretKey: paySecretKey,
-                keychain: .external,
-                network: network.toBdkNetwork()
+            try Descriptor.newBip49(
+                secretKey: paySecretKey.derivePriv(path: DerivationPath(path: "m/49'/0'/0'/0/0")),
+                keychainKind: .external,
+                network: network.toBitcoinNetwork()
             )
         case .peek:
-            Descriptor.newBip86(
-                secretKey: paySecretKey,
-                keychain: .external,
-                network: network.toBdkNetwork()
+            try Descriptor.newBip86(
+                secretKey: paySecretKey.derivePriv(path: DerivationPath(path: "m/86'/0'/0'/0/0")),
+                keychainKind: .external,
+                network: network.toBitcoinNetwork()
             )
         }
 
-        let ordiDescriptor = Descriptor.newBip86(
-            secretKey: paySecretKey,
-            keychain: .external,
-            network: network.toBdkNetwork()
+        let ordiDescriptor = try Descriptor.newBip86(
+            secretKey: paySecretKey.derivePriv(path: DerivationPath(path: "m/86'/0'/0'/0/1")),
+            keychainKind: .external,
+            network: network.toBitcoinNetwork()
         )
 
         return (payDescriptor, ordiDescriptor)
@@ -246,14 +247,14 @@ struct WalletService {
             connection: ordiDb
         )
 
-        let payAddress = payWallet.peekAddress(keychain: .external, index: 0).address
-        _ = payWallet.revealAddressesTo(keychain: .external, index: 0)
-        var ordiAddress = ordiWallet.peekAddress(keychain: .external, index: 0).address
-        _ = ordiWallet.revealAddressesTo(keychain: .external, index: 0)
-        if mode == .peek {
-            ordiAddress = ordiWallet.peekAddress(keychain: .external, index: 1).address
-            _ = ordiWallet.revealAddressesTo(keychain: .external, index: 1)
-        }
+//        let payAddress = payWallet.peekAddress(keychainKind: .external, index: 0).address
+        let payAddress = payWallet.revealNextAddress(keychainKind: .external).address
+//        var ordiAddress = ordiWallet.peekAddress(keychainKind: .external, index: 0).address
+        let ordiAddress = ordiWallet.revealNextAddress(keychainKind: .external).address
+//        if mode == .peek {
+//            ordiAddress = ordiWallet.peekAddress(keychainKind: .external, index: 1).address
+//            _ = ordiWallet.revealAddressesTo(keychainKind: .external, index: 1)
+//        }
 
         _ = try payWallet.persist(connection: payDb)
 
@@ -263,7 +264,7 @@ struct WalletService {
             mnemonic: words12,
             mode: mode
         )
-        let ok = try KeyChainService.saveBackupInfo(backupInfo)
+        _ = try KeyChainService.saveBackupInfo(backupInfo)
 
         return ((payWallet, payDb, payAddress), (ordiWallet, ordiDb, ordiAddress))
     }
@@ -292,11 +293,11 @@ struct WalletService {
             connection: ordiDb
         )
 
-        let payAddr = payWallet.peekAddress(keychain: .external, index: 0).address
-        var ordiAddr = ordiWallet.peekAddress(keychain: .external, index: 0).address
-        if mode == .peek {
-            ordiAddr = ordiWallet.peekAddress(keychain: .external, index: 1).address
-        }
+        let payAddr = payWallet.peekAddress(keychainKind: .external, index: 0).address
+        let ordiAddr = ordiWallet.peekAddress(keychainKind: .external, index: 0).address
+//        if mode == .peek {
+//            ordiAddr = ordiWallet.peekAddress(keychainKind: .external, index: 1).address
+//        }
 
         return ((payWallet, db, payAddr), (ordiWallet, ordiDb, ordiAddr))
     }
@@ -318,54 +319,19 @@ struct WalletService {
         try FileManager.default.deleteAllContentsInDocumentsDirectory()
     }
 
-    func buildTx(_ tx: TxBuilder) throws -> (BitcoinDevKit.Transaction, Psbt) {
-        let psbt = try tx.finish(wallet: self.payWallet)
-        return try (psbt.extractTx(), psbt)
-    }
-
-    func buildAndSignTx(_ tx: TxBuilder) throws -> (BitcoinDevKit.Transaction, Psbt) {
-        let psbt = try tx.finish(wallet: self.payWallet)
-        let ok = try payWallet.sign(psbt: psbt)
-        if !ok {
-            print("SIgn error")
-        }
-
-        return try (psbt.extractTx(), psbt)
-    }
-
-    func buildTransaction(address: String, amount: UInt64, feeRate: UInt64) throws
-        -> Psbt
-    {
-        let script = try Address(address: address, network: self.network.toBdkNetwork())
-            .scriptPubkey()
-        let txBuilder = try TxBuilder()
-            .addRecipient(
-                script: script,
-                amount: Amount.fromSat(fromSat: amount)
-            )
-            .feeRate(feeRate: FeeRate.fromSatPerVb(satPerVb: feeRate))
-            .drainTo(script: self.payAddress.scriptPubkey())
-            .finish(wallet: self.payWallet)
-        return txBuilder
-    }
-
-    func signAndBroadcast(psbt: Psbt) throws {
-        let isSigned = try payWallet.sign(psbt: psbt)
-        if isSigned {
-            let transaction = try psbt.extractTx()
-            let client = self.syncClient
-            try client.broadcast(transaction)
-        } else {
-            throw WalletError.walletNotFound
+    func finish(_ txbuiler: TxBuilder) -> Result<Psbt, CreateTxError> {
+        Result {
+            try txbuiler.finish(wallet: self.payWallet)
         }
     }
 
-    func sign(_ psbt: Psbt) throws -> Psbt {
-        let ok = try payWallet.sign(psbt: psbt)
-        if !ok {
-            throw WalletError.signError
+    func sign(_ psbt: Psbt, walletType: WalletType = .pay) -> Result<Bool, SignerError> {
+        Result {
+            switch walletType {
+            case .pay: try self.payWallet.sign(psbt: psbt)
+            case .ordinal: try self.ordiWallet.sign(psbt: psbt)
+            }
         }
-        return psbt
     }
 
     func inspector(inspectedCount: UInt64, total: UInt64) {
@@ -373,7 +339,7 @@ struct WalletService {
     }
 
     func sync() async throws {
-        let syncRequest = try payWallet.startSyncWithRevealedSpks().inspectSpks(inspector: WalletSyncScriptInspector(updateProgress: self.inspector)).build()
+        let syncRequest = try payWallet.startSyncWithRevealedSpks().build()
 
         self.logger.info("Syning")
 
@@ -385,35 +351,37 @@ struct WalletService {
         _ = try self.payWallet.persist(connection: self.payConn)
     }
 
-    func calculateFee(_ tx: BitcoinDevKit.Transaction) -> UInt64 {
+    func calculateFee(_ tx: DecentralizedFFI.Transaction) -> Amount {
         do {
-            let fee = try self.payWallet.calculateFee(tx: tx)
-            return fee.toSat()
+            return try self.payWallet.calculateFee(tx: tx)
         } catch {
-            return 0
+            return .Zero
         }
     }
 
-    func calculateFeeRate(_ tx: BitcoinDevKit.Transaction) -> UInt64 {
+    func calculateFeeRate(_ tx: DecentralizedFFI.Transaction) -> FeeRate {
         do {
-            let feeRate = try self.payWallet.calculateFeeRate(tx: tx)
-            return feeRate.toSatPerVbCeil()
+            return try self.payWallet.calculateFeeRate(tx: tx)
         } catch {
-            return 0
+            return try! .fromSatPerVb(satPerVb: 0)
         }
     }
 
-    func sentAndReceived(_ tx: BitcoinDevKit.Transaction) -> SentAndReceivedValues {
+    func sentAndReceived(_ tx: DecentralizedFFI.Transaction) -> SentAndReceivedValues {
         self.payWallet.sentAndReceived(tx: tx)
     }
 
-    func broadcast(_ tx: BitcoinDevKit.Transaction) throws -> String {
+    func broadcast(_ tx: DecentralizedFFI.Transaction) throws -> String {
         let txid = try self.syncClient.broadcast(tx)
 
         self.payWallet.applyUnconfirmedTxs(txAndLastSeens: [TransactionAndLastSeen(tx: tx, lastSeen: UInt64(Date().timeIntervalSince1970))])
         let _ = try self.payWallet.persist(connection: self.payConn)
 
         return txid
+    }
+
+    func insertTxOut(op: OutPoint, txout: TxOut) {
+        self.payWallet.insertTxout(outpoint: op, txout: txout)
     }
 }
 

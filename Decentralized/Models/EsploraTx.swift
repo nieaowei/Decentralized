@@ -1,11 +1,7 @@
-// This file was generated from JSON Schema using quicktype, do not modify it directly.
-// To parse the JSON, add this file to your project and do:
-//
-//   let person = try Person(json)
+
 
 import Foundation
 
-// MARK: - PersonElement
 
 struct EsploraTx: Identifiable, Codable {
     var id: String {
@@ -20,7 +16,6 @@ struct EsploraTx: Identifiable, Codable {
     let status: Status
 }
 
-// MARK: PersonElement convenience initializers and mutators
 
 extension EsploraTx {
     init(data: Data) throws {
@@ -162,8 +157,8 @@ struct Vout: Codable, Identifiable {
     let scriptpubkeyType: ScriptpubkeyType
     let scriptpubkeyAddress: String?
     let value: UInt64
-    var id: UUID = UUID()
-    
+    var id: UUID = .init()
+
     enum CodingKeys: String, CodingKey {
         case scriptpubkey
         case scriptpubkeyASM = "scriptpubkey_asm"
@@ -172,8 +167,6 @@ struct Vout: Codable, Identifiable {
         case value
     }
 }
-
-
 
 // MARK: Vout convenience initializers and mutators
 
@@ -254,38 +247,27 @@ extension Array where Element == Txs.Element {
     }
 }
 
-extension EsploraTx {
-//    var changeBalance: Amount{
-//        self.
-//    }
+struct EsploraWssTx: Identifiable, Codable {
+    var id: String {
+        self.txid
+    }
+
+    
+    let txid: String
+    let flags: UInt64
+    let feeRate: Double
+
+    func isAnyoneCanPay() -> Bool {
+        self.flags & (1 << 44) != 0
+    }
+    
+    func isInscription() -> Bool {
+        self.flags & (1 << 26) != 0
+    }
+    
+    func isOpReturn() -> Bool {
+        self.flags & (1 << 24) != 0
+    }
 }
 
-import BitcoinDevKit
 
-// extension Tx: BitcoinDevKit.TransactionProtocol {
-//    func input()  -> [TxIn]
-//
-//    func isCoinbase()  -> Bool{
-//
-//    }
-//
-//    func isExplicitlyRbf()  -> Bool
-//
-//    func isLockTimeEnabled()  -> Bool
-//
-//    func lockTime()  -> UInt32
-//
-//    func output()  -> [TxOut]
-//
-//    func serialize()  -> [UInt8]
-//
-//    func totalSize()  -> UInt64
-//
-//    func txid()  -> String
-//
-//    func version()  -> Int32
-//
-//    func vsize()  -> UInt64
-//
-//    func weight()  -> UInt64
-// }

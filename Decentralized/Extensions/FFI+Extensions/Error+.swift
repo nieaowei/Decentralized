@@ -5,7 +5,7 @@
 //  Created by Matthew Ramsden on 9/5/23.
 //
 
-import BitcoinDevKit
+import DecentralizedFFI
 import Foundation
 
 extension CalculateFeeError {

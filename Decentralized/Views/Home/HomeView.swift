@@ -4,8 +4,9 @@
 //  Created by Nekilc on 2024/5/27.
 //
 
-import BitcoinDevKit
+import DecentralizedFFI
 import LocalAuthentication
+import SwiftData
 import SwiftUI
 
 struct HomeDetailView: View {
@@ -21,14 +22,22 @@ struct HomeDetailView: View {
             case .utxos:
                 UtxosView()
                     .navigationTitle(dest.title)
-            case .transactions:
-                TransactionView()
-                    .navigationTitle(dest.title)
+            case .transactions(let tx):
+                switch tx {
+                case .list:
+                    TransactionView()
+                        .navigationTitle(tx.title)
+                case .detail(let tx):
+                    TransactionDetailView(tx: tx)
+                }
             case .send(let selected):
-                SendScreen(selectedOutpoints: selected)
+                SendScreen(selectedOutpointIds: selected)
+                    .navigationTitle(dest.title)
+            case .sign:
+                SignView()
                     .navigationTitle(dest.title)
             case .contacts:
-                ContactView()
+                ContactScreen()
                     .navigationTitle(dest.title)
             }
         case .tools(let dest):
@@ -36,9 +45,9 @@ struct HomeDetailView: View {
             case .broadcast:
                 BroadcastView()
                     .navigationTitle(dest.title)
-            case .sign:
-                SignView()
-                    .navigationTitle(dest.title)
+            case .mempoolMonitor:
+                MempoolMonitor()
+                    .navigationTitle("")
             case .ordinal:
                 OrdinalMintScreen()
                     .navigationTitle(dest.title)
@@ -48,26 +57,33 @@ struct HomeDetailView: View {
 }
 
 struct HomeView: View {
+    @Environment(\.modelContext) private var ctx
     @Environment(\.scenePhase) private var scenePhase
     @Environment(AppSettings.self) var settings
+    @Environment(WssStore.self) var wss
+
     @Environment(\.showError) private var showError
 
+    @Environment(EsploraClientWrap.self) private var esploraClient
+
     @State var syncClient: SyncClient
-    @State var wss: WssStore
+//    @State var wss: WssStore
     @State var wallet: WalletStore
     @State var isFirst: Bool = true
 
     @State var showPop: Bool = false
+    @State var showBalancePop: Bool = false
     @State var route: Route = .wallet(.me)
     @State var routes: [Route] = [.wallet(.me)]
 
     @State
     @MainActor
     var isAuth: Bool = false
-    
+
     var authCtx: LAContext = .init()
 
     init(_ settings: AppSettings) {
+        logger.info("Init HomeView")
         let syncClientInner = switch settings.serverType {
         case .Esplora:
             SyncClientInner.esplora(EsploraClient(url: settings.serverUrl))
@@ -78,10 +94,16 @@ struct HomeView: View {
         }
 
         let syncClient = SyncClient(inner: syncClientInner)
-        let walletService = try! WalletService(network: settings.network, syncClient: .init(inner: syncClientInner))
-        _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
+        do{
+            let walletService = try WalletService(network: settings.network, syncClient: .init(inner: syncClientInner))
+            _wallet = State(wrappedValue: WalletStore(wallet: walletService))
+
+        }catch{
+            settings.isOnBoarding = true
+            fatalError("error")
+        }
+//        _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
         _syncClient = State(wrappedValue: syncClient)
-        _wallet = State(wrappedValue: WalletStore(wallet: walletService))
         isAuth = !settings.enableTouchID
     }
 
@@ -129,17 +151,6 @@ struct HomeView: View {
                     }
                 }
             }
-            .toolbar {
-                ToolbarItemGroup(placement: .primaryAction) {
-                    Text("\(wss.fastFee) sats/vB")
-                    Text("\(wallet.balance.displayBtc)")
-                    WalletSyncStatusView(synced: wallet.syncStatus)
-                        .onTapGesture {
-                            wallet.updateStatus(.notStarted)
-                        }
-                    WssStatusView(status: wss.status)
-                }
-            }
             .environment(wallet)
             .environment(syncClient)
             .environment(wss)
@@ -160,6 +171,7 @@ struct HomeView: View {
             }
             .task(id: wss.status) {
                 if wss.status == .connected {
+                    wss.subscribe([.mempoolBlock(0)])
                     wss.subscribe([.address(wallet.payAddress?.description ?? "")])
                     if wallet.syncStatus == .synced { // Track tx after Syned
                         for tx in wallet.transactions {
@@ -188,17 +200,14 @@ struct HomeView: View {
                     }
                 }
             }
-            .task(id: wss.event) {
-                wallet.updateStatus(.notStarted)
+            .onChange(of: wss.status) { _, newValue in
+                if newValue == EsploraWss.Status.connected {
+                    handleWssData()
+                }
             }
             .onAppear {
                 wss.connect()
             }
-
-            //        .onChange(of: settings.serverType) {
-            //            logger.info("serverType Change")
-            //            updateSyncClientInner()
-            //        }
             .onChange(of: settings.serverUrl) {
                 logger.info("serverUrl Change")
                 updateSyncClientInner()
@@ -237,6 +246,73 @@ struct HomeView: View {
     func updateWallet() {
         updateSyncClientInner()
         wallet = WalletStore(wallet: try! WalletService(network: settings.network, syncClient: syncClient))
+    }
+
+    func handleWssData() {
+        Task {
+            for await data in wss.asyncStream()! {
+                switch data {
+                case .mempoolTx(let esploraWssTx):
+                    Task {
+                        if case .success(let ordinals) = await fetchOrdinalTxPairsAsync(esploraClient: esploraClient, settings: settings, esploraWssTx: esploraWssTx)
+                            .inspectError({ error in
+                                logger.error("[fetchOrdinalTxPairs] \(error)")
+                            })
+                        {
+                            for ordi in ordinals {
+                                
+                                if ordi.type == .rune && ordi.ordinalId.isEmpty {
+                                    if case .success(let runeid) = RuneInfo.fetchOneByName(ctx: ctx, name: ordi.name), let runeid {
+                                        ordi.ordinalId = runeid.id
+                                    }
+                                }
+                                _ = ctx.upsert(ordi)
+                            }
+                        }
+                    }
+                case .newTx(let esploraTx):
+                    NotificationManager.sendNotification(title: NSLocalizedString("New Transaction", comment: ""), subtitle: esploraTx.id, body: "")
+                    wallet.syncStatus = .notStarted
+                case .txConfirmed(let string):
+                    NotificationManager.sendNotification(title: NSLocalizedString("Transaction Confirmed", comment: ""), subtitle: string, body: "")
+                    wallet.syncStatus = .notStarted
+                case .txRemoved(let esploraTx):
+                    NotificationManager.sendNotification(title: NSLocalizedString("Transaction Removed", comment: ""), subtitle: esploraTx.id, body: "")
+                    wallet.syncStatus = .notStarted
+                case .block(let block):
+                    try! Ordinal.clearConfirmed(ctx: ctx, blockMinFeeRate: block.extras.feeRange.first!)
+                }
+            }
+        }
+    }
+}
+
+struct WalletStatusToolbar: ToolbarContent {
+    @Environment(WalletStore.self) var wallet: WalletStore
+    @Environment(WssStore.self) var wss
+
+    @State var showBalancePop: Bool = false
+
+    var body: some ToolbarContent {
+        ToolbarItemGroup(placement: .confirmationAction) {
+            Text("\(wss.fastFee) sats/vB")
+            Text("\(wallet.balance.total.formatted)")
+                .onTapGesture {
+                    showBalancePop = true
+                }
+                .popover(isPresented: $showBalancePop) {
+                    Form {
+                        LabeledContent("Confirmed", value: wallet.balance.confirmed.formatted)
+                        LabeledContent("Unconfirmed", value: wallet.balance.untrustedPending.formatted)
+                    }
+                    .padding(.all)
+                }
+            WalletSyncStatusView(synced: wallet.syncStatus)
+                .onTapGesture {
+                    wallet.updateStatus(.notStarted)
+                }
+            WssStatusView(status: wss.status)
+        }
     }
 }
 
@@ -296,7 +372,8 @@ struct WalletSyncStatusView: View {
     var body: some View {
         Image(systemName: sign().0)
             .foregroundColor(sign().1)
-            .foregroundColor(.green)
+//            .foregroundColor(.green)
+            .aspectRatio(contentMode: .fit)
             .symbolEffect(.pulse.wholeSymbol, isActive: sign().2)
     }
 

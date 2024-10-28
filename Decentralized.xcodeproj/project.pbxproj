@@ -7,26 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		151E97DF2C48E69D001DA0E2 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 151E97DE2C48E69D001DA0E2 /* WidgetKit.framework */; };
-		151E97E12C48E69D001DA0E2 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 151E97E02C48E69D001DA0E2 /* SwiftUI.framework */; };
-		151E97EF2C48E69F001DA0E2 /* AccountExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 151E97DD2C48E69D001DA0E2 /* AccountExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		151E97FD2C49FD62001DA0E2 /* BitcoinDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 151E97FC2C49FD62001DA0E2 /* BitcoinDevKit */; };
-		153F3D4C2C9A462400586F2B /* BitcoinDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 153F3D4B2C9A462400586F2B /* BitcoinDevKit */; };
-		1542476B2C80598500EA1376 /* BitcoinDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1542476A2C80598500EA1376 /* BitcoinDevKit */; };
 		1542476D2C81174700EA1376 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 1542476C2C81174700EA1376 /* README.md */; };
 		154247732C81709800EA1376 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 154247722C81709800EA1376 /* Localizable.xcstrings */; };
-		15F6DBB92C9A26D700F98D72 /* BitcoinDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 15F6DBB82C9A26D700F98D72 /* BitcoinDevKit */; };
-		15F6DBBB2C9A275900F98D72 /* BitcoinDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 15F6DBBA2C9A275900F98D72 /* BitcoinDevKit */; };
+		15CB0D412CCB89EA00565F76 /* DecentralizedFFI in Frameworks */ = {isa = PBXBuildFile; productRef = 15CB0D402CCB89EA00565F76 /* DecentralizedFFI */; };
+		15CB0D442CCB8AC600565F76 /* DecentralizedFFI in Frameworks */ = {isa = PBXBuildFile; productRef = 15CB0D432CCB8AC600565F76 /* DecentralizedFFI */; };
+		15CB0D472CCB8D0100565F76 /* DecentralizedFFI in Frameworks */ = {isa = PBXBuildFile; productRef = 15CB0D462CCB8D0100565F76 /* DecentralizedFFI */; };
+		15CB0D4A2CCB922C00565F76 /* DecentralizedFFI in Frameworks */ = {isa = PBXBuildFile; productRef = 15CB0D492CCB922C00565F76 /* DecentralizedFFI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		151E97ED2C48E69F001DA0E2 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 15BFE9C42C3EACCE00EDE0B4 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 151E97DC2C48E69D001DA0E2;
-			remoteInfo = AccountExtension;
-		};
 		15F857062C47223000495405 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 15BFE9C42C3EACCE00EDE0B4 /* Project object */;
@@ -43,7 +32,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				151E97EF2C48E69F001DA0E2 /* AccountExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -52,7 +40,6 @@
 
 /* Begin PBXFileReference section */
 		151005132C4747740009FDE6 /* Decentralized.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Decentralized.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		151E97DD2C48E69D001DA0E2 /* AccountExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AccountExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		151E97DE2C48E69D001DA0E2 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		151E97E02C48E69D001DA0E2 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		1542476C2C81174700EA1376 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -68,40 +55,23 @@
 			);
 			target = 15BFE9CB2C3EACCE00EDE0B4 /* Decentralized */;
 		};
-		151E97F32C48E69F001DA0E2 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 151E97DC2C48E69D001DA0E2 /* AccountExtension */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		151E97E22C48E69D001DA0E2 /* Account */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (151E97F32C48E69F001DA0E2 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Account; sourceTree = "<group>"; };
+		151E97E22C48E69D001DA0E2 /* Account */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Account; sourceTree = "<group>"; };
 		15BFE9CE2C3EACCE00EDE0B4 /* Decentralized */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (151005962C4747B30009FDE6 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Decentralized; sourceTree = "<group>"; };
 		15F857032C47223000495405 /* DecentralizedTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = DecentralizedTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		151E97DA2C48E69D001DA0E2 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				151E97E12C48E69D001DA0E2 /* SwiftUI.framework in Frameworks */,
-				151E97DF2C48E69D001DA0E2 /* WidgetKit.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		15BFE9C92C3EACCE00EDE0B4 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				153F3D4C2C9A462400586F2B /* BitcoinDevKit in Frameworks */,
-				15F6DBB92C9A26D700F98D72 /* BitcoinDevKit in Frameworks */,
-				15F6DBBB2C9A275900F98D72 /* BitcoinDevKit in Frameworks */,
-				151E97FD2C49FD62001DA0E2 /* BitcoinDevKit in Frameworks */,
-				1542476B2C80598500EA1376 /* BitcoinDevKit in Frameworks */,
+				15CB0D412CCB89EA00565F76 /* DecentralizedFFI in Frameworks */,
+				15CB0D442CCB8AC600565F76 /* DecentralizedFFI in Frameworks */,
+				15CB0D472CCB8D0100565F76 /* DecentralizedFFI in Frameworks */,
+				15CB0D4A2CCB922C00565F76 /* DecentralizedFFI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -133,7 +103,6 @@
 			children = (
 				15F857022C47223000495405 /* DecentralizedTests.xctest */,
 				151005132C4747740009FDE6 /* Decentralized.app */,
-				151E97DD2C48E69D001DA0E2 /* AccountExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -150,28 +119,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		151E97DC2C48E69D001DA0E2 /* AccountExtension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 151E97F02C48E69F001DA0E2 /* Build configuration list for PBXNativeTarget "AccountExtension" */;
-			buildPhases = (
-				151E97D92C48E69D001DA0E2 /* Sources */,
-				151E97DA2C48E69D001DA0E2 /* Frameworks */,
-				151E97DB2C48E69D001DA0E2 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				151E97E22C48E69D001DA0E2 /* Account */,
-			);
-			name = AccountExtension;
-			packageProductDependencies = (
-			);
-			productName = AccountExtension;
-			productReference = 151E97DD2C48E69D001DA0E2 /* AccountExtension.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
 		15BFE9CB2C3EACCE00EDE0B4 /* Decentralized */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 15BFE9DD2C3EACCF00EDE0B4 /* Build configuration list for PBXNativeTarget "Decentralized" */;
@@ -185,18 +132,16 @@
 			buildRules = (
 			);
 			dependencies = (
-				151E97EE2C48E69F001DA0E2 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				15BFE9CE2C3EACCE00EDE0B4 /* Decentralized */,
 			);
 			name = Decentralized;
 			packageProductDependencies = (
-				151E97FC2C49FD62001DA0E2 /* BitcoinDevKit */,
-				1542476A2C80598500EA1376 /* BitcoinDevKit */,
-				15F6DBB82C9A26D700F98D72 /* BitcoinDevKit */,
-				15F6DBBA2C9A275900F98D72 /* BitcoinDevKit */,
-				153F3D4B2C9A462400586F2B /* BitcoinDevKit */,
+				15CB0D402CCB89EA00565F76 /* DecentralizedFFI */,
+				15CB0D432CCB8AC600565F76 /* DecentralizedFFI */,
+				15CB0D462CCB8D0100565F76 /* DecentralizedFFI */,
+				15CB0D492CCB922C00565F76 /* DecentralizedFFI */,
 			);
 			productName = Decentralized;
 			productReference = 151005132C4747740009FDE6 /* Decentralized.app */;
@@ -235,9 +180,6 @@
 				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1610;
 				TargetAttributes = {
-					151E97DC2C48E69D001DA0E2 = {
-						CreatedOnToolsVersion = 16.0;
-					};
 					15BFE9CB2C3EACCE00EDE0B4 = {
 						CreatedOnToolsVersion = 16.0;
 					};
@@ -257,7 +199,7 @@
 			);
 			mainGroup = 15BFE9C32C3EACCE00EDE0B4;
 			packageReferences = (
-				153F3D4A2C9A462400586F2B /* XCRemoteSwiftPackageReference "bdk-swift" */,
+				15CB0D482CCB922C00565F76 /* XCLocalSwiftPackageReference "../../RustroverProjects/decentralized-ffi/decentralized-swift" */,
 			);
 			productRefGroup = 15BFE9CD2C3EACCE00EDE0B4 /* Products */;
 			projectDirPath = "";
@@ -265,19 +207,11 @@
 			targets = (
 				15BFE9CB2C3EACCE00EDE0B4 /* Decentralized */,
 				15F857012C47223000495405 /* DecentralizedTests */,
-				151E97DC2C48E69D001DA0E2 /* AccountExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		151E97DB2C48E69D001DA0E2 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		15BFE9CA2C3EACCE00EDE0B4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -318,13 +252,6 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		151E97D92C48E69D001DA0E2 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		15BFE9C82C3EACCE00EDE0B4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -342,11 +269,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		151E97EE2C48E69F001DA0E2 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 151E97DC2C48E69D001DA0E2 /* AccountExtension */;
-			targetProxy = 151E97ED2C48E69F001DA0E2 /* PBXContainerItemProxy */;
-		};
 		15F857072C47223000495405 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 15BFE9CB2C3EACCE00EDE0B4 /* Decentralized */;
@@ -355,68 +277,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		151E97F12C48E69F001DA0E2 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_ENTITLEMENTS = Account/Account.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 2Q8B34FN8L;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Account/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Account;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.Decentralized.Account;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		151E97F22C48E69F001DA0E2 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_ENTITLEMENTS = Account/Account.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 2Q8B34FN8L;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Account/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Account;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.Decentralized.Account;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
 		15BFE9DB2C3EACCF00EDE0B4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -650,15 +510,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		151E97F02C48E69F001DA0E2 /* Build configuration list for PBXNativeTarget "AccountExtension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				151E97F12C48E69F001DA0E2 /* Debug */,
-				151E97F22C48E69F001DA0E2 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		15BFE9C72C3EACCE00EDE0B4 /* Build configuration list for PBXProject "Decentralized" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -688,38 +539,29 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		153F3D4A2C9A462400586F2B /* XCRemoteSwiftPackageReference "bdk-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/nieaowei/bdk-swift";
-			requirement = {
-				branch = "1.0.0-beta2e";
-				kind = branch;
-			};
+/* Begin XCLocalSwiftPackageReference section */
+		15CB0D482CCB922C00565F76 /* XCLocalSwiftPackageReference "../../RustroverProjects/decentralized-ffi/decentralized-swift" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../RustroverProjects/decentralized-ffi/decentralized-swift";
 		};
-/* End XCRemoteSwiftPackageReference section */
+/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		151E97FC2C49FD62001DA0E2 /* BitcoinDevKit */ = {
+		15CB0D402CCB89EA00565F76 /* DecentralizedFFI */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = BitcoinDevKit;
+			productName = DecentralizedFFI;
 		};
-		153F3D4B2C9A462400586F2B /* BitcoinDevKit */ = {
+		15CB0D432CCB8AC600565F76 /* DecentralizedFFI */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 153F3D4A2C9A462400586F2B /* XCRemoteSwiftPackageReference "bdk-swift" */;
-			productName = BitcoinDevKit;
+			productName = DecentralizedFFI;
 		};
-		1542476A2C80598500EA1376 /* BitcoinDevKit */ = {
+		15CB0D462CCB8D0100565F76 /* DecentralizedFFI */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = BitcoinDevKit;
+			productName = DecentralizedFFI;
 		};
-		15F6DBB82C9A26D700F98D72 /* BitcoinDevKit */ = {
+		15CB0D492CCB922C00565F76 /* DecentralizedFFI */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = BitcoinDevKit;
-		};
-		15F6DBBA2C9A275900F98D72 /* BitcoinDevKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = BitcoinDevKit;
+			productName = DecentralizedFFI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

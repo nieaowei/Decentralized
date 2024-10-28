@@ -4,7 +4,7 @@
 //
 //  Created by Nekilc on 2024/7/10.
 //
-import BitcoinDevKit
+import DecentralizedFFI
 import SwiftUI
 
 struct UtxoSelector: View {
@@ -14,12 +14,16 @@ struct UtxoSelector: View {
 
     var body: some View {
         VStack {
-            Table(utxos, selection: $selected) {
+            Table(of: LocalOutput.self,selection: $selected) {
                 TableColumn("OutPoint") { utxos in
                     Text(utxos.id)
                         .truncationMode(.middle)
                 }
-                TableColumn("Value", value: \.diplayBTCValue)
+                TableColumn("Value", value: \.txout.value.formatted)
+            } rows: {
+                ForEach(utxos) { u in
+                    TableRow(u)
+                }
             }
             .truncationMode(.middle)
         }

@@ -15,22 +15,12 @@ struct MeView: View {
     var body: some View {
         ScrollView {
             VStack {
-//                GroupedBox([
-//                    Chart(walletVm.txsChangeGroupDay.prefix(14).reversed(), id: \.0) { date, change in
-//                        BarMark(
-//                            x: .value("Date", date.monDayFormat()),
-//                            y: .value("Value", change)
-//                        )
-//                        .foregroundStyle(change > 0 ? .green : .red)
-//                    }
-//                    .frame(height: 180)
-//                ])
                 GroupedBox("PayWallet", items: [
                     GroupedLabeledContent("Address") {
                         Text(wallet.payAddress?.description ?? "")
                     },
                     GroupedLabeledContent("Balance") {
-                        Text(wallet.balance.displayBtc)
+                        Text(wallet.balance.total.formatted)
                     },
                     GroupedLabeledContent("QR") {
                         QRCodeView(data: wallet.payAddress?.description)
@@ -54,14 +44,15 @@ struct MeView: View {
             }
             .padding(.vertical)
         }
-
+        .toolbar {
+            WalletStatusToolbar()
+        }
         .sheet(item: $showQR) { qr in
-            VStack{
-                QRCodeView(data: qr,size: 180)
-                Button("OK"){
+            VStack {
+                QRCodeView(data: qr, size: 180)
+                PrimaryButton("OK") {
                     showQR = nil
                 }
-                .primary()
             }
             .padding(.all)
         }

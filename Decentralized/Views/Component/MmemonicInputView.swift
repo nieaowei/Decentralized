@@ -6,7 +6,7 @@
 //
 
 import AppKit
-import BitcoinDevKit
+import DecentralizedFFI
 import SwiftUI
 
 extension WordCount: @retroactive CaseIterable {

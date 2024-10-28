@@ -24,6 +24,6 @@ enum AppError: Error, LocalizedError {
 
 struct ErrorWrapper: Identifiable {
     let id = UUID()
-    let error: Error
+    let error: Error?
     let guidance: String
 }

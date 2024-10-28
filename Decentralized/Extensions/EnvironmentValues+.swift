@@ -8,17 +8,15 @@
 import SwiftUI
 
 struct ShowErrorEnvironmentKey: EnvironmentKey {
-    static var defaultValue: (Error, String) -> Void = { _, _ in }
+    static var defaultValue: (Error?, String) -> Void = { _, _ in }
 }
 
 extension EnvironmentValues {
-    var showError: (Error, String) -> Void {
+    var showError: (Error?, String) -> Void {
         get { self[ShowErrorEnvironmentKey.self] }
         set { self[ShowErrorEnvironmentKey.self] = newValue }
     }
 }
-
-
 
 struct NavigateEnvironmentKey: EnvironmentKey {
     static var defaultValue: NavigateAction = .init(action: { _ in })
@@ -37,14 +35,13 @@ extension View {
     }
 }
 
-
-//struct LoadingEnvironmentKey: EnvironmentKey {
+// struct LoadingEnvironmentKey: EnvironmentKey {
 //    static var defaultValue: Bool = false
-//}
+// }
 //
-//extension EnvironmentValues {
+// extension EnvironmentValues {
 //    var loading: Bool {
 //        get { self[LoadingEnvironmentKey.self] }
 //        set { self[LoadingEnvironmentKey.self] = newValue }
 //    }
-//}
+// }

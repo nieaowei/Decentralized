@@ -5,7 +5,7 @@
 //  Created by Matthew Ramsden on 9/4/23.
 //
 
-import BitcoinDevKit
+import DecentralizedFFI
 import Foundation
 import SwiftUI
 
@@ -21,38 +21,23 @@ enum Networks: String, Codable, CaseIterable, Identifiable {
     var id: String {
         self.rawValue
     }
-    
-    var accentColor:Color{
+
+    var accentColor: Color {
         switch self {
         case .bitcoin:
-                .orange
+            .orange
         case .testnet:
-                .green
+            .green
         case .testnet4:
-                .green
+            .green
         case .signet:
-                .purple
+            .purple
         case .regtest:
-                .yellow
+            .yellow
         }
     }
 
-    func toBdkNetwork() -> Network {
-        switch self {
-        case .bitcoin:
-            .bitcoin
-        case .testnet:
-            .testnet
-        case .testnet4:
-            .testnet
-        case .signet:
-            .signet
-        case .regtest:
-            .regtest
-        }
-    }
-
-    func toCustomNetwork() -> CustomNetwork {
+    func toBitcoinNetwork() -> Network {
         switch self {
         case .bitcoin:
             .bitcoin
@@ -66,27 +51,19 @@ enum Networks: String, Codable, CaseIterable, Identifiable {
             .regtest
         }
     }
-    
-    
-}
 
-extension Network {
-    var description: String {
+    func toCustomNetwork() -> Network {
         switch self {
-        case .bitcoin: return "bitcoin"
-        case .testnet: return "testnet"
-        case .signet: return "signet"
-        case .regtest: return "regtest"
-        }
-    }
-
-    init?(stringValue: String) {
-        switch stringValue {
-        case "bitcoin": self = .bitcoin
-        case "testnet": self = .testnet
-        case "signet": self = .signet
-        case "regtest": self = .regtest
-        default: return nil
+        case .bitcoin:
+            .bitcoin
+        case .testnet:
+            .testnet
+        case .testnet4:
+            .testnet4
+        case .signet:
+            .signet
+        case .regtest:
+            .regtest
         }
     }
 }

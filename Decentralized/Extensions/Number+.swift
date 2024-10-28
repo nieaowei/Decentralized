@@ -1,11 +1,30 @@
 //
-//  Int+Extensions.swift
-//  BDKSwiftExampleWallet
+//  Number+.swift
+//  Decentralized
 //
-//  Created by Temiloluwa on 15/06/2023.
+//  Created by Nekilc on 2024/10/17.
 //
 
+import DecentralizedFFI
 import Foundation
+
+extension Double {
+    var displayBtc: String {
+        if self <= 0 {
+            String(format: "%.8f BTC", arguments: [self])
+        } else {
+            String(format: "+%.8f BTC", arguments: [self])
+        }
+    }
+
+    var displaySatsUnit: String {
+        if self < 0.01 {
+            String(format: "%.8f sats/unit", arguments: [self])
+        } else {
+            String(format: "%.2f sats/unit", arguments: [self])
+        }
+    }
+}
 
 extension UInt32 {
     private static var numberFormatter: NumberFormatter = {
@@ -34,6 +53,10 @@ extension UInt64 {
 }
 
 extension UInt64 {
+    var amount: Amount {
+        Amount.fromSat(sat: self)
+    }
+
     func formattedSatoshis() -> String {
         if self == 0 {
             return "0.00 000 000"
@@ -76,5 +99,3 @@ extension UInt64 {
         return Date(timeIntervalSince1970: TimeInterval(self))
     }
 }
-
-

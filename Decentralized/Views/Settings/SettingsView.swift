@@ -24,6 +24,9 @@ struct SettingsView: View {
             Tab("Wallet", systemImage: "dollarsign.circle") {
                 WalletSettings()
             }
+            Tab("MempoolMonitor", systemImage: "leaf") {
+                MempoolMonitorSettings()
+            }
             Tab("Safe", systemImage: "lock.shield") {
                 SafeSettingsView()
             }

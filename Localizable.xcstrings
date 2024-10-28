@@ -7,13 +7,24 @@
     "%@" : {
       "shouldTranslate" : false
     },
+    "%@ (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ (%2$@)"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
+    "%@ BTC" : {
+      "shouldTranslate" : false
+    },
     "%d" : {
       "shouldTranslate" : false
     },
     "%lf sats/vB" : {
-
-    },
-    "%lld sats/vB" : {
       "shouldTranslate" : false
     },
     "%llu kB" : {
@@ -26,7 +37,6 @@
       "shouldTranslate" : false
     },
     "%llu sats" : {
-      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -38,7 +48,7 @@
       "shouldTranslate" : false
     },
     "%llu sats/vB" : {
-
+      "shouldTranslate" : false
     },
     "%u" : {
       "shouldTranslate" : false
@@ -73,8 +83,31 @@
         }
       }
     },
-    "Ancestors" : {
+    "All" : {
 
+    },
+    "Amount" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数量"
+          }
+        }
+      }
+    },
+    "Amount Path" : {
+
+    },
+    "Ancestors" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "祖先"
+          }
+        }
+      }
     },
     "App First" : {
       "shouldTranslate" : false
@@ -85,6 +118,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "应用"
+          }
+        }
+      }
+    },
+    "Auth" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权"
           }
         }
       }
@@ -101,7 +144,7 @@
       }
     },
     "BTC" : {
-      "shouldTranslate" : false
+
     },
     "Build" : {
       "extractionState" : "manual",
@@ -116,6 +159,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "构建"
+          }
+        }
+      }
+    },
+    "Buy" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "购买"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
+    "CFPF Support" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CPFP 支持"
           }
         }
       }
@@ -136,6 +209,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "关闭"
+          }
+        }
+      }
+    },
+    "Close" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭"
+          }
+        }
+      }
+    },
+    "Confirmed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已确认"
+          }
+        }
+      }
+    },
+    "Copy Ordinal ID" : {
+
+    },
+    "Copy OutPoint" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制 OutPoint"
           }
         }
       }
@@ -164,7 +271,14 @@
 
     },
     "Descendants" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后裔"
+          }
+        }
+      }
     },
     "Development" : {
       "localizations" : {
@@ -172,6 +286,19 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "开发者"
+          }
+        }
+      }
+    },
+    "Div Path" : {
+      "shouldTranslate" : false
+    },
+    "Enable" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用"
           }
         }
       }
@@ -206,9 +333,6 @@
         }
       }
     },
-    "Esplora Sever" : {
-
-    },
     "Export Mnemonic" : {
       "localizations" : {
         "zh-Hans" : {
@@ -228,6 +352,15 @@
           }
         }
       }
+    },
+    "Fallback Auth" : {
+      "shouldTranslate" : false
+    },
+    "Fallback ID Path" : {
+      "shouldTranslate" : false
+    },
+    "Fallback Url" : {
+      "shouldTranslate" : false
     },
     "Fee" : {
       "extractionState" : "manual",
@@ -251,8 +384,44 @@
         }
       }
     },
+    "Filter" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "过滤器"
+          }
+        }
+      }
+    },
+    "Fund" : {
+      "shouldTranslate" : false
+    },
+    "History" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "历史"
+          }
+        }
+      }
+    },
     "ID" : {
       "shouldTranslate" : false
+    },
+    "ID Path" : {
+      "shouldTranslate" : false
+    },
+    "Inscription" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "铭文"
+          }
+        }
+      }
     },
     "Invalid" : {
       "extractionState" : "manual",
@@ -266,6 +435,7 @@
       }
     },
     "Invalid Transaction hex" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -286,7 +456,14 @@
       }
     },
     "Max" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最大值"
+          }
+        }
+      }
     },
     "Me" : {
       "extractionState" : "manual",
@@ -299,8 +476,55 @@
         }
       }
     },
+    "MempoolMonitor" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "内存池监控"
+          }
+        }
+      }
+    },
+    "Minimum Buy Fee Rate" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最小购买费率"
+          }
+        }
+      }
+    },
+    "Minimum Fee" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最小费用"
+          }
+        }
+      }
+    },
+    "Minimum Fee Rate" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最小费率"
+          }
+        }
+      }
+    },
     "Mint" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "铸造"
+          }
+        }
+      }
     },
     "Name" : {
       "localizations" : {
@@ -312,6 +536,9 @@
         }
       }
     },
+    "Name Path" : {
+      "shouldTranslate" : false
+    },
     "Network" : {
       "localizations" : {
         "zh-Hans" : {
@@ -321,6 +548,9 @@
           }
         }
       }
+    },
+    "New Contact" : {
+
     },
     "New Transaction" : {
       "localizations" : {
@@ -354,6 +584,7 @@
       }
     },
     "OK" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -372,6 +603,9 @@
           }
         }
       }
+    },
+    "Open in Safari" : {
+      "shouldTranslate" : false
     },
     "OrdinalsWallet" : {
       "extractionState" : "manual",
@@ -432,8 +666,25 @@
     "RBF" : {
       "shouldTranslate" : false
     },
+    "Recive Address" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接收地址"
+          }
+        }
+      }
+    },
     "Reciver" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接收地址"
+          }
+        }
+      }
     },
     "Replace By Fee" : {
       "shouldTranslate" : false
@@ -448,8 +699,35 @@
         }
       }
     },
+    "Rune" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "符文"
+          }
+        }
+      }
+    },
     "Safe" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安全"
+          }
+        }
+      }
+    },
+    "Same As Rune" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "和符文相同"
+          }
+        }
+      }
     },
     "sats/vB" : {
       "shouldTranslate" : false
@@ -525,6 +803,16 @@
         }
       }
     },
+    "Split Fee Rate" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切割费率"
+          }
+        }
+      }
+    },
     "Status" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -537,7 +825,14 @@
       }
     },
     "Sync Sever" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步服务器"
+          }
+        }
+      }
     },
     "Touch ID" : {
       "localizations" : {
@@ -591,7 +886,17 @@
       }
     },
     "Unconfirmed" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未确认"
+          }
+        }
+      }
+    },
+    "Url" : {
+      "shouldTranslate" : false
     },
     "Value" : {
       "localizations" : {
@@ -637,7 +942,14 @@
       }
     },
     "Welcome" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "欢迎"
+          }
+        }
+      }
     },
     "Your transaction has been successfully sent" : {
       "localizations" : {

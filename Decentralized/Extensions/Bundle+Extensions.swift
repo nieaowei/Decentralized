@@ -1,8 +1,7 @@
 //
 //  Bundle+Extensions.swift
-//  BDKSwiftExampleWallet
+//  Decentralize
 //
-//  Created by Matthew Ramsden on 8/22/23.
 //
 
 import Foundation

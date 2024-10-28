@@ -1,6 +1,6 @@
 //
 //  TransactionView.swift
-//  BTCt
+//  Decentralized
 //
 //  Created by Nekilc on 2024/5/24.
 //
@@ -20,7 +20,7 @@ struct TransactionView: View {
             Table(of: WalletTransaction.self, selection: $selected, sortOrder: $sortOrder) {
                 TableColumn("ID") { tx in
                     HStack {
-                        Text(verbatim: tx.id)
+                        Text(tx.id)
                             .truncationMode(.middle)
 
                         if tx.canRBF {
@@ -52,14 +52,29 @@ struct TransactionView: View {
                                 }
                             }
                             if !tx.isComfirmed {
+                                
                                 if tx.canCPFP {
+                                    // CPFP conditions:
+                                    // - Input must be contain one of origin' output
+                                    // - FeeRate must be more than origin tx
+                                    // - Fee must be more than origin tx
                                     NavigationLink("Child Pay For Parent") {
-                                        SendScreen(isCPFP: true, selectedOutpoints: tx.cpfpOutputs)
+                                        SendScreen(isCPFP: true, selectedOutpointIds: tx.cpfpOutputs)
                                     }
                                 }
                                 if tx.canRBF {
+                                    NavigationLink("Cancel") {
+                                        // Cancel conditions:
+                                        // - Input must be contain one of origin tx
+                                        // - FeeRate must be more than origin tx
+                                        // - Fee must be more than origin tx
+                                        SendScreen(isRBF: true, selectedOutpointIds: Set(tx.inputs.map { $0.id }))
+                                    }
+                                    // RBF conditions:
+                                    // - FeeRate must be more than origin tx
+                                    // - Fee must be more than origin tx
                                     NavigationLink("Replace By Fee") {
-                                        SendScreen(isRBF: true, selectedOutpoints: Set(tx.inputs.map { $0.id }))
+                                        SendScreen(isRBF: true, selectedOutpointIds: Set(tx.inputs.map { $0.id }))
                                     }
                                 }
                             }
