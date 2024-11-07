@@ -150,11 +150,24 @@ struct WalletTransaction: Identifiable, Hashable {
 
 @Observable
 class WalletStore {
-    enum SyncStatus: Equatable {
+    enum SyncStatus: Equatable, CustomStringConvertible {
         case error(String)
         case notStarted
         case syncing
         case synced
+        
+        var description: String{
+            switch self {
+            case .error(let err):
+                err
+            case .notStarted:
+                "notStarted"
+            case .syncing:
+                "syncing"
+            case .synced:
+                "synced"
+            }
+        }
     }
     
     var wallet: WalletService
@@ -243,8 +256,8 @@ class WalletStore {
         WalletTransaction(walletService: wallet, inner: CanonicalTx(transaction: tx, chainPosition: ChainPosition.unconfirmed(timestamp: 0)))
     }
     
-    func broadcast(_ tx: DecentralizedFFI.Transaction) throws -> String {
-        try wallet.broadcast(tx)
+    func broadcast(_ tx: DecentralizedFFI.Transaction) async -> Result<String, Error> {
+        wallet.broadcast(tx)
     }
     
     func insertTxout(op: OutPoint, txout: TxOut) {

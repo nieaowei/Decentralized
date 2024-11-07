@@ -145,7 +145,17 @@ struct SignScreen: View {
         }
     }
 
-    func onBroadcast() {}
+    func onBroadcast() {
+        Task {
+            loading = true
+
+            for unsignedPsbt in unsignedPsbts {
+                _ = await wallet.broadcast(unsignedPsbt.psbt.extractTxUncheckedFeeRate())
+            }
+            self.loading = false
+            showSuccess = true
+        }
+    }
 }
 
 // #Preview {

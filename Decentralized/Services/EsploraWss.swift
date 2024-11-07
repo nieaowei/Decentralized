@@ -43,7 +43,7 @@ enum EsploraWssData: Equatable {
 }
 
 class EsploraWss {
-    enum Status {
+    enum Status: String {
         case connected, disconnected, connecting
     }
 

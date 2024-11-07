@@ -94,11 +94,11 @@ struct HomeView: View {
         }
 
         let syncClient = SyncClient(inner: syncClientInner)
-        do{
+        do {
             let walletService = try WalletService(network: settings.network, syncClient: .init(inner: syncClientInner))
             _wallet = State(wrappedValue: WalletStore(wallet: walletService))
 
-        }catch{
+        } catch {
             settings.isOnBoarding = true
             fatalError("error")
         }
@@ -260,7 +260,6 @@ struct HomeView: View {
                             })
                         {
                             for ordi in ordinals {
-                                
                                 if ordi.type == .rune && ordi.ordinalId.isEmpty {
                                     if case .success(let runeid) = RuneInfo.fetchOneByName(ctx: ctx, name: ordi.name), let runeid {
                                         ordi.ordinalId = runeid.id
@@ -292,6 +291,8 @@ struct WalletStatusToolbar: ToolbarContent {
     @Environment(WssStore.self) var wss
 
     @State var showBalancePop: Bool = false
+    @State var showSyncActions: Bool = false
+    @State var showWssActions: Bool = false
 
     var body: some ToolbarContent {
         ToolbarItemGroup(placement: .confirmationAction) {
@@ -308,10 +309,37 @@ struct WalletStatusToolbar: ToolbarContent {
                     .padding(.all)
                 }
             WalletSyncStatusView(synced: wallet.syncStatus)
+                .popover(isPresented: $showSyncActions) {
+                    Form {
+                        LabeledContent("Status", value: wallet.syncStatus.description)
+                        Button("Resync") {
+                            Task {
+                                try await wallet.sync()
+                            }
+                        }
+                    }
+                    .padding(.all)
+                }
                 .onTapGesture {
-                    wallet.updateStatus(.notStarted)
+                    showSyncActions = true
                 }
             WssStatusView(status: wss.status)
+                .popover(isPresented: $showWssActions) {
+                    Form {
+                        LabeledContent("Status", value: wss.status.rawValue)
+                        if wss.status == .disconnected {
+                            Button("Reconnect") {
+                                Task {
+                                    wss.connect()
+                                }
+                            }
+                        }
+                    }
+                    .padding(.all)
+                }
+                .onTapGesture {
+                    showWssActions = true
+                }
         }
     }
 }

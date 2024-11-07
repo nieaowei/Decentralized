@@ -64,7 +64,7 @@ extension Psbt: @retroactive Equatable, @retroactive Hashable {
     }
 
     static func fromHex(_ hex: String) -> Result<Psbt, PsbtParseError> {
-        Result{
+        Result {
             try Psbt.fromHex(psbtHex: hex)
         }
     }
@@ -176,5 +176,13 @@ extension TxOut: Codable {
         try container.encode(self.value.toSat(), forKey: .value)
         try container.encode(self.scriptPubkey.toBytes(), forKey: .scriptPubkey)
         try container.encode(self.serializeHex, forKey: .serializeHex)
+    }
+}
+
+extension DecentralizedFFI.Transaction {
+    static func fromData(data: Data) -> Result<DecentralizedFFI.Transaction, TransactionError> {
+        Result {
+            try DecentralizedFFI.Transaction(transactionBytes: data)
+        }
     }
 }

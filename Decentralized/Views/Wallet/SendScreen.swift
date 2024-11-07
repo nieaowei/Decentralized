@@ -254,6 +254,9 @@ struct SendScreen: View {
                 }
             }
         }
+        .toolbar{
+            WalletStatusToolbar()
+        }
         .navigationDestination(item: $builtPsbt) { psbt in
             SignScreen(unsignedPsbts: [.init(psbt: psbt)])
         }

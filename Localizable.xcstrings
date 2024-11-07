@@ -143,6 +143,9 @@
         }
       }
     },
+    "Broadcast" : {
+
+    },
     "BTC" : {
 
     },
@@ -344,6 +347,7 @@
       }
     },
     "Extract Hex" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -446,6 +450,7 @@
       }
     },
     "Invalid transaction hex string" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -686,6 +691,9 @@
         }
       }
     },
+    "Reconnect" : {
+
+    },
     "Replace By Fee" : {
       "shouldTranslate" : false
     },
@@ -698,6 +706,9 @@
           }
         }
       }
+    },
+    "Resync" : {
+
     },
     "Rune" : {
       "localizations" : {

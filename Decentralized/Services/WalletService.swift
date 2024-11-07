@@ -371,13 +371,24 @@ struct WalletService {
         self.payWallet.sentAndReceived(tx: tx)
     }
 
-    func broadcast(_ tx: DecentralizedFFI.Transaction) throws -> String {
-        let txid = try self.syncClient.broadcast(tx)
+    func broadcast(_ tx: DecentralizedFFI.Transaction) -> Result<String, Error> {
+        let txid = Result {
+            try self.syncClient.broadcast(tx)
+        }
+        guard case .success(let txid) = txid else {
+            return .failure(txid.err()!)
+        }
 
         self.payWallet.applyUnconfirmedTxs(txAndLastSeens: [TransactionAndLastSeen(tx: tx, lastSeen: UInt64(Date().timeIntervalSince1970))])
-        let _ = try self.payWallet.persist(connection: self.payConn)
 
-        return txid
+        let ok = Result {
+            try self.payWallet.persist(connection: self.payConn)
+        }
+        guard case .success(let ok) = ok else {
+            return .failure(ok.err()!)
+        }
+
+        return .success(txid)
     }
 
     func insertTxOut(op: OutPoint, txout: TxOut) {

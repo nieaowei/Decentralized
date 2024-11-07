@@ -8,58 +8,56 @@
 import DecentralizedFFI
 import SwiftUI
 
-
-
 struct BroadcastView: View {
+    @Environment(WalletStore.self) var wallet
+    @Environment(\.showError) var showError
+    @Environment(SyncClient.self) var syncClient
+
     @State var sigedHex: String = ""
     @State var showTxid: String? = nil
-    @State var tx: DecentralizedFFI.Transaction? = nil
+    @State var tx: WalletTransaction? = nil
 
     @State var errorMsg: String? = nil
-    @State var showError: Bool = false
+
     var body: some View {
-        
-            VStack {
-                
-                TextEditor(text: $sigedHex)
-                    .textEditorStyle(.automatic)
-                    .contentMargins(10, for: .scrollContent)
-                HStack{
-                    Spacer()
-                    Button {
-                        onExtract()
-                    } label: {
-                        Text("Extract Hex")
-                    }
-                    .primary()
+        VStack {
+            TextEditor(text: $sigedHex)
+                .textEditorStyle(.automatic)
+                .contentMargins(10, for: .scrollContent)
+            HStack {
+                Spacer()
+                Button {
+                    onBroadcast()
+                } label: {
+                    Text("Broadcast")
+                }
+                .primary()
 //                    .navigationDestination(item: $tx) { tx in
 //                        SendDetailView( tx: tx, txBuilder: .constant(.init()))
 //                    }
-                }
-                .padding(.all)
             }
-        
-        .alert("Invalid transaction hex string", isPresented: $showError, actions: {
-            Button {
-                showError.toggle()
-            } label: {
-                Text(verbatim: "close")
-            }
-            
-        })
-        .sheet(item: $showTxid) { _ in
-            
+            .padding(.all)
+        }
+        .navigationDestination(item: $tx) { tx in
+            TransactionDetailView(tx: tx)
         }
     }
 
     func onExtract() {
-        do {
-            tx = try DecentralizedFFI.Transaction(transactionBytes: Data(sigedHex.hexStringToByteArray()))
-        } catch {
-            logger.error("\(error.localizedDescription)")
-            errorMsg = "Invalid Transaction hex"
-            showError.toggle()
+        guard case let .success(tx) = DecentralizedFFI.Transaction.fromData(data: Data(sigedHex.hexStringToByteArray())) else {
+            showError(nil, "Invalid Transaction Hex")
+            return
         }
+        self.tx = wallet.createWalletTx(tx: tx)
+        print(tx.id)
+    }
+
+    func onBroadcast() {
+        guard case let .success(tx) = DecentralizedFFI.Transaction.fromData(data: Data(sigedHex.hexStringToByteArray())) else {
+            showError(nil, "Invalid Transaction Hex")
+            return
+        }
+        try! syncClient.broadcast(tx)
     }
 }
 
