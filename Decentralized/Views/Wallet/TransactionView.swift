@@ -89,6 +89,9 @@ struct TransactionView: View {
                 wallet.transactions.sort(using: sortOrder)
             }
         }
+        .toolbar{
+            WalletStatusToolbar()
+        }
     }
 }
 

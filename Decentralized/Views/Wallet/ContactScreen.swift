@@ -10,16 +10,15 @@ import SwiftData
 import SwiftUI
 
 struct ContactScreen: View {
-    
     @Query private var contacts: [Contact]
 
     @Environment(\.modelContext) private var modelCtx
 
     @State private var QRData: String? = nil
     @State private var showAddContact: Bool = false
-    
+
     init() {
-        var d = FetchDescriptor<Contact>()
+        let d = FetchDescriptor<Contact>()
 //        d.includePendingChanges = false
         _contacts = Query(d, animation: .default)
     }
@@ -89,7 +88,8 @@ struct AddContactView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(\.showError) private var showError
 
-    @State private var contact: Contact = .init(addr: "", name: "")
+    @State private var name: String = ""
+    @State private var addr: String = ""
 
     @State private var addrError: String?
 
@@ -97,8 +97,8 @@ struct AddContactView: View {
         VStack {
             Form {
                 Section {
-                    TextField("Name", text: $contact.name)
-                    TextField("Address", text: $contact.addr)
+                    TextField("Name", text: $name)
+                    TextField("Address", text: $addr)
                 }
                 .sectionActions {
                     if let error = addrError {
@@ -116,13 +116,12 @@ struct AddContactView: View {
 
     private func onConfirm() {
         print(modelCtx.autosaveEnabled)
-        guard case .success = Address.from(address: contact.addr, network: settings.network.toBitcoinNetwork()).inspectError({ _ in
+        guard case .success = Address.from(address: addr, network: settings.network.toBitcoinNetwork()).inspectError({ _ in
             addrError = "Invalid Address"
         }) else {
             return
         }
-
-        _ = modelCtx.upsert(contact)
+        _ = modelCtx.upsert(Contact(addr: addr, name: name))
 
         dismiss()
     }

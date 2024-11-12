@@ -13,7 +13,9 @@ struct UtxosView: View {
     @Environment(\.navigate) var navigate: NavigateAction
 
     @State var selected: Set<String> = .init()
-    @State private var sortOrder = [KeyPathComparator(\LocalOutput.txout.value, order: .reverse)]
+    @State private var sortOrder = [
+        KeyPathComparator(\LocalOutput.txout.value, order: .reverse)
+    ]
 
     var body: some View {
         VStack {
@@ -58,6 +60,9 @@ struct UtxosView: View {
                 .buttonStyle(BorderedProminentButtonStyle())
             }
             .padding(.all)
+        }
+        .toolbar{
+            WalletStatusToolbar()
         }
     }
 }
