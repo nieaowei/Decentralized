@@ -74,7 +74,7 @@ struct BuyScreen: View {
     @State var buildLoading: Bool = false
 
     var isBuildable: Bool {
-        totalSat != 0
+        totalSat != 0 && wallet.balance.total.toSat() > totalSat
     }
 
     @MainActor
@@ -85,13 +85,13 @@ struct BuyScreen: View {
 
     var buildText: String {
         if isBuildable {
+            "Build"
+        } else {
             if wallet.balance.total.toSat() < totalSat {
                 "Insufficient Balance"
             } else {
-                "Build"
+                "No Available Ordinal"
             }
-        } else {
-            "No Available Ordinal"
         }
     }
 
