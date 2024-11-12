@@ -12,9 +12,11 @@ struct UtxoSelector: View {
 
     @State var utxos: [LocalOutput]
 
+    @State private var sortOrder: [KeyPathComparator] = [KeyPathComparator(\LocalOutput.txout.value, order: .reverse)]
+
     var body: some View {
         VStack {
-            Table(of: LocalOutput.self,selection: $selected) {
+            Table(of: LocalOutput.self, selection: $selected, sortOrder: $sortOrder) {
                 TableColumn("OutPoint") { utxos in
                     Text(utxos.id)
                         .truncationMode(.middle)
@@ -26,6 +28,10 @@ struct UtxoSelector: View {
                 }
             }
             .truncationMode(.middle)
+        }
+
+        .onChange(of: sortOrder, initial: true) { _, sortOrder in
+            utxos.sort(using: sortOrder)
         }
         .onAppear {
             self.utxos.removeAll { lo in

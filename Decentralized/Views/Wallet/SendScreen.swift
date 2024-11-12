@@ -369,7 +369,7 @@ struct SendScreen: View {
 
     func onAddOutput() {
         withAnimation {
-            outputs.append(Recipient(address: contacts.first?.addr ?? "", value: 0.001))
+            outputs.append(Recipient(address: contacts.first?.addr ?? "", value: 0.00000546))
         }
     }
 
