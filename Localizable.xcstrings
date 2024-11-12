@@ -84,7 +84,14 @@
       }
     },
     "All" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有"
+          }
+        }
+      }
     },
     "Amount" : {
       "localizations" : {
@@ -97,7 +104,7 @@
       }
     },
     "Amount Path" : {
-
+      "shouldTranslate" : false
     },
     "Ancestors" : {
       "localizations" : {
@@ -144,10 +151,17 @@
       }
     },
     "Broadcast" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "广播"
+          }
+        }
+      }
     },
     "BTC" : {
-
+      "shouldTranslate" : false
     },
     "Build" : {
       "extractionState" : "manual",
@@ -238,14 +252,21 @@
       }
     },
     "Copy Ordinal ID" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝铭文ID"
+          }
+        }
+      }
     },
     "Copy OutPoint" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "复制 OutPoint"
+            "value" : "拷贝 OutPoint"
           }
         }
       }
@@ -271,7 +292,14 @@
       }
     },
     "Deploy" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部署"
+          }
+        }
+      }
     },
     "Descendants" : {
       "localizations" : {
@@ -555,7 +583,14 @@
       }
     },
     "New Contact" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建联系人"
+          }
+        }
+      }
     },
     "New Transaction" : {
       "localizations" : {
@@ -692,7 +727,14 @@
       }
     },
     "Reconnect" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新连接"
+          }
+        }
+      }
     },
     "Replace By Fee" : {
       "shouldTranslate" : false
@@ -708,7 +750,14 @@
       }
     },
     "Resync" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新同步"
+          }
+        }
+      }
     },
     "Rune" : {
       "localizations" : {
