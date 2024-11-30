@@ -14,12 +14,12 @@ struct OrdinalTableView: View {
     }
 
     @Query
-    var ordinals: [Ordinal]
+    var ordinals: [MempoolOrdinal]
 
-    @Binding var selections: Set<Ordinal.ID>
-    @Binding var sortOrder: [KeyPathComparator<Ordinal>]
+    @Binding var selections: Set<MempoolOrdinal.ID>
+    @Binding var sortOrder: [KeyPathComparator<MempoolOrdinal>]
 
-    var selectedOrdinals: [Ordinal] {
+    var selectedOrdinals: [MempoolOrdinal] {
         selections.compactMap { id in
             ordinals.first(where: { $0.id == id })
         }
@@ -28,30 +28,30 @@ struct OrdinalTableView: View {
     init(
         filter: Filter,
         search: String,
-        selections: Binding<Set<Ordinal.ID>>,
-        sortOrder: Binding<[KeyPathComparator<Ordinal>]>
+        selections: Binding<Set<MempoolOrdinal.ID>>,
+        sortOrder: Binding<[KeyPathComparator<MempoolOrdinal>]>
     ) {
         _selections = selections
         _sortOrder = sortOrder
         let search = search.lowercased()
-        var p: Predicate<Ordinal>
+        var p: Predicate<MempoolOrdinal>
         switch filter {
         case .all:
-            p = Ordinal.predicate(search: search)
+            p = MempoolOrdinal.predicate(search: search)
         case .used:
-            p = Ordinal.predicate(search: search, isUsed: true)
+            p = MempoolOrdinal.predicate(search: search, isUsed: true)
         case .rune:
-            p = Ordinal.predicate(search: search, type: .rune)
+            p = MempoolOrdinal.predicate(search: search, type: .rune)
         case .inscription:
-            p = Ordinal.predicate(search: search, type: .inscription)
+            p = MempoolOrdinal.predicate(search: search, type: .inscription)
         case .fund:
-            p = Ordinal.predicate(search: search, type: .fund)
+            p = MempoolOrdinal.predicate(search: search, type: .fund)
         }
         _ordinals = Query(filter: p, sort: \.createTs, order: .reverse, animation: .default)
     }
 
     var body: some View {
-        Table(of: Ordinal.self, selection: $selections, sortOrder: $sortOrder) {
+        Table(of: MempoolOrdinal.self, selection: $selections, sortOrder: $sortOrder) {
             TableColumn("OutPoint") { ordinal in
                 Text(verbatim: ordinal.outpoint)
                     .truncationMode(.middle)
@@ -97,7 +97,7 @@ struct OrdinalTableView: View {
         }
     }
 
-    func enableSelection(ordinal: Ordinal) -> Bool { // only same type
+    func enableSelection(ordinal: MempoolOrdinal) -> Bool { // only same type
         selections.count > 1 && selectedOrdinals.contains(where: { $0.type != ordinal.type })
     }
 }

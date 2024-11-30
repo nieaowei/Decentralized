@@ -42,13 +42,17 @@ struct DecentralizedApp: App {
     @AppStorage("isOnBoarding") var isOnBoarding: Bool = true
     @Environment(\.openWindow) private var openWindow
 
-    let settings: AppSettings
-    let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, CPFPChain.self, Ordinal.self, RuneInfo.self, configurations: ModelConfiguration())
+    @State var settings: AppSettings
+    let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, CPFPChain.self, MempoolOrdinal.self, RuneInfo.self, configurations: ModelConfiguration())
 
     let esploraClient: EsploraClientWrap
     @State var wss: WssStore
 
     @State private var errorWrapper: ErrorWrapper?
+    
+//    @State private var accentColor: Color
+    @AppStorage("network")
+    var network: Networks = .bitcoin
 
     init() {
         let settings = AppSettings()
@@ -59,13 +63,14 @@ struct DecentralizedApp: App {
         self.settings = settings
         _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
         self.mainModelContainer.mainContext.autosaveEnabled = true
+//        self.accentColor = settings.accentColor
     }
 
     var body: some Scene {
         WindowGroup {
             if isOnBoarding {
                 OnBoradingView()
-                    .tint(settings.accentColor)
+                    .tint(network.accentColor)
                     .toolbar(removing: .title)
                     .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
                     .containerBackground(.thickMaterial, for: .window)
@@ -81,7 +86,7 @@ struct DecentralizedApp: App {
 
             } else {
                 HomeView(settings)
-                    .tint(settings.accentColor)
+                    .tint(network.accentColor)
                     .sheet(item: $errorWrapper) { errorWrapper in
                         VStack {
                             Text(errorWrapper.guidance)
@@ -122,6 +127,7 @@ struct DecentralizedApp: App {
 
         Window("Welcome", id: "welcom") {
             OnBoradingView()
+                .tint(network.accentColor)
                 .toolbar(removing: .title)
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
                 .containerBackground(.thickMaterial, for: .window)
@@ -143,7 +149,7 @@ struct DecentralizedApp: App {
                 .containerBackground(.thickMaterial, for: .window)
                 .windowMinimizeBehavior(.disabled)
                 .windowResizeBehavior(.disabled)
-                .tint(settings.accentColor)
+                .tint(network.accentColor)
         }
         .windowResizability(.contentSize)
         .restorationBehavior(.disabled)
@@ -153,7 +159,7 @@ struct DecentralizedApp: App {
             SettingsView()
                 .windowResizeBehavior(.enabled)
                 .modelContainer(mainModelContainer)
-                .tint(settings.accentColor)
+                .tint(network.accentColor)
         }
         .environment(settings)
         .windowIdealSize(.fitToContent)

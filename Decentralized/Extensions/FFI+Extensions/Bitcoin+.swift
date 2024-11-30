@@ -52,6 +52,10 @@ struct TxOutRow: Identifiable {
     var amount: Amount {
         return self.inner.value
     }
+
+    func isMine(_ wallet: WalletStore) -> Bool {
+        wallet.isMine(self.inner.scriptPubkey)
+    }
 }
 
 extension Psbt: @retroactive Equatable, @retroactive Hashable {

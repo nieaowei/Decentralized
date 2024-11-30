@@ -9,8 +9,8 @@ import DecentralizedFFI
 import Foundation
 import SwiftData
 
-func fetchOrdinalTxPairsAsync(esploraClient: EsploraClientWrap, settings: AppSettings, esploraWssTx: EsploraWssTx) async -> Result<[Ordinal], Error> {
-    var datas: [Ordinal] = []
+func fetchOrdinalTxPairsAsync(esploraClient: EsploraClientWrap, settings: AppSettings, esploraWssTx: EsploraWssTx) async -> Result<[MempoolOrdinal], Error> {
+    var datas: [MempoolOrdinal] = []
     let tx = await esploraClient.getTx(txid: esploraWssTx.id)
     guard case let .success(tx) = tx else {
         return .failure(tx.err()!)
@@ -44,15 +44,15 @@ func fetchOrdinalTxPairsAsync(esploraClient: EsploraClientWrap, settings: AppSet
 
             if !data.isEmpty {
                 if data[0] != nil || data[1] != nil {
-                    datas.append(Ordinal(type: .rune, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: data[1] ?? "", name: data[0] ?? "", amount: data[2] ?? "1", div: data[3] ?? "0"))
+                    datas.append(MempoolOrdinal(type: .rune, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: data[1] ?? "", name: data[0] ?? "", amount: data[2] ?? "1", div: data[3] ?? "0"))
                     continue
                 }
                 if data[4] != nil || data[5] != nil {
-                    datas.append(Ordinal(type: .inscription, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: data[4] ?? "", name: data[5] ?? "", amount: data[6] ?? "1", div: data[7] ?? "0"))
+                    datas.append(MempoolOrdinal(type: .inscription, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: data[4] ?? "", name: data[5] ?? "", amount: data[6] ?? "1", div: data[7] ?? "0"))
                     continue
                 }
             }
-            datas.append(Ordinal(type: .fund, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: "", name: ""))
+            datas.append(MempoolOrdinal(type: .fund, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: "", name: ""))
             continue
         }
 
@@ -70,7 +70,7 @@ func fetchOrdinalTxPairsAsync(esploraClient: EsploraClientWrap, settings: AppSet
         }
 
         if runeData.id != nil || runeData.name != nil {
-            datas.append(Ordinal(type: .rune, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: runeData.id ?? "", name: runeData.name ?? "", amount: runeData.amount, div: runeData.decimal))
+            datas.append(MempoolOrdinal(type: .rune, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: runeData.id ?? "", name: runeData.name ?? "", amount: runeData.amount, div: runeData.decimal))
             continue
         }
 
@@ -89,11 +89,11 @@ func fetchOrdinalTxPairsAsync(esploraClient: EsploraClientWrap, settings: AppSet
         }
 
         if insData.id != nil || insData.name != nil {
-            datas.append(Ordinal(type: .inscription, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: insData.id ?? "", name: insData.name ?? "", amount: insData.amount, div: insData.decimal))
+            datas.append(MempoolOrdinal(type: .inscription, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: insData.id ?? "", name: insData.name ?? "", amount: insData.amount, div: insData.decimal))
             continue
         }
 
-        datas.append(Ordinal(type: .fund, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: "", name: ""))
+        datas.append(MempoolOrdinal(type: .fund, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: "", name: ""))
     }
     return .success(datas)
 }
@@ -154,3 +154,4 @@ func fetchRuneIdFromDB(modelCtx: ModelContext, name: String) -> Result<String?, 
         runeInfo?.id
     }
 }
+

@@ -49,7 +49,7 @@ struct HomeDetailView: View {
                 MempoolMonitor()
                     .navigationTitle("")
             case .ordinal:
-                OrdinalMintScreen()
+                OrdinalScreen()
                     .navigationTitle(dest.title)
             }
         }
@@ -279,7 +279,7 @@ struct HomeView: View {
                     NotificationManager.sendNotification(title: NSLocalizedString("Transaction Removed", comment: ""), subtitle: esploraTx.id, body: "")
                     wallet.syncStatus = .notStarted
                 case .block(let block):
-                    try! Ordinal.clearConfirmed(ctx: ctx, blockMinFeeRate: block.extras.feeRange.first!)
+                    try! MempoolOrdinal.clearConfirmed(ctx: ctx, blockMinFeeRate: block.extras.feeRange.first!)
                 }
             }
         }

@@ -150,6 +150,9 @@
         }
       }
     },
+    "BRC20" : {
+
+    },
     "Broadcast" : {
       "localizations" : {
         "zh-Hans" : {
@@ -251,6 +254,9 @@
         }
       }
     },
+    "Copy Address" : {
+
+    },
     "Copy Ordinal ID" : {
       "localizations" : {
         "zh-Hans" : {
@@ -297,6 +303,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "部署"
+          }
+        }
+      }
+    },
+    "Deploy Max" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发行总量"
           }
         }
       }
@@ -374,17 +390,6 @@
         }
       }
     },
-    "Extract Hex" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "解析Hex"
-          }
-        }
-      }
-    },
     "Fallback Auth" : {
       "shouldTranslate" : false
     },
@@ -405,6 +410,16 @@
         }
       }
     },
+    "Fee Rate" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "费率"
+          }
+        }
+      }
+    },
     "FeeRate" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -412,6 +427,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "费率"
+          }
+        }
+      }
+    },
+    "File" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件"
           }
         }
       }
@@ -484,6 +509,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "不合法的交易Hex字符串"
+          }
+        }
+      }
+    },
+    "Limit Per Mint" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "单次铸造上限"
           }
         }
       }
@@ -792,6 +827,9 @@
     "sats/vB" : {
       "shouldTranslate" : false
     },
+    "Selecte File" : {
+
+    },
     "Send" : {
       "localizations" : {
         "zh-Hans" : {
@@ -894,6 +932,26 @@
         }
       }
     },
+    "Text" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文本"
+          }
+        }
+      }
+    },
+    "Tick" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "币种"
+          }
+        }
+      }
+    },
     "Touch ID" : {
       "localizations" : {
         "zh-Hans" : {
@@ -934,6 +992,16 @@
         }
       }
     },
+    "Transfer" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "转移"
+          }
+        }
+      }
+    },
     "Txid" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -941,6 +1009,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "交易ID"
+          }
+        }
+      }
+    },
+    "Type" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "类型"
           }
         }
       }

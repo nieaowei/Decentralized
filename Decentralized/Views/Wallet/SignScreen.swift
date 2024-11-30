@@ -34,6 +34,9 @@ struct SignScreen: View {
     var unsignedPsbts: [UnsignedPsbt]
 
     @State
+    var deferBroadcastTxs: [DecentralizedFFI.Transaction]?
+
+    @State
     private var showSuccess: Bool = false
 
     @State
@@ -150,7 +153,15 @@ struct SignScreen: View {
             loading = true
 
             for unsignedPsbt in unsignedPsbts {
-                _ = await wallet.broadcast(unsignedPsbt.psbt.extractTxUncheckedFeeRate())
+                let id = await wallet.broadcast(unsignedPsbt.psbt.extractTxUncheckedFeeRate())
+                print(id)
+            }
+            if let addedBroadcast = deferBroadcastTxs {
+                try await Task.sleep(nanoseconds: 3 * 1_000_000_000)
+                for added in addedBroadcast {
+                    let id = await wallet.broadcast(added)
+                    print(id)
+                }
             }
             self.loading = false
             showSuccess = true

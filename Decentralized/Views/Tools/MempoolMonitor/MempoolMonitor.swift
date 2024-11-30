@@ -16,9 +16,9 @@ struct MempoolMonitor: View {
 
     let ts: UInt64 = 0
 
-    @State private var sortOrder = [KeyPathComparator(\Ordinal.createTs, order: .reverse)]
+    @State private var sortOrder = [KeyPathComparator(\MempoolOrdinal.createTs, order: .reverse)]
 
-    @State var selections: Set<Ordinal.ID> = Set()
+    @State var selections: Set<MempoolOrdinal.ID> = Set()
 
     @State var url: String? = nil
 
@@ -55,7 +55,7 @@ struct MempoolMonitor: View {
         })
         .onAppear {
             let now = UInt64(Date().timeIntervalSince1970) - 3600
-            try! ctx.delete(model: Ordinal.self, where: #Predicate { o in
+            try! ctx.delete(model: MempoolOrdinal.self, where: #Predicate { o in
                 o.createTs < now
             })
         }

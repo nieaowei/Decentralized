@@ -23,7 +23,7 @@ struct BuyScreen: View {
             inner.outpoint
         }
 
-        let inner: Ordinal
+        let inner: MempoolOrdinal
         var status: Status = .loading
     }
 
@@ -65,7 +65,7 @@ struct BuyScreen: View {
 
     @State var summaryTable: [String: SummaryRow] = [:]
 
-    init(type: BuyScreen.BuyType, ordinals: [Ordinal]) {
+    init(type: BuyScreen.BuyType, ordinals: [MempoolOrdinal]) {
         self.type = type
         _ordinals = State(wrappedValue: ordinals.map { e in OrdinalRow(inner: e) })
     }

@@ -156,7 +156,7 @@ class WalletStore {
         case syncing
         case synced
         
-        var description: String{
+        var description: String {
             switch self {
             case .error(let err):
                 err
@@ -260,7 +260,15 @@ class WalletStore {
         wallet.broadcast(tx)
     }
     
+    func broadcastSync(_ tx: DecentralizedFFI.Transaction) -> Result<String, Error> {
+        wallet.broadcast(tx)
+    }
+    
     func insertTxout(op: OutPoint, txout: TxOut) {
         wallet.insertTxOut(op: op, txout: txout)
+    }
+    
+    func isMine(_ script: Script) -> Bool {
+        wallet.isMine(script: script)
     }
 }

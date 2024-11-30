@@ -99,7 +99,7 @@ enum ToolRoute: String, Hashable, CaseIterable {
     // speedUp, cancelTx, monitor
 
     static var allCases: [ToolRoute] {
-        [.mempoolMonitor, .broadcast]
+        [.mempoolMonitor, .broadcast, ordinal]
     }
 
     var title: String {
@@ -113,7 +113,7 @@ enum ToolRoute: String, Hashable, CaseIterable {
     var icon: String {
         switch self {
         case .broadcast: "dot.radiowaves.left.and.right"
-        case .ordinal: "pencil"
+        case .ordinal: "smallcircle.circle"
         case .mempoolMonitor: "leaf"
         }
     }

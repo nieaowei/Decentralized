@@ -20,7 +20,7 @@ enum OrdinalType: Int, Codable, CaseIterable, Identifiable {
 }
 
 @Model
-class Ordinal: Identifiable {
+class MempoolOrdinal: Identifiable {
     @Attribute(.unique) var id: String
     
     @Attribute(.unique) var outpoint: String
@@ -86,13 +86,13 @@ class Ordinal: Identifiable {
 //        self.div = div
 //    }
     static func clearConfirmed(ctx: ModelContext, blockMinFeeRate: Double) throws {
-        try ctx.delete(model: Ordinal.self, where: #Predicate<Ordinal> { ordi in
+        try ctx.delete(model: MempoolOrdinal.self, where: #Predicate<MempoolOrdinal> { ordi in
             ordi.feeRate >= blockMinFeeRate
         })
     }
 }
 
-extension Ordinal: Hashable {
+extension MempoolOrdinal: Hashable {
     var amountWithDiv: Double {
         let div = Int(div) ?? 0
         var amount = amount
@@ -136,8 +136,8 @@ extension Ordinal: Hashable {
 //    }
 }
 
-extension Ordinal {
-    static func predicate(search: String, type: OrdinalType? = nil, isUsed: Bool? = nil) -> Predicate<Ordinal> {
+extension MempoolOrdinal {
+    static func predicate(search: String, type: OrdinalType? = nil, isUsed: Bool? = nil) -> Predicate<MempoolOrdinal> {
         let hasTypeRaw = type != nil
         let typeRaw = hasTypeRaw ? type!.rawValue : OrdinalType.rune.rawValue
         
@@ -149,7 +149,7 @@ extension Ordinal {
         }
     }
     
-    static func fetchOneByOp(ctx: ModelContext, outpoint: String) -> Result<Ordinal?, Error> {
+    static func fetchOneByOp(ctx: ModelContext, outpoint: String) -> Result<MempoolOrdinal?, Error> {
         ctx.fetchOne(predicate: #Predicate { $0.outpoint == outpoint }, includePendingChanges: true)
     }
 }

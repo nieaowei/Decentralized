@@ -12,7 +12,17 @@ public extension Result {
         do {
             self = try .success(transform())
         } catch let error as Failure {
-            self =  .failure(error)
+            self = .failure(error)
+        } catch {
+            fatalError("\(error)")
+        }
+    }
+
+    init(_ transform: () async throws -> Success) async {
+        do {
+            self = try .success(await transform())
+        } catch let error as Failure {
+            self = .failure(error)
         } catch {
             fatalError("\(error)")
         }
