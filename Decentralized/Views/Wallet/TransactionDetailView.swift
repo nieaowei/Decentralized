@@ -78,13 +78,20 @@ struct TransactionDetailView: View {
                         TableColumn("Address") { vout in
                             Text(verbatim: "\(vout.formattedScript(network: settings.network.toBitcoinNetwork()))")
                                 .truncationMode(.middle)
+                                .foregroundStyle(vout.isMine(wallet) ? settings.network.accentColor : .primary)
                         }
                         TableColumn("Value") { vout in
                             Text(verbatim: "\(vout.amount.formatted)")
+                                .foregroundStyle(vout.isMine(wallet) ? settings.network.accentColor : .primary)
                         }
                     } rows: {
                         ForEach(inputs) { tx in
                             TableRow(tx)
+                                .contextMenu {
+                                    Button("Copy Address"){
+                                        copyToClipboard(tx.formattedScript(network: settings.network.toBitcoinNetwork()))
+                                    }
+                                }
                         }
                     }
                     .truncationMode(.middle)
@@ -92,13 +99,20 @@ struct TransactionDetailView: View {
                         TableColumn("Address") { vout in
                             Text("\(vout.formattedScript(network: settings.network.toBitcoinNetwork()))")
                                 .truncationMode(.middle)
+                                .foregroundStyle(vout.isMine(wallet) ? settings.network.accentColor : .primary)
                         }
                         TableColumn("Value") { vout in
                             Text(verbatim: "\(vout.amount.formatted)")
+                                .foregroundStyle(vout.isMine(wallet) ? settings.network.accentColor : .primary)
                         }
                     } rows: {
                         ForEach(outputs) { tx in
                             TableRow(tx)
+                                .contextMenu {
+                                    Button("Copy Address"){
+                                        copyToClipboard(tx.formattedScript(network: settings.network.toBitcoinNetwork()))
+                                    }
+                                }
                         }
                     }
                 }
@@ -161,7 +175,7 @@ struct TransactionDetailView: View {
 
     func fetchOutputs() {
         do {
-            var inputs : [TxOutRow] = []
+            var inputs: [TxOutRow] = []
             for txin in tx.inputs {
                 // from db
                 if let txout = wallet.getTxOut(txin.previousOutput) {
