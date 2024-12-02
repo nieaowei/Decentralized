@@ -143,6 +143,9 @@ class AppSettings {
     @AppStorage("inscriptionNamePath")
     var inscriptionNamePath: String = ""
 
+    @ObservationIgnored
+    @AppStorage("inscriptionNumberPath")
+    var inscriptionNumberPath: String = ""
     
     // for brc20 etc.
     @ObservationIgnored

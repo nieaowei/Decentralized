@@ -73,6 +73,9 @@
         }
       }
     },
+    "Add" : {
+
+    },
     "Address" : {
       "localizations" : {
         "zh-Hans" : {
@@ -244,6 +247,12 @@
         }
       }
     },
+    "Collection" : {
+
+    },
+    "Confirm" : {
+
+    },
     "Confirmed" : {
       "localizations" : {
         "zh-Hans" : {
@@ -360,6 +369,9 @@
         }
       }
     },
+    "End" : {
+
+    },
     "Enter" : {
       "localizations" : {
         "zh-Hans" : {
@@ -450,9 +462,6 @@
           }
         }
       }
-    },
-    "Fund" : {
-      "shouldTranslate" : false
     },
     "History" : {
       "localizations" : {
@@ -646,6 +655,9 @@
           }
         }
       }
+    },
+    "Number Path" : {
+
     },
     "Ok" : {
       "extractionState" : "manual",
@@ -910,6 +922,9 @@
           }
         }
       }
+    },
+    "Start" : {
+
     },
     "Status" : {
       "extractionState" : "manual",

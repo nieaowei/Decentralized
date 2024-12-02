@@ -19,6 +19,7 @@ final class CPFPChain {
     @Relationship(deleteRule: .cascade, inverse: \CPFPChain.parents) var childs: [CPFPChain] = []
     @Relationship(deleteRule: .cascade) var parents: [CPFPChain] = []
 
+    
     var effectiveFeeRate: Double {
         var totalFee: UInt64 = 0
         var totalWeight: UInt64 = 0

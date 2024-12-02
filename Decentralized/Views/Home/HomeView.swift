@@ -265,6 +265,11 @@ struct HomeView: View {
                                         ordi.ordinalId = runeid.id
                                     }
                                 }
+                                if ordi.type == .inscription && ordi.name.isEmpty {
+                                    if case .success(let name) = InscriptionCollection.fetchNameByNumber(ctx: ctx, number: ordi.number), let name {
+                                        ordi.name = name
+                                    }
+                                }
                                 _ = ctx.upsert(ordi)
                             }
                         }

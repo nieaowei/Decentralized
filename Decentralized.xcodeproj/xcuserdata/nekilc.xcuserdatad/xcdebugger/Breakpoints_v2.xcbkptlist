@@ -83,8 +83,8 @@
             filePath = "Decentralized/Extensions/Async.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "41"
-            endingLineNumber = "41"
+            startingLineNumber = "42"
+            endingLineNumber = "42"
             landmarkName = "fetchOrdinalTxPairsAsync(esploraClient:settings:esploraWssTx:)"
             landmarkType = "9">
          </BreakpointContent>
@@ -99,8 +99,8 @@
             filePath = "Decentralized/Extensions/Async.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "42"
-            endingLineNumber = "42"
+            startingLineNumber = "43"
+            endingLineNumber = "43"
             landmarkName = "fetchOrdinalTxPairsAsync(esploraClient:settings:esploraWssTx:)"
             landmarkType = "9">
          </BreakpointContent>
@@ -115,8 +115,8 @@
             filePath = "Decentralized/Extensions/Async.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "45"
-            endingLineNumber = "45"
+            startingLineNumber = "46"
+            endingLineNumber = "46"
             landmarkName = "fetchOrdinalTxPairsAsync(esploraClient:settings:esploraWssTx:)"
             landmarkType = "9">
          </BreakpointContent>
@@ -131,8 +131,8 @@
             filePath = "Decentralized/Extensions/Async.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "98"
-            endingLineNumber = "98"
+            startingLineNumber = "99"
+            endingLineNumber = "99"
             landmarkName = "fetchOrdinalTxPairsAsync(esploraClient:settings:esploraWssTx:)"
             landmarkType = "9">
          </BreakpointContent>

@@ -87,7 +87,7 @@ struct OrdinalTableView: View {
                                 NSPasteboard.general.clearContents()
                                 NSPasteboard.general.setString(ordinal.outpoint, forType: .string)
                             }
-                            Button("Copy Ordinal ID"){
+                            Button("Copy Ordinal ID") {
                                 NSPasteboard.general.clearContents()
                                 NSPasteboard.general.setString(ordinal.ordinalId, forType: .string)
                             }

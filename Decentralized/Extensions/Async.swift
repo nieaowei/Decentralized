@@ -33,7 +33,8 @@ func fetchOrdinalTxPairsAsync(esploraClient: EsploraClientWrap, settings: AppSet
                         settings.inscriptionIdPath,
                         settings.inscriptionNamePath,
                         settings.inscriptionAmountPath,
-                        settings.inscriptionDivPath
+                        settings.inscriptionDivPath,
+                        settings.inscriptionNumberPath,
                     ]
                 )
             }
@@ -48,7 +49,7 @@ func fetchOrdinalTxPairsAsync(esploraClient: EsploraClientWrap, settings: AppSet
                     continue
                 }
                 if data[4] != nil || data[5] != nil {
-                    datas.append(MempoolOrdinal(type: .inscription, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: data[4] ?? "", name: data[5] ?? "", amount: data[6] ?? "1", div: data[7] ?? "0"))
+                    datas.append(MempoolOrdinal(type: .inscription, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: data[4] ?? "", name: data[5] ?? "", number: data[8] == nil ? 0 : (UInt64(data[8]!) ?? 0), amount: data[6] ?? "1", div: data[7] ?? "0"))
                     continue
                 }
             }
@@ -63,14 +64,15 @@ func fetchOrdinalTxPairsAsync(esploraClient: EsploraClientWrap, settings: AppSet
             idPath: settings.runeIdPath,
             namePath: settings.runeNamePath,
             amountPath: settings.runeAmountPath,
-            decimalPath: settings.runeDivPath
+            decimalPath: settings.runeDivPath,
+            numberPath: settings.inscriptionNumberPath
         )
         guard case let .success(runeData) = runeData else {
             return .failure(runeData.err()!)
         }
 
         if runeData.id != nil || runeData.name != nil {
-            datas.append(MempoolOrdinal(type: .rune, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: runeData.id ?? "", name: runeData.name ?? "", amount: runeData.amount, div: runeData.decimal))
+            datas.append(MempoolOrdinal(type: .rune, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: runeData.id ?? "", name: runeData.name ?? "", number: runeData.number ?? 0, amount: runeData.amount, div: runeData.decimal))
             continue
         }
 
@@ -81,7 +83,8 @@ func fetchOrdinalTxPairsAsync(esploraClient: EsploraClientWrap, settings: AppSet
             idPath: settings.inscriptionIdPath,
             namePath: settings.inscriptionNamePath,
             amountPath: settings.inscriptionAmountPath,
-            decimalPath: settings.inscriptionDivPath
+            decimalPath: settings.inscriptionDivPath,
+            numberPath: settings.inscriptionNumberPath
         )
 
         guard case let .success(insData) = insData else {
@@ -89,7 +92,7 @@ func fetchOrdinalTxPairsAsync(esploraClient: EsploraClientWrap, settings: AppSet
         }
 
         if insData.id != nil || insData.name != nil {
-            datas.append(MempoolOrdinal(type: .inscription, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: insData.id ?? "", name: insData.name ?? "", amount: insData.amount, div: insData.decimal))
+            datas.append(MempoolOrdinal(type: .inscription, txin: pair.txin, txout: pair.txout, feeRate: esploraWssTx.feeRate, ordinalId: insData.id ?? "", name: insData.name ?? "", number: insData.number ?? 0, amount: insData.amount, div: insData.decimal))
             continue
         }
 
@@ -101,23 +104,24 @@ func fetchOrdinalTxPairsAsync(esploraClient: EsploraClientWrap, settings: AppSet
 struct OrdinalInfo {
     let id: String?
     let name: String?
+    let number: UInt64?
     let amount: String
     let decimal: String
 }
 
-func fetchOrdinalInfo(url: String, auth: String, txid: String, vout: String, idPath: String, namePath: String, amountPath: String, decimalPath: String) async -> Result<OrdinalInfo, Error> {
+func fetchOrdinalInfo(url: String, auth: String, txid: String, vout: String, idPath: String, namePath: String, amountPath: String, decimalPath: String, numberPath: String) async -> Result<OrdinalInfo, Error> {
     let runeData = Result {
         try getJsonInfoFromUrl(
             url: url,
             auth: auth,
             params: [txid, vout],
-            paths: [idPath, namePath, amountPath, decimalPath]
+            paths: [idPath, namePath, amountPath, decimalPath, numberPath]
         )
     }
     guard case let .success(runeData) = runeData else {
         return .failure(runeData.err()!)
     }
-    return .success(OrdinalInfo(id: runeData[0], name: runeData[1], amount: runeData[2] ?? "1", decimal: runeData[3] ?? "0"))
+    return .success(OrdinalInfo(id: runeData[0], name: runeData[1], number: runeData[4] == nil ? 0 : UInt64(runeData[4]!), amount: runeData[2] ?? "1", decimal: runeData[3] ?? "0"))
 }
 
 // func fetchRuneId(modelCtx: ModelContext, name: String, url: String, auth: String, txid: String, vout: String, idPath: String) async throws -> String? {
@@ -155,3 +159,6 @@ func fetchRuneIdFromDB(modelCtx: ModelContext, name: String) -> Result<String?, 
     }
 }
 
+func fetchInscriptionNameFrom(modelCtx: ModelContext, number: UInt64) -> Result<String?, Error> {
+    InscriptionCollection.fetchNameByNumber(ctx: modelCtx, number: number)
+}

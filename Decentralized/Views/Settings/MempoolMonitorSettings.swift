@@ -33,6 +33,8 @@ struct MempoolMonitorSettings: View {
     @State var inscriptionAmountPath = ""
     
     @State var inscriptionDivPath = ""
+    
+    @State var inscriptionNumberPath = ""
 
     @State var sameAsRune: Bool = false
 
@@ -79,6 +81,7 @@ struct MempoolMonitorSettings: View {
                 inscriptionUrl = settings.inscriptionUrl
                 inscriptionAuth = settings.inscriptionAuth
                 inscriptionIdPath = settings.inscriptionIdPath
+                inscriptionNumberPath = settings.inscriptionNumberPath
                 inscriptionNamePath = settings.inscriptionNamePath
                 inscriptionAmountPath = settings.inscriptionAmountPath
                 inscriptionDivPath = settings.inscriptionDivPath
@@ -91,6 +94,7 @@ struct MempoolMonitorSettings: View {
                     TextField("Auth", text: $inscriptionAuth)
                 }
                 TextField("ID Path", text: $inscriptionIdPath)
+                TextField("Number Path", text: $inscriptionNumberPath)
                 TextField("Name Path", text: $inscriptionNamePath)
                 TextField("Amount Path", text: $inscriptionAmountPath)
                 TextField("Div Path", text: $inscriptionDivPath)
@@ -123,6 +127,7 @@ struct MempoolMonitorSettings: View {
         }
         settings.sameAsRune = sameAsRune
         settings.inscriptionIdPath = inscriptionIdPath
+        settings.inscriptionNumberPath = inscriptionNumberPath
         settings.inscriptionNamePath = inscriptionNamePath
         settings.inscriptionAmountPath = inscriptionAmountPath
         settings.inscriptionDivPath = inscriptionDivPath

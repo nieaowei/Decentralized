@@ -9,6 +9,11 @@ import DecentralizedFFI
 import SwiftData
 import SwiftUI
 
+enum MempoolMonitorTab: Hashable {
+    case ordinalFilter(OrdinalTableView.Filter)
+    case collection
+}
+
 struct MempoolMonitor: View {
     @Environment(\.modelContext) var ctx
     @Environment(WalletStore.self) var wallet
@@ -22,25 +27,29 @@ struct MempoolMonitor: View {
 
     @State var url: String? = nil
 
-    @State var filter: OrdinalTableView.Filter = .all
+//    @State var filter: OrdinalTableView.Filter = .all
+    @State var tabIndex: MempoolMonitorTab = .ordinalFilter(.all)
     @State var search: String = ""
 
     @State var showAdd: Bool = false
-    
+
     var body: some View {
         VStack {
-            OrdinalTableView(filter: filter, search: search, selections: $selections, sortOrder: $sortOrder)
+            switch tabIndex {
+            case .collection: CollectionView()
+            case .ordinalFilter(let filter): OrdinalTableView(filter: filter, search: search, selections: $selections, sortOrder: $sortOrder)
+            }
         }
         .searchable(text: $search, placement: .automatic)
         .toolbar(content: {
             WalletStatusToolbar()
             ToolbarItemGroup(placement: .secondaryAction) {
-                Picker("Filter", selection: $filter) {
-                    Text("All").tag(OrdinalTableView.Filter.all)
-                    Text("History").tag(OrdinalTableView.Filter.used)
-                    Text("Rune").tag(OrdinalTableView.Filter.rune)
-                    Text("Inscription").tag(OrdinalTableView.Filter.inscription)
-                    Text("Fund").tag(OrdinalTableView.Filter.fund)
+                Picker("Filter", selection: $tabIndex) {
+                    Text("All").tag(MempoolMonitorTab.ordinalFilter(.all))
+                    Text("History").tag(MempoolMonitorTab.ordinalFilter(.used))
+                    Text("Rune").tag(MempoolMonitorTab.ordinalFilter(.rune))
+                    Text("Inscription").tag(MempoolMonitorTab.ordinalFilter(.inscription))
+                    Text("Collection").tag(MempoolMonitorTab.collection)
                 }
                 .pickerStyle(SegmentedPickerStyle())
             }
@@ -50,7 +59,6 @@ struct MempoolMonitor: View {
                 } label: {
                     Image(systemName: "plus")
                 }
-
             }
         })
         .onAppear {

@@ -40,6 +40,7 @@ class MempoolOrdinal: Identifiable {
     var name: String // rune name or
     var value: UInt64
     
+    var number: UInt64
 //    var fee: UInt64
 //
     var feeRate: Double
@@ -55,11 +56,12 @@ class MempoolOrdinal: Identifiable {
     
     var createTs: UInt64
     
-    init(type: OrdinalType, txin: TxIn, txout: TxOut, feeRate: Double, ordinalId: String, name: String, amount: String = "1", div: String = "0") {
+    init(type: OrdinalType, txin: TxIn, txout: TxOut, feeRate: Double, ordinalId: String, name: String, number: UInt64 = 0, amount: String = "1", div: String = "0") {
         self.id = txin.id
         self.outpoint = txin.id
         self.ordinalId = ordinalId
         self.name = name
+        self.number = number
         self.value = txout.value.toSat()
         self.txinHex = txin.serializeHex
         self.witnessHex = txin.witnessHex
@@ -73,18 +75,6 @@ class MempoolOrdinal: Identifiable {
         self.feeRate = feeRate
     }
     
-//    init(outpoint: String, ordinalId: String, name: String, value: Double, txinHex: String, witnessHex: String, txoutHex: String, amount: String = "1", div: String = "0") {
-//        self.outpoint = outpoint
-//        self.ordinalId = ordinalId
-//        self.name = name
-//        self.value = value
-//        self.txinHex = txinHex
-//        self.witnessHex = witnessHex
-//        self.txoutHex = txoutHex
-//        self.createTs = UInt64(Date().timeIntervalSince1970)
-//        self.amount = amount
-//        self.div = div
-//    }
     static func clearConfirmed(ctx: ModelContext, blockMinFeeRate: Double) throws {
         try ctx.delete(model: MempoolOrdinal.self, where: #Predicate<MempoolOrdinal> { ordi in
             ordi.feeRate >= blockMinFeeRate
@@ -130,10 +120,6 @@ extension MempoolOrdinal: Hashable {
     var displayDate: String {
         createTs.toDate().commonFormat()
     }
-    
-//    var displayValue: String {
-//
-//    }
 }
 
 extension MempoolOrdinal {

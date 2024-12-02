@@ -43,13 +43,13 @@ struct DecentralizedApp: App {
     @Environment(\.openWindow) private var openWindow
 
     @State var settings: AppSettings
-    let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, CPFPChain.self, MempoolOrdinal.self, RuneInfo.self, configurations: ModelConfiguration())
+    let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, CPFPChain.self, MempoolOrdinal.self, RuneInfo.self, InscriptionCollection.self, configurations: ModelConfiguration())
 
     let esploraClient: EsploraClientWrap
     @State var wss: WssStore
 
     @State private var errorWrapper: ErrorWrapper?
-    
+
 //    @State private var accentColor: Color
     @AppStorage("network")
     var network: Networks = .bitcoin
@@ -68,15 +68,15 @@ struct DecentralizedApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if isOnBoarding {
+            if self.isOnBoarding {
                 OnBoradingView()
-                    .tint(network.accentColor)
+                    .tint(self.network.accentColor)
                     .toolbar(removing: .title)
                     .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
                     .containerBackground(.thickMaterial, for: .window)
                     .windowMinimizeBehavior(.disabled)
                     .windowResizeBehavior(.disabled)
-                    .sheet(item: $errorWrapper) { errorWrapper in
+                    .sheet(item: self.$errorWrapper) { errorWrapper in
                         Text(errorWrapper.guidance)
                             .font(.title3)
                         if let error = errorWrapper.error {
@@ -85,9 +85,9 @@ struct DecentralizedApp: App {
                     }
 
             } else {
-                HomeView(settings)
-                    .tint(network.accentColor)
-                    .sheet(item: $errorWrapper) { errorWrapper in
+                HomeView(self.settings)
+                    .tint(self.network.accentColor)
+                    .sheet(item: self.$errorWrapper) { errorWrapper in
                         VStack {
                             Text(errorWrapper.guidance)
                                 .font(.title3)
@@ -106,19 +106,19 @@ struct DecentralizedApp: App {
                     }
             }
         }
-        .environment(settings)
-        .environment(esploraClient)
-        .environment(wss)
+        .environment(self.settings)
+        .environment(self.esploraClient)
+        .environment(self.wss)
         .environment(\.showError) { error, guidance in
-            errorWrapper = ErrorWrapper(error: error, guidance: guidance)
+            self.errorWrapper = ErrorWrapper(error: error, guidance: guidance)
         }
-        .modelContainer(mainModelContainer)
+        .modelContainer(self.mainModelContainer)
 
         // Replace About Button Action
         .commands {
             CommandGroup(replacing: CommandGroupPlacement.appInfo) {
                 Button(action: {
-                    openWindow(id: "about")
+                    self.openWindow(id: "about")
                 }) {
                     Text("About Decentralized")
                 }
@@ -127,19 +127,19 @@ struct DecentralizedApp: App {
 
         Window("Welcome", id: "welcom") {
             OnBoradingView()
-                .tint(network.accentColor)
+                .tint(self.network.accentColor)
                 .toolbar(removing: .title)
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
                 .containerBackground(.thickMaterial, for: .window)
                 .windowMinimizeBehavior(.disabled)
                 .windowResizeBehavior(.disabled)
-                .sheet(item: $errorWrapper) { errorWrapper in
+                .sheet(item: self.$errorWrapper) { errorWrapper in
                     if let error = errorWrapper.error {
                         Text(error.localizedDescription)
                     }
                 }
         }
-        .environment(settings)
+        .environment(self.settings)
 
         // Custom About
         Window("About", id: "about") {
@@ -149,7 +149,7 @@ struct DecentralizedApp: App {
                 .containerBackground(.thickMaterial, for: .window)
                 .windowMinimizeBehavior(.disabled)
                 .windowResizeBehavior(.disabled)
-                .tint(network.accentColor)
+                .tint(self.network.accentColor)
         }
         .windowResizability(.contentSize)
         .restorationBehavior(.disabled)
@@ -158,10 +158,10 @@ struct DecentralizedApp: App {
         Settings {
             SettingsView()
                 .windowResizeBehavior(.enabled)
-                .modelContainer(mainModelContainer)
-                .tint(network.accentColor)
+                .modelContainer(self.mainModelContainer)
+                .tint(self.network.accentColor)
         }
-        .environment(settings)
+        .environment(self.settings)
         .windowIdealSize(.fitToContent)
         .windowResizability(.contentSize)
     }
