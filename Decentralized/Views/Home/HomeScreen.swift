@@ -56,7 +56,7 @@ struct HomeDetailView: View {
     }
 }
 
-struct HomeView: View {
+struct HomeScreen: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.scenePhase) private var scenePhase
     @Environment(AppSettings.self) var settings
@@ -300,9 +300,16 @@ struct WalletStatusToolbar: ToolbarContent {
     @State var showWssActions: Bool = false
 
     var body: some ToolbarContent {
-        ToolbarItemGroup(placement: .confirmationAction) {
+//        ToolbarItemGroup(placement: .confirmationAction) {
+        ToolbarSpacer(.fixed, placement: .automatic)
+        ToolbarItem{
             Text("\(wss.fastFee) sats/vB")
+                .padding(.horizontal)
+        }
+        ToolbarSpacer(.flexible, placement: .automatic)
+        ToolbarItem{
             Text("\(wallet.balance.total.formatted)")
+                .padding(.horizontal)
                 .onTapGesture {
                     showBalancePop = true
                 }
@@ -313,39 +320,46 @@ struct WalletStatusToolbar: ToolbarContent {
                     }
                     .padding(.all)
                 }
-            WalletSyncStatusView(synced: wallet.syncStatus)
-                .popover(isPresented: $showSyncActions) {
-                    Form {
-                        LabeledContent("Status", value: wallet.syncStatus.description)
-                        Button("Resync") {
-                            Task {
-                                try await wallet.sync()
-                            }
-                        }
-                    }
-                    .padding(.all)
-                }
-                .onTapGesture {
-                    showSyncActions = true
-                }
-            WssStatusView(status: wss.status)
-                .popover(isPresented: $showWssActions) {
-                    Form {
-                        LabeledContent("Status", value: wss.status.rawValue)
-                        if wss.status == .disconnected {
-                            Button("Reconnect") {
+        }
+        ToolbarSpacer(.flexible, placement: .automatic)
+        ToolbarItem{
+            HStack{
+                WalletSyncStatusView(synced: wallet.syncStatus)
+                    .popover(isPresented: $showSyncActions) {
+                        Form {
+                            LabeledContent("Status", value: wallet.syncStatus.description)
+                            Button("Resync") {
                                 Task {
-                                    wss.connect()
+                                    try await wallet.sync()
                                 }
                             }
                         }
+                        .padding(.all)
                     }
-                    .padding(.all)
-                }
-                .onTapGesture {
-                    showWssActions = true
-                }
+                    .onTapGesture {
+                        showSyncActions = true
+                    }
+                WssStatusView(status: wss.status)
+                    .popover(isPresented: $showWssActions) {
+                        Form {
+                            LabeledContent("Status", value: wss.status.rawValue)
+                            if wss.status == .disconnected {
+                                Button("Reconnect") {
+                                    Task {
+                                        wss.connect()
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.all)
+                    }
+                    .onTapGesture {
+                        showWssActions = true
+                    }
+            }
+            .padding(.horizontal)
         }
+//        }
     }
 }
 

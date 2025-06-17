@@ -62,6 +62,7 @@ struct BuyScreen: View {
 
     @State var minFee: UInt64 = 0
     @State var minFeeRate: UInt64 = 0
+    @State var isBrc20: Bool = false
 
     @State var summaryTable: [String: SummaryRow] = [:]
 

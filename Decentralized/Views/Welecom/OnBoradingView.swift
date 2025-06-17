@@ -32,7 +32,9 @@ struct OnBoradingView: View {
 
                         Text(verbatim: "Decentralized")
                             .font(.largeTitle)
+                            
                     }
+                    
                     VStack(spacing: 10) {
                         Picker("", selection: $mode) {
                             ForEach(WalletMode.allCases, id: \.self) { item in
@@ -68,4 +70,5 @@ struct OnBoradingView: View {
 
 #Preview {
     OnBoradingView()
+        .environment(AppSettings())
 }

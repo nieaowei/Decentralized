@@ -72,6 +72,12 @@ extension Psbt: @retroactive Equatable, @retroactive Hashable {
             try Psbt.fromHex(psbtHex: hex)
         }
     }
+
+    func extractTransaction() -> Result<Transaction, ExtractTxError> {
+        Result {
+            try self.extractTx()
+        }
+    }
 }
 
 extension Amount: @retroactive Comparable {

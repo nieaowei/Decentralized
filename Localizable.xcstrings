@@ -154,7 +154,7 @@
       }
     },
     "BRC20" : {
-
+      "shouldTranslate" : false
     },
     "Broadcast" : {
       "localizations" : {
@@ -185,6 +185,9 @@
           }
         }
       }
+    },
+    "Build %@" : {
+
     },
     "Buy" : {
       "localizations" : {
@@ -248,10 +251,24 @@
       }
     },
     "Collection" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合集"
+          }
+        }
+      }
     },
     "Confirm" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确认"
+          }
+        }
+      }
     },
     "Confirmed" : {
       "localizations" : {
@@ -264,7 +281,14 @@
       }
     },
     "Copy Address" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制地址"
+          }
+        }
+      }
     },
     "Copy Ordinal ID" : {
       "localizations" : {
@@ -349,6 +373,9 @@
     "Div Path" : {
       "shouldTranslate" : false
     },
+    "Eddit" : {
+
+    },
     "Enable" : {
       "localizations" : {
         "zh-Hans" : {
@@ -370,7 +397,14 @@
       }
     },
     "End" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "结束"
+          }
+        }
+      }
     },
     "Enter" : {
       "localizations" : {
@@ -657,7 +691,7 @@
       }
     },
     "Number Path" : {
-
+      "shouldTranslate" : false
     },
     "Ok" : {
       "extractionState" : "manual",
@@ -784,7 +818,7 @@
       }
     },
     "Replace By Fee" : {
-      "shouldTranslate" : false
+
     },
     "Reset Wallet" : {
       "localizations" : {
@@ -840,7 +874,14 @@
       "shouldTranslate" : false
     },
     "Selecte File" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择文件"
+          }
+        }
+      }
     },
     "Send" : {
       "localizations" : {
@@ -1071,6 +1112,9 @@
           }
         }
       }
+    },
+    "Version %@" : {
+
     },
     "Vsize" : {
       "extractionState" : "manual",

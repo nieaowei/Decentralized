@@ -8,6 +8,7 @@
 import DecentralizedFFI
 import SwiftData
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ContactScreen: View {
     @Query private var contacts: [Contact]
@@ -52,16 +53,13 @@ struct ContactScreen: View {
                 ForEach(contacts) { contact in
                     TableRow(contact)
                         .contextMenu {
-                            Button {
+                            Button(role: .destructive) {
                                 modelCtx.delete(contact)
-                            } label: {
-                                Image(systemName: "trash")
-                                Text(verbatim: "Delete")
                             }
+                            .tint(.red)
                         }
                 }
             }
-
             .controlSize(.large)
         }
         .toolbar {

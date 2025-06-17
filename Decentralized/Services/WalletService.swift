@@ -12,6 +12,7 @@ import OSLog
 enum WalletMode: String, Codable, CaseIterable {
     case xverse
     case peek
+    case me
 }
 
 enum WalletType: String, Codable, CaseIterable {
@@ -201,6 +202,12 @@ struct WalletService {
                 keychainKind: .external,
                 network: network.toBitcoinNetwork()
             )
+        case .me:
+            try Descriptor.newBip84(
+                secretKey: paySecretKey.derivePriv(path: DerivationPath(path: "m/84'/0'/0'/0/0")),
+                keychainKind: .external,
+                network: network.toBitcoinNetwork()
+            )
         }
 
         let ordiDescriptor = try Descriptor.newBip86(
@@ -320,6 +327,12 @@ struct WalletService {
     }
 
     func finish(_ txbuiler: TxBuilder) -> Result<Psbt, CreateTxError> {
+        Result {
+            try txbuiler.finish(wallet: self.payWallet)
+        }
+    }
+
+    func finishBump(_ txbuiler: BumpFeeTxBuilder, walletType: WalletType = .pay) -> Result<Psbt, CreateTxError> {
         Result {
             try txbuiler.finish(wallet: self.payWallet)
         }

@@ -5,6 +5,7 @@
 //  Created by Nekilc on 2024/5/24.
 //
 
+import DecentralizedFFI
 import SwiftUI
 
 struct TransactionView: View {
@@ -15,6 +16,9 @@ struct TransactionView: View {
 
     @State private var sortOrder = [KeyPathComparator(\WalletTransaction.timestamp, order: .reverse)]
 
+    @State var bumpPsbt: Psbt? = nil
+
+    
     var body: some View {
         VStack {
             Table(of: WalletTransaction.self, selection: $selected, sortOrder: $sortOrder) {
@@ -52,7 +56,6 @@ struct TransactionView: View {
                                 }
                             }
                             if !tx.isComfirmed {
-                                
                                 if tx.canCPFP {
                                     // CPFP conditions:
                                     // - Input must be contain one of origin' output
@@ -73,8 +76,11 @@ struct TransactionView: View {
                                     // RBF conditions:
                                     // - FeeRate must be more than origin tx
                                     // - Fee must be more than origin tx
-                                    NavigationLink("Replace By Fee") {
-                                        SendScreen(isRBF: true, selectedOutpointIds: Set(tx.inputs.map { $0.id }))
+//                                    NavigationLink("Replace By Fee") {
+//                                        SendScreen(isRBF: true, selectedOutpointIds: Set(tx.inputs.map { $0.id }))
+//                                    }
+                                    Button("Replace By Fee") {
+                                        onRbf(txid: tx.id)
                                     }
                                 }
                             }
@@ -88,9 +94,23 @@ struct TransactionView: View {
             .onChange(of: wallet.transactions) { _, _ in
                 wallet.transactions.sort(using: sortOrder)
             }
+            
         }
-        .toolbar{
+        .toolbar {
             WalletStatusToolbar()
+        }
+        .navigationDestination(item: $bumpPsbt) { psbt in
+            SignScreen(unsignedPsbts: [SignScreen.UnsignedPsbt(psbt: psbt)], deferBroadcastTxs: [])
+        }
+        
+    }
+
+
+    func onRbf(txid: String) {
+        print(txid)
+        let bf = BumpFeeTxBuilder(txid: txid, feeRate: FeeRate.from(satPerVb: 10).unwrap())
+        if case .success(let psbt) = wallet.finishBump(bf) {
+            bumpPsbt = psbt
         }
     }
 }

@@ -19,12 +19,11 @@ struct Recipient: Identifiable, Transferable, Codable {
     static var draggableType = UTType(exportedAs: "app.decentralized.Recipient")
 
     public static var transferRepresentation: some TransferRepresentation {
-        CodableRepresentation(contentType: Self.draggableType)
+        CodableRepresentation(contentType: draggableType)
     }
 }
 
 struct SendUtxo: Identifiable, Transferable, Codable {
-
     public var id: String {
         "\(outpoint.txid):\(outpoint.vout)"
     }
@@ -46,10 +45,11 @@ struct SendUtxo: Identifiable, Transferable, Codable {
         self.txout = txout
         self.deleteable = deleteable
     }
+
     static var draggableType = UTType(exportedAs: "app.decentralized.SendUtxo")
 
     public static var transferRepresentation: some TransferRepresentation {
-        CodableRepresentation(contentType: Self.draggableType)
+        CodableRepresentation(contentType: draggableType)
     }
 }
 
@@ -71,6 +71,7 @@ struct SendScreen: View {
     @Environment(\.showError) var showError
 
     @State var outputs: [Recipient] = []
+    @State var selectedOutputs: [Recipient.ID] = []
     @State var selectedOutpointIds = Set<String>()
 
 //    @State var selectedOutpoints: [String] = []
@@ -155,7 +156,6 @@ struct SendScreen: View {
                         TableColumn("Address") { $o in
                             HStack(spacing: 0) {
                                 Image(systemName: "arrow.up.arrow.down")
-                                    .draggable(o)
                                 Picker("", selection: $o.address) {
                                     ForEach(contacts) { contact in
                                         Text(verbatim: "\(contact.name):\(contact.addr)")
@@ -164,6 +164,7 @@ struct SendScreen: View {
                                     }
                                 }
                             }
+                            .draggable(o)
                         }
                         TableColumn("Value") { $o in
                             HStack(spacing: 0) {
@@ -179,6 +180,7 @@ struct SendScreen: View {
                     } rows: {
                         ForEach($outputs) { $o in
                             TableRow($o)
+
                                 .contextMenu {
                                     Button {
                                         onRemoveOutput(o.id)
@@ -197,7 +199,9 @@ struct SendScreen: View {
 
                             self.outputs.insert(contentsOf: recipients, at: index > firstRemoveIndex ? (index - 1) : index)
                         }
+                        
                     }
+                    
                     .truncationMode(.middle)
                     .contextMenu {
                         Button {
@@ -235,7 +239,7 @@ struct SendScreen: View {
                         HStack {
                             PrimaryButton("OK") {
                                 let added = selectedOutpointIds.reduce(into: [SendUtxo]()) { partialResult, id in
-                                    if let lo = wallet.allUtxos.first(where: { $0.id == id }), !inputs.contains(where: {$0.id == lo.id}) {
+                                    if let lo = wallet.allUtxos.first(where: { $0.id == id }), !inputs.contains(where: { $0.id == lo.id }) {
                                         partialResult.append(SendUtxo(lo: lo))
                                     }
                                 }
@@ -254,7 +258,7 @@ struct SendScreen: View {
                 }
             }
         }
-        .toolbar{
+        .toolbar {
             WalletStatusToolbar()
         }
         .navigationDestination(item: $builtPsbt) { psbt in
@@ -314,6 +318,7 @@ struct SendScreen: View {
         let psbt = wallet.finish(txBuilder)
 
         guard case .success(let psbt) = psbt else {
+            showError(psbt.err()!, "")
             return .failure(psbt.err()!)
         }
 
@@ -334,7 +339,6 @@ struct SendScreen: View {
                     withAnimation {
                         inputs.append(SendUtxo(lo: lo))
                     }
-                   
                 }
             }
         }
@@ -383,7 +387,6 @@ struct SendScreen: View {
         withAnimation {
             outputs.removeAll()
         }
-       
     }
 }
 

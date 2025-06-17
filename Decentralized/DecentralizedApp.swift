@@ -43,7 +43,7 @@ struct DecentralizedApp: App {
     @Environment(\.openWindow) private var openWindow
 
     @State var settings: AppSettings
-    let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, CPFPChain.self, MempoolOrdinal.self, RuneInfo.self, InscriptionCollection.self, configurations: ModelConfiguration())
+    let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, CPFPChain.self, MempoolOrdinal.self, RuneInfo.self, InscriptionCollection.self, OrdinalHistory.self, configurations: ModelConfiguration())
 
     let esploraClient: EsploraClientWrap
     @State var wss: WssStore
@@ -73,7 +73,7 @@ struct DecentralizedApp: App {
                     .tint(self.network.accentColor)
                     .toolbar(removing: .title)
                     .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
-                    .containerBackground(.thickMaterial, for: .window)
+                    .containerBackground(.ultraThinMaterial, for: .window)
                     .windowMinimizeBehavior(.disabled)
                     .windowResizeBehavior(.disabled)
                     .sheet(item: self.$errorWrapper) { errorWrapper in
@@ -85,7 +85,7 @@ struct DecentralizedApp: App {
                     }
 
             } else {
-                HomeView(self.settings)
+                HomeScreen(self.settings)
                     .tint(self.network.accentColor)
                     .sheet(item: self.$errorWrapper) { errorWrapper in
                         VStack {
@@ -113,7 +113,6 @@ struct DecentralizedApp: App {
             self.errorWrapper = ErrorWrapper(error: error, guidance: guidance)
         }
         .modelContainer(self.mainModelContainer)
-
         // Replace About Button Action
         .commands {
             CommandGroup(replacing: CommandGroupPlacement.appInfo) {
@@ -130,7 +129,7 @@ struct DecentralizedApp: App {
                 .tint(self.network.accentColor)
                 .toolbar(removing: .title)
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
-                .containerBackground(.thickMaterial, for: .window)
+                .containerBackground(.ultraThinMaterial, for: .window)
                 .windowMinimizeBehavior(.disabled)
                 .windowResizeBehavior(.disabled)
                 .sheet(item: self.$errorWrapper) { errorWrapper in
@@ -138,6 +137,7 @@ struct DecentralizedApp: App {
                         Text(error.localizedDescription)
                     }
                 }
+//                .glassEffect(in:.rect)
         }
         .environment(self.settings)
 
@@ -158,6 +158,7 @@ struct DecentralizedApp: App {
         Settings {
             SettingsView()
                 .windowResizeBehavior(.enabled)
+                .containerBackground(.ultraThinMaterial, for: .window)
                 .modelContainer(self.mainModelContainer)
                 .tint(self.network.accentColor)
         }

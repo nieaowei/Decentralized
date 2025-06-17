@@ -76,9 +76,11 @@ struct TransactionDetailView: View {
                 HSplitView {
                     Table(of: TxOutRow.self) {
                         TableColumn("Address") { vout in
-                            Text(verbatim: "\(vout.formattedScript(network: settings.network.toBitcoinNetwork()))")
+                            let addr = vout.formattedScript(network: settings.network.toBitcoinNetwork())
+                            Text(verbatim: "\(addr)")
                                 .truncationMode(.middle)
                                 .foregroundStyle(vout.isMine(wallet) ? settings.network.accentColor : .primary)
+                                
                         }
                         TableColumn("Value") { vout in
                             Text(verbatim: "\(vout.amount.formatted)")

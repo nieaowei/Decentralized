@@ -244,6 +244,10 @@ class WalletStore {
         wallet.finish(tx)
     }
     
+    func finishBump(_ tx: BumpFeeTxBuilder) -> Result<Psbt, CreateTxError> {
+        wallet.finishBump(tx)
+    }
+    
 //    func buildAndSignTx(_ tx: TxBuilder) throws -> (DecentralizedFFI.Transaction, Psbt) {
 //        return try wallet.buildAndSignTx(tx)
 //    }
