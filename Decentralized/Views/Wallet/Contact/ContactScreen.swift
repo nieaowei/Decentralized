@@ -11,17 +11,17 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct ContactScreen: View {
-    @Query private var contacts: [Contact]
+    @Query
+    private var contacts: [Contact]
 
     @Environment(\.modelContext) private var modelCtx
+//    @Environment(AppSettings.self) private var settings
 
     @State private var QRData: String? = nil
     @State private var showAddContact: Bool = false
 
-    init() {
-        let d = FetchDescriptor<Contact>()
-//        d.includePendingChanges = false
-        _contacts = Query(d, animation: .default)
+    init(_ settings: AppSettings) {
+        _contacts = Query(filter: Contact.predicate(search: "", network: settings.network))
     }
 
     var body: some View {
@@ -113,19 +113,18 @@ struct AddContactView: View {
     }
 
     private func onConfirm() {
-        print(modelCtx.autosaveEnabled)
-        guard case .success = Address.from(address: addr, network: settings.network.toBitcoinNetwork()).inspectError({ _ in
-            addrError = "Invalid Address"
+        guard case .success = Address.from(address: addr, network: settings.network.toBitcoinNetwork()).inspectError({ error in
+            addrError = "\(error)"
         }) else {
             return
         }
-        _ = modelCtx.upsert(Contact(addr: addr, name: name))
+        _ = modelCtx.upsert(Contact(addr: addr, name: name, network: settings.network))
 
         dismiss()
     }
 }
 
-#Preview {
-    ContactScreen()
-        .modelContainer(for: Contact.self)
-}
+// #Preview {
+//    ContactScreen()
+//        .modelContainer(for: Contact.self)
+// }

@@ -7,7 +7,6 @@
 import DecentralizedFFI
 import SwiftUI
 
-
 struct TextMintView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(WalletStore.self) private var wallet
@@ -21,6 +20,9 @@ struct TextMintView: View {
     @State var reciver: String = ""
     @State var feeRate: UInt64 = 0
 
+    @State var showContactSeletor = false
+    @State private var selectedContact: Contact? = nil
+
     var body: some View {
         Form {
             Section("Text") {
@@ -30,23 +32,27 @@ struct TextMintView: View {
                     .textEditorStyle(.plain)
             }
             Section {
-                HStack{
-                    Picker("Reciver", selection: $reciver) {
-                        Text(verbatim: reciver).tag(reciver)
-                        Divider()
-                        Button("Eddit"){
-                            
-                        }
+                HStack {
+                    TextField("Reciver", text: $reciver)
+                    Button("Select Contact") {
+                        showContactSeletor = true
                     }
-//                    TextField("Reciver", text: $reciver)
-//                    Button("Select Contact") {
-//                        
-//                    }
+                    .sheet(isPresented: $showContactSeletor) {
+                        ContactPicker(selected: $selectedContact)
+                            .frame(minHeight: 300)
+                            .padding(.all)
+                            .onChange(of: selectedContact) { _, newValue in
+                                guard let newValue else {
+                                    return
+                                }
+                                reciver = newValue.addr
+                            }
+                    }
                 }
                 TextField("Fee Rate", value: $feeRate, formatter: NumberFormatter())
             }
             .sectionActions {
-                PrimaryButton("Build", action: onBuild)
+                GlassButton.primary("Build", action: onBuild)
             }
         }
         .formStyle(.grouped)
