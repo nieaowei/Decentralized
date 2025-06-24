@@ -22,4 +22,8 @@ extension Date {
         fs.locale = Locale.current
         return fs.string(from: self)
     }
+
+    static func nowTs() -> UInt64 {
+        UInt64(Date().timeIntervalSince1970)
+    }
 }

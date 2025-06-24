@@ -51,8 +51,8 @@
             filePath = "Decentralized/Extensions/Async.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "14"
-            endingLineNumber = "14"
+            startingLineNumber = "18"
+            endingLineNumber = "18"
             landmarkName = "fetchOrdinalTxPairsAsync(esploraClient:settings:esploraWssTx:)"
             landmarkType = "9">
          </BreakpointContent>
@@ -67,8 +67,8 @@
             filePath = "Decentralized/Extensions/Async.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "22"
-            endingLineNumber = "22"
+            startingLineNumber = "26"
+            endingLineNumber = "26"
             landmarkName = "fetchOrdinalTxPairsAsync(esploraClient:settings:esploraWssTx:)"
             landmarkType = "9">
          </BreakpointContent>
@@ -77,38 +77,6 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "54E98B3A-1BFC-4592-9D74-F56DE131C6DD"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Decentralized/Extensions/Async.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "42"
-            endingLineNumber = "42"
-            landmarkName = "fetchOrdinalTxPairsAsync(esploraClient:settings:esploraWssTx:)"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "65F2FA61-1603-484B-B47E-E0C56BBE33F6"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Decentralized/Extensions/Async.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "43"
-            endingLineNumber = "43"
-            landmarkName = "fetchOrdinalTxPairsAsync(esploraClient:settings:esploraWssTx:)"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "7A9E9D53-2F6C-4242-B238-287984C03B7F"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
@@ -124,6 +92,38 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
+            uuid = "65F2FA61-1603-484B-B47E-E0C56BBE33F6"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Decentralized/Extensions/Async.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "47"
+            endingLineNumber = "47"
+            landmarkName = "fetchOrdinalTxPairsAsync(esploraClient:settings:esploraWssTx:)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "7A9E9D53-2F6C-4242-B238-287984C03B7F"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Decentralized/Extensions/Async.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "50"
+            endingLineNumber = "50"
+            landmarkName = "fetchOrdinalTxPairsAsync(esploraClient:settings:esploraWssTx:)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
             uuid = "EEFAA0B2-339E-48F4-AA13-FB4099A99B16"
             shouldBeEnabled = "No"
             ignoreCount = "0"
@@ -131,8 +131,8 @@
             filePath = "Decentralized/Extensions/Async.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "99"
-            endingLineNumber = "99"
+            startingLineNumber = "103"
+            endingLineNumber = "103"
             landmarkName = "fetchOrdinalTxPairsAsync(esploraClient:settings:esploraWssTx:)"
             landmarkType = "9">
          </BreakpointContent>
@@ -147,8 +147,8 @@
             filePath = "Decentralized/Views/Tools/MempoolMonitor/BuyScreen.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "258"
-            endingLineNumber = "258"
+            startingLineNumber = "262"
+            endingLineNumber = "262"
             landmarkName = "fetchOutPoints()"
             landmarkType = "7">
          </BreakpointContent>
@@ -163,8 +163,8 @@
             filePath = "Decentralized/Views/Tools/MempoolMonitor/BuyScreen.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "235"
-            endingLineNumber = "235"
+            startingLineNumber = "239"
+            endingLineNumber = "239"
             landmarkName = "fetchOutPoints()"
             landmarkType = "7">
          </BreakpointContent>
@@ -179,8 +179,8 @@
             filePath = "Decentralized/Views/Tools/MempoolMonitor/BuyScreen.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "304"
-            endingLineNumber = "304"
+            startingLineNumber = "308"
+            endingLineNumber = "308"
             landmarkName = "fetchOutPoints()"
             landmarkType = "7">
          </BreakpointContent>

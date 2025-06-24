@@ -11,7 +11,11 @@ import SwiftData
 
 func fetchOrdinalTxPairsAsync(esploraClient: EsploraClientWrap, settings: AppSettings, esploraWssTx: EsploraWssTx) async -> Result<[MempoolOrdinal], Error> {
     var datas: [MempoolOrdinal] = []
-    let tx = await esploraClient.getTx(txid: esploraWssTx.id)
+    guard case let .success(txid) = Txid.from(hex: esploraWssTx.txid) else {
+        return .failure(TxidParseError.InvalidTxid(txid: esploraWssTx.txid))
+    }
+
+    let tx = await esploraClient.getTx(txid: txid)
     guard case let .success(tx) = tx else {
         return .failure(tx.err()!)
     }

@@ -57,7 +57,7 @@ struct FileMintView: View {
                 TextField("Fee Rate", value: $feeRate, formatter: NumberFormatter())
             }
             .sectionActions {
-                PrimaryButton("Build", action: onBuild)
+                GlassButton.primary("Build", action: onBuild)
             }
         }
         .formStyle(.grouped)

@@ -62,7 +62,7 @@ struct BRC20MintView: View {
                 TextField("Fee Rate", value: $feeRate, formatter: NumberFormatter())
             }
             .sectionActions {
-                PrimaryButton("Build", action: onConfirm)
+                GlassButton.primary("Build", action: onConfirm)
             }
         }
         .formStyle(.grouped)
@@ -112,7 +112,7 @@ struct BRC20MintView: View {
                             return
                         }
                         
-                        let ordi = OrdinalHistory(commitTxId: commitTx.computeTxid(), revealTxId: success.revealTx.computeTxid(), commitPsbtHex: success.commitPsbtTx.serializeHex(), revealTxHex: success.revealTx.description, revealPk: success.revealPrivateKey)
+                        let ordi = OrdinalHistory(commitTxId: commitTx.computeTxid(), revealTxId: success.revealTx.computeTxid(), commitPsbtHex: success.commitPsbtTx.serializeHex(), revealTxHex: success.revealTx.serializeHex(), revealPk: success.revealPrivateKey)
                     }
 
                 case .failure(let failure):

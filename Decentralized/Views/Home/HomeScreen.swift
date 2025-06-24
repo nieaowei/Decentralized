@@ -10,6 +10,8 @@ import SwiftData
 import SwiftUI
 
 struct HomeDetailView: View {
+    @Environment(AppSettings.self) private var settings
+
     var route: Route
 
     var body: some View {
@@ -37,7 +39,7 @@ struct HomeDetailView: View {
                 SignView()
                     .navigationTitle(dest.title)
             case .contacts:
-                ContactScreen()
+                ContactScreen(settings)
                     .navigationTitle(dest.title)
             }
         case .tools(let dest):
@@ -175,8 +177,8 @@ struct HomeScreen: View {
                     wss.subscribe([.address(wallet.payAddress?.description ?? "")])
                     if wallet.syncStatus == .synced { // Track tx after Syned
                         for tx in wallet.transactions {
-                            if !tx.isComfirmed {
-                                wss.subscribe([.transaction(tx.id)])
+                            if !tx.isConfirmed {
+                                wss.subscribe([.transaction(tx.id.description)])
                             }
                         }
                     }
@@ -186,8 +188,8 @@ struct HomeScreen: View {
                 if wallet.syncStatus == .synced {
                     if wss.status == .connected {
                         for tx in wallet.transactions {
-                            if !tx.isComfirmed {
-                                wss.subscribe([.transaction(tx.id)])
+                            if !tx.isConfirmed {
+                                wss.subscribe([.transaction(tx.id.description)])
                             }
                         }
                     }

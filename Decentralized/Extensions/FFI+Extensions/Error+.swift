@@ -90,6 +90,8 @@ extension EsploraError {
             return value
         case .RequestAlreadyConsumed:
             return "Request Already Consumed."
+        case .InvalidResponse:
+            return "Invalid Response"
         }
     }
 }
@@ -97,7 +99,7 @@ extension EsploraError {
 extension PersistenceError {
     var description: String {
         switch self {
-        case .Write(let errorMessage):
+        case .Reason(let errorMessage):
             return "Write \(errorMessage)"
         }
     }

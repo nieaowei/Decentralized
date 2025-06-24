@@ -28,19 +28,19 @@ class EsploraClientWrap {
         }
     }
     
-    func getOutputStatus(txid: String, index: UInt64) async -> Result<OutputStatus, EsploraError> {
+    func getOutputStatus(txid: Txid, index: UInt64) async -> Result<OutputStatus, EsploraError> {
         Result {
             try inner.getOutputStatus(txid: txid, index: index)
         }
     }
     
-    func getTx(txid: String) async -> Result<DecentralizedFFI.Transaction, EsploraError> {
+    func getTx(txid: Txid) async -> Result<DecentralizedFFI.Transaction, EsploraError> {
         Result {
             try inner.getTx(txid: txid)
         }
     }
     
-    func getTxInfo(txid: String) async -> Result<Tx, EsploraError> {
+    func getTxInfo(txid: Txid) async -> Result<Tx, EsploraError> {
         Result {
             try inner.getTxInfo(txid: txid)
         }

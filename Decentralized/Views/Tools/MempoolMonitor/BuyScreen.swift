@@ -214,15 +214,19 @@ struct BuyScreen: View {
      - summary total fee, average fee etc.
      */
     func fetchOutPoints() async {
-        var txCache: [String: Tx] = [:]
+        var txCache: [Txid: Tx] = [:]
         var fees: [UInt64] = []
         var feeRates: [UInt64] = []
         var total: UInt64 = 0
         for (index, o) in ordinals.enumerated() {
             o.inner.isUsed = true
 
+            guard case let .success(txid) = Txid.from(hex: o.inner.txid) else {
+                continue
+            }
+
             let output = await eslpora
-                .getOutputStatus(txid: o.inner.txid, index: UInt64(o.inner.vout))
+                .getOutputStatus(txid: txid, index: UInt64(o.inner.vout))
                 .inspectErrorAsync { error in
                     logger.error("getOutputStatus error: \(error)")
                 }
@@ -272,7 +276,7 @@ struct BuyScreen: View {
                 continue
             }
 
-            fees.append(tx.fee.toSat())
+            fees.append(tx.fee)
             feeRates.append(tx.feeRate)
             total += o.inner.value
 
@@ -384,7 +388,7 @@ struct BuyScreen: View {
             let txout = newTxoutFromHex(hex: o.inner.txoutHex)
 
             if let txin, let txout {
-                let tx = await eslpora.getTx(txid: txin.previousOutput.txid.description)
+                let tx = await eslpora.getTx(txid: txin.previousOutput.txid)
                     .inspectError { error in
                         logger.error("[onBuild] getTx error: \(error)")
                         showError(error, "Fetch Remote Tx Error")
@@ -432,7 +436,7 @@ struct BuyScreen: View {
         }
 
         let splitFeeRate = Result {
-            try FeeRate.fromSatPerVb(satPerVb: self.splitFeeRate)
+            try FeeRate.fromSatPerVb(satVb: self.splitFeeRate)
         }.inspectError { err in
             logger.error("[onBuild] splitFeeRate parse error: \(err)")
             showError(err, "Invalid Split Fee Rate")
@@ -446,7 +450,7 @@ struct BuyScreen: View {
                 snipeUtxoPairs: snipeUtxoPairs,
                 payAddr: wallet.payAddress!,
                 ordiAddr: wallet.ordiAddress!,
-                snipeMinFee: Amount.fromSat(sat: fee),
+                snipeMinFee: Amount.fromSat(satoshi: fee),
                 snipeRate: buyFeeRate,
                 splitRate: splitFeeRate,
                 runeRecvAddr: recvAddress
@@ -467,7 +471,7 @@ struct BuyScreen: View {
                 snipeUtxoPairs: snipeInscriptions,
                 payAddr: wallet.payAddress!,
                 ordiAddr: wallet.ordiAddress!,
-                snipeMinFee: Amount.fromSat(sat: fee),
+                snipeMinFee: Amount.fromSat(satoshi: fee),
                 snipeRate: buyFeeRate,
                 splitRate: splitFeeRate,
                 inscriptionRecvAddr: recvAddress

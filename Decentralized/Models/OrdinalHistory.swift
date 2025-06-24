@@ -7,6 +7,7 @@
 
 import SwiftData
 import Foundation
+import DecentralizedFFI
 
 @Model
 class OrdinalHistory {
@@ -17,9 +18,9 @@ class OrdinalHistory {
     var revealPk: String
     var createTs: UInt64
     
-    init(commitTxId: String, revealTxId: String, commitPsbtHex: String, revealTxHex: String, revealPk: String) {
-        self.commitTxId = commitTxId
-        self.revealTxId = revealTxId
+    init(commitTxId: Txid, revealTxId: Txid, commitPsbtHex: String, revealTxHex: String, revealPk: String) {
+        self.commitTxId = commitTxId.description
+        self.revealTxId = revealTxId.description
         self.commitPsbtHex = commitPsbtHex
         self.revealTxHex = revealTxHex
         self.revealPk = revealPk

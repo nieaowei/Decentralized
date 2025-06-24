@@ -16,11 +16,13 @@ struct ContactPicker: View {
     @State
     private var search: String = ""
 
-    @Binding
-    var selected: Contact?
+//    @Binding
+//    var selected: Contact?
 
     @State
     private var selectedId: UUID? = nil
+
+    var onSelected: (_ contact: Contact) -> Void
 
     var body: some View {
         NavigationView {
@@ -44,7 +46,8 @@ struct ContactPicker: View {
         guard let contact else {
             return
         }
-        selected = contact
+//        selected = contact
+        onSelected(contact)
         DispatchQueue.main.async {
             dismiss()
         }

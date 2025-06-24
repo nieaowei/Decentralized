@@ -38,15 +38,11 @@ struct TextMintView: View {
                         showContactSeletor = true
                     }
                     .sheet(isPresented: $showContactSeletor) {
-                        ContactPicker(selected: $selectedContact)
-                            .frame(minHeight: 300)
-                            .padding(.all)
-                            .onChange(of: selectedContact) { _, newValue in
-                                guard let newValue else {
-                                    return
-                                }
-                                reciver = newValue.addr
-                            }
+                        ContactPicker { contact in
+                            reciver = contact.addr
+                        }
+                        .frame(minHeight: 300)
+                        .padding(.all)
                     }
                 }
                 TextField("Fee Rate", value: $feeRate, formatter: NumberFormatter())

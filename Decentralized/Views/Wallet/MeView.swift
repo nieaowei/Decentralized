@@ -50,7 +50,7 @@ struct MeView: View {
         .sheet(item: $showQR) { qr in
             VStack {
                 QRCodeView(data: qr, size: 180)
-                PrimaryButton("OK") {
+                GlassButton.primary("OK") {
                     showQR = nil
                 }
             }

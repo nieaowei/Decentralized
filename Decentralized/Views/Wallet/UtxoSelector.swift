@@ -12,10 +12,13 @@ struct UtxoSelector: View {
 
     @State var utxos: [LocalOutput]
 
+    @State private var tableUtxos: [LocalOutput] = []
+
     @State private var sortOrder: [KeyPathComparator] = [KeyPathComparator(\LocalOutput.txout.value, order: .reverse)]
 
+    @State private var search: String = ""
     var body: some View {
-        VStack {
+        NavigationView {
             Table(of: LocalOutput.self, selection: $selected, sortOrder: $sortOrder) {
                 TableColumn("OutPoint") { utxos in
                     Text(utxos.id)
@@ -23,19 +26,26 @@ struct UtxoSelector: View {
                 }
                 TableColumn("Value", value: \.txout.value.formatted)
             } rows: {
-                ForEach(utxos) { u in
+                ForEach(tableUtxos) { u in
                     TableRow(u)
                 }
             }
             .truncationMode(.middle)
         }
-
         .onChange(of: sortOrder, initial: true) { _, sortOrder in
-            utxos.sort(using: sortOrder)
+            tableUtxos.sort(using: sortOrder)
         }
         .onAppear {
             self.utxos.removeAll { lo in
                 selected.contains(lo.id)
+            }
+            self.tableUtxos = self.utxos
+        }
+        .searchable(text: $search, prompt: "TxID Or OutpointID")
+        .onChange(of: search) { _, newValue in
+
+            self.tableUtxos = newValue.isEmpty ? self.utxos : self.utxos.filter { lo in
+                lo.id.contains(newValue)
             }
         }
     }

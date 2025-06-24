@@ -70,7 +70,7 @@ struct DecentralizedApp: App {
         WindowGroup {
             if self.isOnBoarding {
                 OnBoradingView()
-                    .tint(self.network.accentColor)
+//                    .tint(self.network.accentColor)
                     .toolbar(removing: .title)
                     .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
                     .containerBackground(.ultraThinMaterial, for: .window)
@@ -86,7 +86,7 @@ struct DecentralizedApp: App {
 
             } else {
                 HomeScreen(self.settings)
-                    .tint(self.network.accentColor)
+//                    .tint(self.network.accentColor)
                     .sheet(item: self.$errorWrapper) { errorWrapper in
                         VStack {
                             Text(errorWrapper.guidance)
@@ -126,7 +126,7 @@ struct DecentralizedApp: App {
 
         Window("Welcome", id: "welcom") {
             OnBoradingView()
-                .tint(self.network.accentColor)
+//                .tint(self.network.accentColor)
                 .toolbar(removing: .title)
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
                 .containerBackground(.ultraThinMaterial, for: .window)
@@ -149,7 +149,7 @@ struct DecentralizedApp: App {
                 .containerBackground(.thickMaterial, for: .window)
                 .windowMinimizeBehavior(.disabled)
                 .windowResizeBehavior(.disabled)
-                .tint(self.network.accentColor)
+//                .tint(self.network.accentColor)
         }
         .windowResizability(.contentSize)
         .restorationBehavior(.disabled)

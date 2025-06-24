@@ -220,7 +220,7 @@
       }
     },
     "Child Pay For Parent" : {
-      "shouldTranslate" : false
+
     },
     "close" : {
       "extractionState" : "manual",
@@ -240,7 +240,6 @@
       }
     },
     "Close" : {
-      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -372,9 +371,6 @@
     },
     "Div Path" : {
       "shouldTranslate" : false
-    },
-    "Eddit" : {
-
     },
     "Enable" : {
       "localizations" : {
@@ -508,7 +504,7 @@
       }
     },
     "ID" : {
-      "shouldTranslate" : false
+
     },
     "ID Path" : {
       "shouldTranslate" : false
@@ -555,6 +551,12 @@
           }
         }
       }
+    },
+    "Label" : {
+
+    },
+    "Label or Address" : {
+
     },
     "Limit Per Mint" : {
       "localizations" : {
@@ -705,7 +707,6 @@
       }
     },
     "OK" : {
-      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -872,6 +873,9 @@
     },
     "sats/vB" : {
       "shouldTranslate" : false
+    },
+    "Select Contact" : {
+
     },
     "Selecte File" : {
       "localizations" : {
@@ -1068,6 +1072,9 @@
           }
         }
       }
+    },
+    "TxID Or OutpointID" : {
+
     },
     "Type" : {
       "localizations" : {

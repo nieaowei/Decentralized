@@ -54,7 +54,7 @@ extension UInt64 {
 
 extension UInt64 {
     var amount: Amount {
-        Amount.fromSat(sat: self)
+        Amount.fromSat(satoshi: self)
     }
 
     func formattedSatoshis() -> String {

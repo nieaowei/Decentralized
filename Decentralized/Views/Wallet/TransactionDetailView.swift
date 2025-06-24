@@ -42,10 +42,10 @@ struct TransactionDetailView: View {
             ])
             GroupedBox([
                 GroupedLabeledContent("Txid") {
-                    Text(tx.id)
+                    Text(tx.id.description)
                 },
                 GroupedLabeledContent("Status") {
-                    Text(tx.isComfirmed ? "Confirmed" : "Unconfirmed")
+                    Text(tx.isConfirmed ? "Confirmed" : "Unconfirmed")
                 },
 
                 GroupedLabeledContent("Fee") {
@@ -151,7 +151,7 @@ struct TransactionDetailView: View {
 
     func fetchCpfpChain() async {
         // from db
-        if case let .success(tx) = CPFPChain.fetchOneByTxid(ctx: ctx, txid: tx.id), let tx {
+        if case let .success(tx) = CPFPChain.fetchOneByTxid(ctx: ctx, txid: tx.txid), let tx {
             if !tx.childs.isEmpty || !tx.parents.isEmpty {
                 withAnimation {
                     cpfpTx = tx
@@ -162,7 +162,7 @@ struct TransactionDetailView: View {
 
         // from network
 
-        let _ = await CPFPChain.fetchChain(esploraClient, tx.id, nil).map { chain in
+        let _ = await CPFPChain.fetchChain(esploraClient, tx.txid, nil).map { chain in
             if !chain.childs.isEmpty || !chain.parents.isEmpty {
                 withAnimation {
                     cpfpTx = chain
@@ -187,7 +187,7 @@ struct TransactionDetailView: View {
                 // from network
                 let (txid, vout) = (txin.previousOutput.txid, txin.previousOutput.vout)
 
-                let tx = try syncClient.getTx(txid.description.lowercased())
+                let tx = try syncClient.getTx(txid)
 
                 if vout < tx.output().count {
                     let txout = tx.output()[Int(txin.previousOutput.vout)]

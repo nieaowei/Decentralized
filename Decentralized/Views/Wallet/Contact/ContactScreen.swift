@@ -15,7 +15,7 @@ struct ContactScreen: View {
     private var contacts: [Contact]
 
     @Environment(\.modelContext) private var modelCtx
-//    @Environment(AppSettings.self) private var settings
+    @Environment(AppSettings.self) private var settings
 
     @State private var QRData: String? = nil
     @State private var showAddContact: Bool = false
@@ -61,6 +61,13 @@ struct ContactScreen: View {
                 }
             }
             .controlSize(.large)
+            .onDrop(of: [.commaSeparatedText], isTargeted: nil) { providers in
+                for provider in providers{
+                    handleCSV(provider: provider)
+                    return true
+                }
+                return false
+            }
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -70,13 +77,36 @@ struct ContactScreen: View {
         .sheet(item: $QRData) { data in
             VStack {
                 QRCodeView(data: data)
-                PrimaryButton("Close") {
+                GlassButton.primary("Close") {
                     QRData = nil
                 }
             }
             .padding(.all)
         }
         .sheet(isPresented: $showAddContact, onDismiss: {}, content: { AddContactView() })
+    }
+
+    func handleCSV( provider: NSItemProvider) {
+        if provider.hasItemConformingToTypeIdentifier(UTType.commaSeparatedText.identifier) {
+            provider.loadItem(forTypeIdentifier: UTType.commaSeparatedText.identifier, options: nil) { item, _ in
+                if let url = item as? URL {
+                    let contacts = try! extractContactFromCsvData(csvData: Data(contentsOf: url), network: settings.network.toCustomNetwork())
+                    for contact in contacts {
+                        let c = Contact(addr: contact.address, name: contact.label, network: settings.network)
+                        _ = modelCtx.upsert(c)
+                    }
+                } else if let data = item as? Data {
+                    // 某些系统版本会以 Data 包裹 URL
+                    if let url = URL(dataRepresentation: data, relativeTo: nil) {
+                        let contacts = try! extractContactFromCsvData(csvData: Data(contentsOf: url), network: settings.network.toCustomNetwork())
+                        for contact in contacts {
+                            let c = Contact(addr: contact.address, name: contact.label, network: settings.network)
+                            _ = modelCtx.upsert(c)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -105,7 +135,7 @@ struct AddContactView: View {
                             .font(.caption)
                     }
                     SecondaryButton("Cancel") { dismiss() }
-                    PrimaryButton("Confirm", action: onConfirm)
+                    GlassButton.primary("Confirm", action: onConfirm)
                 }
             }
             .formStyle(.grouped)

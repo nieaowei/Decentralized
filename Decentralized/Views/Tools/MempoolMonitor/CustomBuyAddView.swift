@@ -5,6 +5,7 @@
 //  Created by Nekilc on 2024/10/21.
 //
 
+import DecentralizedFFI
 import SwiftUI
 
 struct CustomBuyAddView: View {
@@ -29,10 +30,8 @@ struct CustomBuyAddView: View {
                             TextField("Txid", text: $txid)
                         }
                         .sectionActions {
-                            PrimaryButton("Confirm") {
-                                onConfirm()
-                            }
-                            SecondaryButton("Cacnel") {
+                            GlassButton.primary("Confirm", action: onConfirm)
+                            GlassButton.cancel("Cancel") {
                                 isPresented = false
                             }
                         }
@@ -69,13 +68,18 @@ struct CustomBuyAddView: View {
                 }
             }
 
+            guard case .success(let txid) = Txid.from(hex: txid) else {
+                showError(nil, "Invalid Txid")
+                return
+            }
+
             guard case .success(let tx) = await esplora.getTxInfo(txid: txid).inspectError({ error in
                 logger.error("Error fetching tx info: \(error)")
                 showError(error, "Error fetching tx info")
             }) else {
                 return
             }
-            guard case .success(let pairs) = await fetchOrdinalTxPairsAsync(esploraClient: esplora, settings: settings, esploraWssTx: EsploraWssTx(txid: tx.txid, flags: 0, feeRate: Double(tx.feeRate))).inspectError({ error in
+            guard case .success(let pairs) = await fetchOrdinalTxPairsAsync(esploraClient: esplora, settings: settings, esploraWssTx: EsploraWssTx(txid: tx.txid.description, flags: 0, feeRate: Double(tx.feeRate))).inspectError({ error in
                 logger.error("Error fetching ordinal: \(error)")
                 showError(error, "Error fetching ordinal")
             }) else {

@@ -12,7 +12,7 @@ struct TransactionView: View {
     @Environment(WalletStore.self) var wallet: WalletStore
     @Environment(\.navigate) private var navigate
 
-    @State var selected: Optional<String> = nil
+    @State var selected: Optional<Txid> = nil
 
     @State private var sortOrder = [KeyPathComparator(\WalletTransaction.timestamp, order: .reverse)]
 
@@ -24,7 +24,7 @@ struct TransactionView: View {
             Table(of: WalletTransaction.self, selection: $selected, sortOrder: $sortOrder) {
                 TableColumn("ID") { tx in
                     HStack {
-                        Text(tx.id)
+                        Text(tx.id.description)
                             .truncationMode(.middle)
 
                         if tx.canRBF {
@@ -42,11 +42,14 @@ struct TransactionView: View {
                 }
                 .width(min: 150, ideal: 150)
                 TableColumn("Date", value: \.timestamp) { item in
-                    Text(verbatim: item.isComfirmed ? item.timestamp.toDate().commonFormat() : "Uncomfirmed")
+                    Text(verbatim: item.isConfirmed ? item.timestamp.toDate().commonFormat() : "Uncomfirmed")
                 }
                 .width(min: 150, ideal: 150)
 
             } rows: {
+//                ForEach(wallet.transactions) { tx in
+//                    TableRow(tx)
+//                }
                 ForEach(wallet.transactions) { tx in
                     TableRow(tx)
                         .contextMenu {
@@ -55,7 +58,7 @@ struct TransactionView: View {
                                     TransactionDetailView(tx: tx)
                                 }
                             }
-                            if !tx.isComfirmed {
+                            if !tx.isConfirmed {
                                 if tx.canCPFP {
                                     // CPFP conditions:
                                     // - Input must be contain one of origin' output
@@ -106,7 +109,7 @@ struct TransactionView: View {
     }
 
 
-    func onRbf(txid: String) {
+    func onRbf(txid: Txid) {
         print(txid)
         let bf = BumpFeeTxBuilder(txid: txid, feeRate: FeeRate.from(satPerVb: 10).unwrap())
         if case .success(let psbt) = wallet.finishBump(bf) {

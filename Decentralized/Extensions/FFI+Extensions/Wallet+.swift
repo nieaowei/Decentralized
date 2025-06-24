@@ -23,13 +23,13 @@ extension Balance: @retroactive Equatable {
 }
 
 extension CanonicalTx: @retroactive Identifiable {
-    public var id: String {
+    public var id: Txid {
         self.transaction.id
     }
 
     var timestamp: UInt64 {
         switch self.chainPosition {
-        case .confirmed(let ts): ts.confirmationTime
+        case .confirmed(let confirmationBlockTime, _): confirmationBlockTime.confirmationTime
         case .unconfirmed: UInt64(Date().timeIntervalSince1970)
         }
     }

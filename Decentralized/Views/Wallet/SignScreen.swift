@@ -67,7 +67,7 @@ struct SignScreen: View {
 //    }
 
     var body: some View {
-        VStack {
+        ZStack(alignment: .bottom) {
             ScrollView {
                 if let hex {
                     GroupedBox("Signed Hex ", items: [
@@ -75,29 +75,33 @@ struct SignScreen: View {
                             .textSelection(.enabled)
                     ])
                 }
-
                 TransactionDetailView(tx: wallet.createWalletTx(tx: tx))
             }
-            HStack {
-                Spacer()
-                if current > 0 {
-                    SecondaryButton("Last", action: { current -= 1 })
+            .safeAreaPadding(.bottom, 80)
+            VStack {
+                HStack {
+                    Spacer()
+                    if current > 0 {
+                        SecondaryButton("Last", action: { current -= 1 })
+                    }
+                    if current < unsignedPsbts.count - 1 && unsignedPsbts[current].isSigned {
+                        SecondaryButton("Next", action: { current += 1 })
+                    }
+                    if !isSigned {
+                        GlassButton.primary(LocalizedStringKey(signText), action: onSign)
+                            .disabled(unsignedPsbts[current].isSigned)
+                    } else {
+                        GlassButton.primary("Broadcast", action: onBroadcast)
+                    }
                 }
-                if current < unsignedPsbts.count - 1 && unsignedPsbts[current].isSigned {
-                    SecondaryButton("Next", action: { current += 1 })
-                }
-                if !isSigned {
-                    PrimaryButton(signText, action: onSign)
-                        .disabled(unsignedPsbts[current].isSigned)
-                } else {
-                    PrimaryButton("Broadcast", action: onBroadcast)
-                }
+                .padding(.all)
+                .glassEffect()
             }
             .padding(.all)
         }
-
         .sheet(isPresented: $loading) {
             ProgressView()
+                .padding(.all)
         }
         .sheet(isPresented: $showSuccess) {
             VStack {
@@ -110,7 +114,7 @@ struct SignScreen: View {
                         .font(.title2)
                     Text("Your transaction has been successfully sent")
                         .font(.footnote)
-                    PrimaryButton("OK") {
+                    GlassButton.primary("OK") {
                         dismiss()
                         showSuccess = false
                     }
@@ -143,7 +147,7 @@ struct SignScreen: View {
 
             let tx = unsignedPsbts[current].psbt.extractTxUncheckedFeeRate()
             for (vout, output) in tx.output().enumerated() {
-                wallet.insertTxout(op: OutPoint(txid: try! Txid.fromString(s: tx.computeTxid()), vout: UInt32(vout)), txout: TxOut(value: output.value, scriptPubkey: output.scriptPubkey, serializeHex: ""))
+                wallet.insertTxout(op: OutPoint(txid: tx.computeTxid(), vout: UInt32(vout)), txout: TxOut(value: output.value, scriptPubkey: output.scriptPubkey, serializeHex: ""))
             }
         }
     }

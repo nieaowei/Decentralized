@@ -105,7 +105,7 @@ struct SendScreen: View {
     }
 
     var body: some View {
-        VStack {
+        ZStack(alignment: .bottom) {
             HSplitView {
                 VStack {
                     Table(of: SendUtxo.self) {
@@ -150,12 +150,17 @@ struct SendScreen: View {
                     }
                     .truncationMode(.middle)
                 }
+                .safeAreaPadding(.bottom, 80)
+
                 // Output
                 VStack {
                     Table(of: Binding<Recipient>.self) {
                         TableColumn("Address") { $o in
                             HStack(spacing: 0) {
                                 Image(systemName: "arrow.up.arrow.down")
+                                ContactPicker() { contact in
+                                    o.address = contact.addr
+                                }
                                 Picker("", selection: $o.address) {
                                     ForEach(contacts) { contact in
                                         Text(verbatim: "\(contact.name):\(contact.addr)")
@@ -199,9 +204,7 @@ struct SendScreen: View {
 
                             self.outputs.insert(contentsOf: recipients, at: index > firstRemoveIndex ? (index - 1) : index)
                         }
-                        
                     }
-                    
                     .truncationMode(.middle)
                     .contextMenu {
                         Button {
@@ -218,6 +221,7 @@ struct SendScreen: View {
                         }
                     }
                 }
+                .safeAreaPadding(.bottom, 80)
             }
             VStack {
                 HStack(spacing: 18) {
@@ -230,14 +234,14 @@ struct SendScreen: View {
                         Text("sats/vB")
                     }
                     .frame(width: 150)
-                    PrimaryButton("Build", action: onBuild)
+                    GlassButton.primary("Build", action: onBuild)
                 }
                 .padding(.all)
                 .sheet(isPresented: $showUtxosSelector, content: {
                     VStack {
                         UtxoSelector(selected: $selectedOutpointIds, utxos: wallet.utxos)
                         HStack {
-                            PrimaryButton("OK") {
+                            GlassButton.primary("OK") {
                                 let added = selectedOutpointIds.reduce(into: [SendUtxo]()) { partialResult, id in
                                     if let lo = wallet.allUtxos.first(where: { $0.id == id }), !inputs.contains(where: { $0.id == lo.id }) {
                                         partialResult.append(SendUtxo(lo: lo))
@@ -257,6 +261,8 @@ struct SendScreen: View {
                     rate = wss.fastFee
                 }
             }
+            .glassEffect()
+            .padding(.all)
         }
         .toolbar {
             WalletStatusToolbar()
@@ -268,7 +274,7 @@ struct SendScreen: View {
 
     func build(_ change: Recipient) -> Result<Psbt, Error> {
         var txBuilder = TxBuilder()
-        txBuilder = txBuilder.ordering(txOrdering: TxOrdering.untouched)
+        txBuilder = txBuilder.txOrdering(ordering: TxOrdering.untouched)
 
         for utxo in inputs {
             txBuilder = txBuilder.addUtxo(outpoint: utxo.outpoint)
@@ -345,7 +351,7 @@ struct SendScreen: View {
         let _ = Result {
             try psbt.fee()
         }.map { amount in
-            fee = amount
+            fee = Amount.fromSat(satoshi: amount)
         }
     }
 

@@ -15,16 +15,22 @@ struct SignView: View {
     @State var psbt: Psbt? = nil
 
     var body: some View {
-        VStack {
+        ZStack(alignment: .bottom) {
             TextEditor(text: $psbtHex)
                 .textEditorStyle(.automatic)
                 .multilineTextAlignment(.leading)
                 .scrollIndicators(.hidden)
-            HStack {
-                Spacer()
-                PrimaryButton("Sign") {
-                    onExtract()
+                .safeAreaPadding(.bottom, 80)
+            VStack {
+                HStack {
+                    Spacer()
+                    GlassButton.primary("Sign") {
+                        onExtract()
+                    }
+                
                 }
+                .padding(.all)
+                .glassEffect()
             }
             .padding(.all)
         }

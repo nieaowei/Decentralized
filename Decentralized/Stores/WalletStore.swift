@@ -27,11 +27,11 @@ struct WalletTransaction: Identifiable, Hashable {
         self.inner = inner
     }
     
-    var id: String {
+    var id: Txid {
         txid
     }
     
-    var txid: String {
+    var txid: Txid {
         inner.transaction.computeTxid()
     }
 
@@ -109,8 +109,10 @@ struct WalletTransaction: Identifiable, Hashable {
     
     var timestamp: UInt64 {
         switch inner.chainPosition {
-        case .confirmed(let ts): ts.confirmationTime
-        case .unconfirmed: UInt64(Date().timeIntervalSince1970)
+        case .confirmed(let confirmationBlockTime, _):
+            confirmationBlockTime.confirmationTime
+        case .unconfirmed(let timestamp):
+            timestamp ?? Date.nowTs()
         }
     }
 
@@ -118,7 +120,7 @@ struct WalletTransaction: Identifiable, Hashable {
         return Calendar.current.startOfDay(for: inner.timestamp.toDate())
     }
 
-    var isComfirmed: Bool {
+    var isConfirmed: Bool {
         switch inner.chainPosition {
         case .confirmed: true
         case .unconfirmed: false
@@ -134,7 +136,7 @@ struct WalletTransaction: Identifiable, Hashable {
         } else {
             (true, recv.toSat() - sent.toSat())
         }
-        let changeBtc = Amount.fromSat(sat: change).toBtc()
+        let changeBtc = Amount.fromSat(satoshi: change).toBtc()
 
         return plus ? changeBtc : -changeBtc
     }
@@ -260,11 +262,11 @@ class WalletStore {
         WalletTransaction(walletService: wallet, inner: CanonicalTx(transaction: tx, chainPosition: ChainPosition.unconfirmed(timestamp: 0)))
     }
     
-    func broadcast(_ tx: DecentralizedFFI.Transaction) async -> Result<String, Error> {
+    func broadcast(_ tx: DecentralizedFFI.Transaction) async -> Result<Txid, Error> {
         wallet.broadcast(tx)
     }
     
-    func broadcastSync(_ tx: DecentralizedFFI.Transaction) -> Result<String, Error> {
+    func broadcastSync(_ tx: DecentralizedFFI.Transaction) -> Result<Txid, Error> {
         wallet.broadcast(tx)
     }
     

@@ -18,50 +18,52 @@ struct UtxosView: View {
     ]
 
     var body: some View {
-        VStack {
-            Table(of: LocalOutput.self, selection: $selected, sortOrder: $sortOrder) {
-                TableColumn("OutPoint") { utxo in
-                    Text(verbatim: "\(utxo.id)")
-                        .truncationMode(.middle)
-                }
-                TableColumn("Value", value: \.txout.value.formatted)
-                TableColumn("Date") { utxo in
-                    switch utxo.confirmationTime {
-                    case .confirmed(_, let time):
-                        Text("\(time.toDate().commonFormat())")
-                    case .unconfirmed(_):
-                        Text("Unconfirmed")
+        ZStack(alignment: .bottom) {
+            VStack {
+                Table(of: LocalOutput.self, selection: $selected, sortOrder: $sortOrder) {
+                    TableColumn("OutPoint") { utxo in
+                        Text(verbatim: "\(utxo.id)")
+                            .truncationMode(.middle)
+                    }
+                    TableColumn("Value", value: \.txout.value.formatted)
+                    TableColumn("Date") { utxo in
+                        switch utxo.chainPosition {
+                        case .confirmed(let time, _):
+                            Text("\(time.confirmationTime.toDate().commonFormat())")
+                        case .unconfirmed:
+                            Text("Unconfirmed")
+                        }
+                    }
+                } rows: {
+                    ForEach(wallet.utxos) { utxo in
+                        TableRow(utxo)
+                            .contextMenu {
+                                Button("Copy OutPoint") {
+                                    NSPasteboard.general.clearContents()
+                                    NSPasteboard.general.setString(utxo.id, forType: .string)
+                                }
+                            }
                     }
                 }
-            } rows: {
-                ForEach(wallet.utxos){ utxo in
-                    TableRow(utxo)
-                        .contextMenu {
-                            Button("Copy OutPoint"){
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.setString(utxo.id, forType: .string)
-                            }
-                        }
+                .onChange(of: sortOrder, initial: true) { _, sortOrder in
+                    wallet.utxos.sort(using: sortOrder)
                 }
-                
             }
-            .onChange(of: sortOrder, initial: true) { _, sortOrder in
-                wallet.utxos.sort(using: sortOrder)
-            }
-            HStack {
-                Spacer()
-                Button(action: {
-                    navigate(.goto(.wallet(.send(selected: selected))))
-                }, label: {
-                    Text("Send")
-                        .padding(.horizontal)
-                })
-                .controlSize(.large)
-                .buttonStyle(BorderedProminentButtonStyle())
+            .safeAreaPadding(.bottom, 80)
+            VStack {
+                HStack {
+                    Spacer()
+                    GlassButton.primary("Send") {
+                        navigate(.goto(.wallet(.send(selected: selected))))
+                    }
+                }
+                .padding(.all)
+                .glassEffect()
             }
             .padding(.all)
+//            .glassEffect()
         }
-        .toolbar{
+        .toolbar {
             WalletStatusToolbar()
         }
     }

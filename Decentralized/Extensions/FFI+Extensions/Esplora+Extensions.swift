@@ -8,12 +8,12 @@
 import DecentralizedFFI
 
 extension DecentralizedFFI.Tx: @retroactive Identifiable {
-    public var id: String {
+    public var id: Txid {
         self.txid
     }
 
     public var feeRate: UInt64 {
-        self.fee.toSat() / (self.weight / 4)
+        self.fee / (self.weight / 4)
     }
 }
 

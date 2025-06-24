@@ -23,6 +23,19 @@ extension ModelContext {
         }
     }
 
+    func fetchMany<Model: PersistentModel>(predicate: Predicate<Model>, includePendingChanges: Bool = true) -> Result<[Model], Error> {
+        var p = FetchDescriptor(predicate: predicate)
+
+        p.includePendingChanges = includePendingChanges
+
+        do {
+            let data = try self.fetch(p)
+            return .success(data)
+        } catch {
+            return .failure(error)
+        }
+    }
+
     func upsert<Model: PersistentModel>(_ model: Model) -> Result<Void, SwiftDataError> {
         self.insert(model)
         return self.persist()

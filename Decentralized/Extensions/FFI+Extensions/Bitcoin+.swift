@@ -8,6 +8,14 @@
 import DecentralizedFFI
 import Foundation
 
+extension Txid {
+    static func from(hex: String) -> Result<Txid, TxidParseError> {
+        Result {
+            try Txid.fromString(hex: hex)
+        }
+    }
+}
+
 extension TxIn: @retroactive Identifiable {
     public var id: String {
         "\(self.previousOutput.txid):\(self.previousOutput.vout)"
@@ -81,7 +89,7 @@ extension Psbt: @retroactive Equatable, @retroactive Hashable {
 }
 
 extension Amount: @retroactive Comparable {
-    static let Zero: Amount = .fromSat(sat: 0)
+    static let Zero: Amount = .fromSat(satoshi: 0)
 
     var formatted: String {
         "\(toSat().formattedSatoshis()) BTC"
@@ -92,16 +100,16 @@ extension Amount: @retroactive Comparable {
     }
 
     static func + (left: Amount, right: Amount) -> Amount {
-        return Amount.fromSat(sat: left.toSat() + right.toSat())
+        return Amount.fromSat(satoshi: left.toSat() + right.toSat())
     }
 
     static func - (left: Amount, right: Amount) -> Amount {
-        return Amount.fromSat(sat: left.toSat() - right.toSat())
+        return Amount.fromSat(satoshi: left.toSat() - right.toSat())
     }
 }
 
 extension Transaction: @retroactive Identifiable {
-    public var id: String { self.computeTxid() }
+    public var id: Txid { self.computeTxid() }
 
     var vsize: UInt64 {
         self.vsize()
@@ -111,12 +119,12 @@ extension Transaction: @retroactive Identifiable {
 extension FeeRate {
     static func from(satPerVb: UInt64) -> Result<FeeRate, FeeRateError> {
         Result {
-            try FeeRate.fromSatPerVb(satPerVb: satPerVb)
+            try FeeRate.fromSatPerVb(satVb: satPerVb)
         }
     }
 
     static func from(satPerKwu: UInt64) -> FeeRate {
-        FeeRate.fromSatPerKwu(satPerKwu: satPerKwu)
+        FeeRate.fromSatPerKwu(satKwu: satPerKwu)
     }
 }
 
@@ -152,7 +160,7 @@ extension OutPoint: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let txidString = try container.decode(String.self, forKey: .txid)
 
-        let txid = try Txid.fromString(s: txidString)
+        let txid = try Txid.fromString(hex: txidString)
         let vout = try container.decode(UInt32.self, forKey: .vout)
         self.init(txid: txid, vout: vout)
     }
@@ -178,7 +186,7 @@ extension TxOut: Codable {
         let scriptPubkey = try container.decode(Data.self, forKey: .scriptPubkey)
         let serializeHex = try container.decode(String.self, forKey: .serializeHex)
 
-        self.init(value: Amount.fromSat(sat: value), scriptPubkey: Script(rawOutputScript: scriptPubkey), serializeHex: serializeHex)
+        self.init(value: Amount.fromSat(satoshi: value), scriptPubkey: Script(rawOutputScript: scriptPubkey), serializeHex: serializeHex)
     }
 
     public func encode(to encoder: any Encoder) throws {

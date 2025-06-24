@@ -10,7 +10,7 @@ import SwiftUI
 
 extension Button {
     func primary() -> some View {
-        self.buttonStyle(BorderedProminentButtonStyle())
+        self.buttonStyle(.glass)
             .controlSize(.large)
     }
    

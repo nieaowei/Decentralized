@@ -19,7 +19,6 @@ final class CPFPChain {
     @Relationship(deleteRule: .cascade, inverse: \CPFPChain.parents) var childs: [CPFPChain] = []
     @Relationship(deleteRule: .cascade) var parents: [CPFPChain] = []
 
-    
     var effectiveFeeRate: Double {
         var totalFee: UInt64 = 0
         var totalWeight: UInt64 = 0
@@ -58,13 +57,17 @@ final class CPFPChain {
         self.fee = fee
     }
 
-    static func fetchChain(_ c: EsploraClientWrap, _ startTxid: String, _ prevTxid: String?) async -> Result<CPFPChain, Error> {
+    static func fetchChain(_ c: EsploraClientWrap, _ startTxid: Txid, _ prevTxid: Txid?) async -> Result<CPFPChain, Error> {
+//        guard case let .success(startTxid) = Txid.from(hex: startTxid) else {
+//            return .failure(TxidParseError.InvalidTxid(txid: startTxid))
+//        }
+
         let startTx = await c.getTxInfo(txid: startTxid)
         guard case let .success(startTx) = startTx else {
             return .failure(startTx.err()!)
         }
 
-        let chainStart = CPFPChain(txid: startTx.txid, weight: startTx.weight, fee: startTx.fee.toSat())
+        let chainStart = CPFPChain(txid: startTx.txid.description, weight: startTx.weight, fee: startTx.fee)
 
         for txin in startTx.vin {
             if let prevTxid = prevTxid {
@@ -105,7 +108,7 @@ final class CPFPChain {
             if let prevTxid = prevTxid, prevTxid == txInfo.txid {
                 continue
             }
-            
+
             if txInfo.status.confirmed {
                 continue
             }
@@ -121,7 +124,10 @@ final class CPFPChain {
 }
 
 extension CPFPChain {
-    static func fetchOneByTxid(ctx: ModelContext, txid: String) -> Result<CPFPChain?, Error> {
-        ctx.fetchOne(predicate: #Predicate { $0.txid == txid })
+    static func fetchOneByTxid(ctx: ModelContext, txid: Txid) -> Result<CPFPChain?, Error> {
+        let txid = txid.description
+        return ctx.fetchOne<CPFPChain>(predicate: #Predicate<CPFPChain> { o in
+            o.txid == txid
+        })
     }
 }
