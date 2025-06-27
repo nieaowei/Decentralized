@@ -26,7 +26,7 @@ struct ContactPicker: View {
 
     var body: some View {
         NavigationView {
-            VStack {
+            VStack{
                 ContactPickerInner(settings, search: search, selected: $selectedId)
                 HStack {
                     Button("Cancel", action: { dismiss() })
@@ -34,8 +34,10 @@ struct ContactPicker: View {
                         .disabled(selectedId == nil)
                         .buttonStyle(.glass)
                 }
+                .padding(.all)
             }
         }
+        .frame(minHeight: 300)
         .searchable(text: $search, prompt: "Label or Address")
     }
 
@@ -50,6 +52,7 @@ struct ContactPicker: View {
         onSelected(contact)
         DispatchQueue.main.async {
             dismiss()
+            contact.lastUsedTs = Date.nowTs()
         }
     }
 }
@@ -64,13 +67,13 @@ struct ContactPickerInner: View {
     @State private var sortOrder: [KeyPathComparator] = [KeyPathComparator(\Contact.lastUsedTs, order: .reverse)]
 
     init(_ settings: AppSettings, search: String, selected: Binding<UUID?>) {
-        _contacts = Query(filter: Contact.predicate(search: search, network: settings.network))
+        _contacts = Query(filter: Contact.predicate(search: search, network: settings.network), sort: \.lastUsedTs, order: .reverse)
         _selected = selected
     }
 
     var body: some View {
         Table(of: Contact.self, selection: $selected, sortOrder: $sortOrder) {
-            TableColumn("Label", value: \.name)
+            TableColumn("Label", value: \.label)
             TableColumn("Address") { contact in
                 Text(verbatim: contact.addr)
                     .truncationMode(.middle)
@@ -80,6 +83,12 @@ struct ContactPickerInner: View {
                 TableRow(contact)
             }
         }
+//        .onChange(of: sortOrder, initial: true) { _, sortOrder in
+//            contacts.sort(using: sortOrder)
+//        }
+//        .onChange(of: contacts) { _, _ in
+//            contacts.sort(using: sortOrder)
+//        }
     }
 }
 
