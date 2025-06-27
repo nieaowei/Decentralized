@@ -15,6 +15,7 @@ struct Recipient: Identifiable, Transferable, Codable {
     var id: UUID = .init()
     var address: String
     var value: Double
+    var deleteable: Bool = true
 
     static var draggableType = UTType(exportedAs: "app.decentralized.Recipient")
 
@@ -31,7 +32,7 @@ struct SendUtxo: Identifiable, Transferable, Codable {
     public var outpoint: OutPoint
     public var txout: TxOut
     public var isSpent: Bool = true
-    public var deleteable: Bool
+    public var deleteable: Bool = true
 
     init(lo: LocalOutput, deleteable: Bool = true) {
         self.outpoint = lo.outpoint
@@ -73,8 +74,6 @@ struct SendScreen: View {
     @State var outputs: [Recipient] = []
     @State var selectedOutputs: [Recipient.ID] = []
     @State var selectedOutpointIds = Set<String>()
-
-//    @State var selectedOutpoints: [String] = []
 
     @Query var contacts: [Contact] = []
     @State var rate: UInt64 = 0
@@ -182,13 +181,14 @@ struct SendScreen: View {
                     } rows: {
                         ForEach($outputs) { $o in
                             TableRow($o)
-
                                 .contextMenu {
-                                    Button {
-                                        onRemoveOutput(o.id)
-                                    } label: {
-                                        Image(systemName: "trash")
-                                        Text(verbatim: "Remove")
+                                    if o.deleteable {
+                                        Button {
+                                            onRemoveOutput(o.id)
+                                        } label: {
+                                            Image(systemName: "trash")
+                                            Text(verbatim: "Remove")
+                                        }
                                     }
                                 }
                         }
@@ -271,8 +271,8 @@ struct SendScreen: View {
             addInputFromSelectedIds()
         }
     }
-    
-    func addInputFromSelectedIds(){
+
+    func addInputFromSelectedIds() {
         let added = selectedOutpointIds.reduce(into: [SendUtxo]()) { partialResult, id in
             if let lo = wallet.allUtxos.first(where: { $0.id == id }), !inputs.contains(where: { $0.id == lo.id }) {
                 partialResult.append(SendUtxo(lo: lo))
@@ -298,7 +298,7 @@ struct SendScreen: View {
                 settedChange = true
                 return
             }
-            guard case .success(let addr) = Address.from(address: o.address, network: settings.network.toBitcoinNetwork()) else {
+            guard case .success(let addr) = Address.from(address: o.address, network: settings.network) else {
                 showError(nil, "\(o.address) is invalid")
                 return
             }
@@ -325,7 +325,7 @@ struct SendScreen: View {
 
         txBuilder = txBuilder.feeRate(feeRate: feeRate)
 
-        let changeAddr = Address.from(address: change.address, network: settings.network.toBitcoinNetwork())
+        let changeAddr = Address.from(address: change.address, network: settings.network)
 
         guard case .success(let changeAddr) = changeAddr else {
             return .failure(changeAddr.err()!)
@@ -349,7 +349,7 @@ struct SendScreen: View {
         let tx = psbt.extractTxUncheckedFeeRate()
 
         outputs = tx.output().map { txout in
-            Recipient(address: txout.formattedScript(network: settings.network.toBitcoinNetwork()), value: txout.value.toBtc())
+            Recipient(address: txout.formattedScript(network: settings.network), value: txout.value.toBtc())
         }
         for txin in tx.input() {
             if !inputs.contains(where: { $0.id == txin.id }) {

@@ -10,6 +10,7 @@ import LocalAuthentication
 import SwiftData
 import SwiftUI
 import UserNotifications
+import DecentralizedFFI
 
 @Model
 class ServerUrl {
@@ -18,7 +19,7 @@ class ServerUrl {
     var type: String
     var network: String
 
-    init(url: String, type: ServerType, network: Networks) {
+    init(url: String, type: ServerType, network: Network) {
         self.url = url
         self.type = type.rawValue
         self.network = network.rawValue
@@ -53,7 +54,7 @@ class AppSettings {
 
     @ObservationIgnored
     @AppStorage("network")
-    var network: Networks = .bitcoin
+    var network: Network = .bitcoin
 
     @ObservationIgnored
     @AppStorage("severType")

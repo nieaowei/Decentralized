@@ -17,7 +17,7 @@ struct TransactionDetailView: View {
     @Environment(AppSettings.self) var settings: AppSettings
     @Environment(\.modelContext) var ctx
     @Environment(EsploraClientWrap.self) var esploraClient: EsploraClientWrap
-
+    @Environment(\.navigate) var navigate
 //    let psbt: Psbt?
     let tx: WalletTransaction
 
@@ -76,11 +76,10 @@ struct TransactionDetailView: View {
                 HSplitView {
                     Table(of: TxOutRow.self) {
                         TableColumn("Address") { vout in
-                            let addr = vout.formattedScript(network: settings.network.toBitcoinNetwork())
+                            let addr = vout.formattedScript(network: settings.network)
                             Text(verbatim: "\(addr)")
                                 .truncationMode(.middle)
                                 .foregroundStyle(vout.isMine(wallet) ? settings.network.accentColor : .primary)
-                                
                         }
                         TableColumn("Value") { vout in
                             Text(verbatim: "\(vout.amount.formatted)")
@@ -90,8 +89,8 @@ struct TransactionDetailView: View {
                         ForEach(inputs) { tx in
                             TableRow(tx)
                                 .contextMenu {
-                                    Button("Copy Address"){
-                                        copyToClipboard(tx.formattedScript(network: settings.network.toBitcoinNetwork()))
+                                    Button("Copy Address") {
+                                        copyToClipboard(tx.formattedScript(network: settings.network))
                                     }
                                 }
                         }
@@ -99,7 +98,7 @@ struct TransactionDetailView: View {
                     .truncationMode(.middle)
                     Table(of: TxOutRow.self) {
                         TableColumn("Address") { vout in
-                            Text("\(vout.formattedScript(network: settings.network.toBitcoinNetwork()))")
+                            Text("\(vout.formattedScript(network: settings.network))")
                                 .truncationMode(.middle)
                                 .foregroundStyle(vout.isMine(wallet) ? settings.network.accentColor : .primary)
                         }
@@ -108,11 +107,16 @@ struct TransactionDetailView: View {
                                 .foregroundStyle(vout.isMine(wallet) ? settings.network.accentColor : .primary)
                         }
                     } rows: {
-                        ForEach(outputs) { tx in
-                            TableRow(tx)
+                        ForEach(outputs.enumerated(), id: \.element) { index, output in
+                            TableRow(output)
                                 .contextMenu {
-                                    Button("Copy Address"){
-                                        copyToClipboard(tx.formattedScript(network: settings.network.toBitcoinNetwork()))
+                                    Button("Copy Address") {
+                                        copyToClipboard(output.formattedScript(network: settings.network))
+                                    }
+                                    if output.isMine(wallet) {
+                                        Button("Send") {
+                                            navigate(.goto(.wallet(.send(selected: Set(["\(tx.id):\(index)"])))))
+                                        }
                                     }
                                 }
                         }

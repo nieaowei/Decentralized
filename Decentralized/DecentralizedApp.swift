@@ -52,7 +52,7 @@ struct DecentralizedApp: App {
 
 //    @State private var accentColor: Color
     @AppStorage("network")
-    var network: Networks = .bitcoin
+    var network: Network = .bitcoin
 
     init() {
         let settings = AppSettings()

@@ -107,7 +107,7 @@ enum WalletError: Error {
 }
 
 struct WalletService {
-    private var network: Networks
+    private var network: Network
     private let syncClient: SyncClient
 
     private var payWallet: Wallet
@@ -123,7 +123,7 @@ struct WalletService {
     init(
         words: String,
         mode: WalletMode,
-        network: Networks,
+        network: Network,
         syncClient: SyncClient
     ) throws {
         self.network = network
@@ -132,7 +132,7 @@ struct WalletService {
     }
 
     init(
-        network: Networks,
+        network: Network,
         syncClient: SyncClient
     ) throws {
         self.network = network
@@ -180,11 +180,11 @@ struct WalletService {
         return self.payWallet.isMine(script: script)
     }
 
-    private static func createDescriptor(words: String, mode: WalletMode, network: Networks) throws -> (Descriptor, Descriptor) {
+    private static func createDescriptor(words: String, mode: WalletMode, network: Network) throws -> (Descriptor, Descriptor) {
         let mnemonic = try Mnemonic.fromString(mnemonic: words)
 
         let paySecretKey = DescriptorSecretKey(
-            network: network.toBitcoinNetwork(),
+            network: network,
             mnemonic: mnemonic,
             password: nil
         )
@@ -194,32 +194,32 @@ struct WalletService {
             try Descriptor.newBip49(
                 secretKey: paySecretKey.derivePriv(path: DerivationPath(path: "m/49'/0'/0'/0/0")),
                 keychainKind: .external,
-                network: network.toBitcoinNetwork()
+                network: network
             )
         case .peek:
             try Descriptor.newBip86(
                 secretKey: paySecretKey.derivePriv(path: DerivationPath(path: "m/86'/0'/0'/0/0")),
                 keychainKind: .external,
-                network: network.toBitcoinNetwork()
+                network: network
             )
         case .me:
             try Descriptor.newBip84(
                 secretKey: paySecretKey.derivePriv(path: DerivationPath(path: "m/84'/0'/0'/0/0")),
                 keychainKind: .external,
-                network: network.toBitcoinNetwork()
+                network: network
             )
         }
 
         let ordiDescriptor = try Descriptor.newBip86(
             secretKey: paySecretKey.derivePriv(path: DerivationPath(path: "m/86'/0'/0'/0/1")),
             keychainKind: .external,
-            network: network.toBitcoinNetwork()
+            network: network
         )
 
         return (payDescriptor, ordiDescriptor)
     }
 
-    static func create(words: String?, mode: WalletMode, network: Networks) throws -> ((Wallet, Persister, Address), (Wallet, Persister, Address)) {
+    static func create(words: String?, mode: WalletMode, network: Network) throws -> ((Wallet, Persister, Address), (Wallet, Persister, Address)) {
         var words12: String
 
         if let words = words, !words.isEmpty {
@@ -239,7 +239,7 @@ struct WalletService {
 
         let payWallet = try Wallet.createSingle(
             descriptor: payDescriptor,
-            network: network.toCustomNetwork(),
+            network: network,
             persister: payDb
         )
 
@@ -250,7 +250,7 @@ struct WalletService {
 
         let ordiWallet = try Wallet.createSingle(
             descriptor: ordiDescriptor,
-            network: network.toCustomNetwork(),
+            network: network,
             persister: ordiDb
         )
 
@@ -276,7 +276,7 @@ struct WalletService {
         return ((payWallet, payDb, payAddress), (ordiWallet, ordiDb, ordiAddress))
     }
 
-    private static func loadWallet(mode: WalletMode, network: Networks, payDescriptor: Descriptor, ordiDescriptor: Descriptor) throws -> ((Wallet, Persister, Address), (Wallet, Persister, Address)) {
+    private static func loadWallet(mode: WalletMode, network: Network, payDescriptor: Descriptor, ordiDescriptor: Descriptor) throws -> ((Wallet, Persister, Address), (Wallet, Persister, Address)) {
         let documentsDirectoryURL = FileManager.default.getDocumentsDirectoryPath()
 
         let payWalletDataDirectoryURL = documentsDirectoryURL.appendingPathComponent("pay_\(network.rawValue).sqlite")
@@ -309,7 +309,7 @@ struct WalletService {
         return ((payWallet, db, payAddr), (ordiWallet, ordiDb, ordiAddr))
     }
 
-    private static func loadWalletFromBackup(network: Networks) throws -> ((Wallet, Persister, Address), (Wallet, Persister, Address)) {
+    private static func loadWalletFromBackup(network: Network) throws -> ((Wallet, Persister, Address), (Wallet, Persister, Address)) {
         let backupInfo = try KeyChainService.getBackupInfo()
 
         if !FileManager.default.fileExists(atPath: FileManager.default.getDocumentsDirectoryPath().appendingPathComponent("pay_\(network.rawValue).sqlite").path) {

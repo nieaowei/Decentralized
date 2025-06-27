@@ -96,7 +96,7 @@ struct ContactScreen: View {
         if provider.hasItemConformingToTypeIdentifier(UTType.commaSeparatedText.identifier) {
             provider.loadItem(forTypeIdentifier: UTType.commaSeparatedText.identifier, options: nil) { item, _ in
                 if let url = item as? URL {
-                    let contacts = try! extractContactFromCsvData(csvData: Data(contentsOf: url), network: settings.network.toCustomNetwork())
+                    let contacts = try! extractContactFromCsvData(csvData: Data(contentsOf: url), network: settings.network)
                     for contact in contacts {
                         let c = Contact(addr: contact.address, label: contact.label, network: settings.network)
                         _ = modelCtx.upsert(c)
@@ -104,7 +104,7 @@ struct ContactScreen: View {
                 } else if let data = item as? Data {
                     // 某些系统版本会以 Data 包裹 URL
                     if let url = URL(dataRepresentation: data, relativeTo: nil) {
-                        let contacts = try! extractContactFromCsvData(csvData: Data(contentsOf: url), network: settings.network.toCustomNetwork())
+                        let contacts = try! extractContactFromCsvData(csvData: Data(contentsOf: url), network: settings.network)
                         for contact in contacts {
                             let c = Contact(addr: contact.address, label: contact.label, network: settings.network)
                             _ = modelCtx.upsert(c)
@@ -149,7 +149,7 @@ struct AddContactView: View {
     }
 
     private func onConfirm() {
-        guard case .success(let address) = Address.from(address: addr, network: settings.network.toBitcoinNetwork()).inspectError({ error in
+        guard case .success(let address) = Address.from(address: addr, network: settings.network).inspectError({ error in
             addrError = "\(error)"
         }) else {
             return

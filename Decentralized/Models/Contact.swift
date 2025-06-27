@@ -19,15 +19,15 @@ class Contact: Identifiable, Hashable {
 
     var label: String
 
-    var network: String
+    var network: String = Network.bitcoin.rawValue
 
-    var minimalNonDust: UInt64
+    var minimalNonDust: UInt64 = 256
 
-    var lastUsedTs: UInt64
+    var lastUsedTs: UInt64 = Date.nowTs()
 
-    var deletable: Bool
+    var deletable: Bool = true
 
-    init(addr: String, label: String = "", minimalNonDust: UInt64 = 256, network: Networks = .bitcoin, deletable: Bool = true) {
+    init(addr: String, label: String = "", minimalNonDust: UInt64 = 256, network: Network = .bitcoin, deletable: Bool = true) {
         self.id = UUID()
         self.addr = addr
         self.label = label
@@ -37,7 +37,7 @@ class Contact: Identifiable, Hashable {
         self.deletable = deletable
     }
 
-    init(addr: Address, label: String = "", network: Networks = .bitcoin, deletable: Bool = true) {
+    init(addr: Address, label: String = "", network: Network = .bitcoin, deletable: Bool = true) {
         self.id = UUID()
         self.addr = addr.description
         self.label = label
@@ -51,9 +51,9 @@ class Contact: Identifiable, Hashable {
 }
 
 extension Contact {
-    static func predicate(search: String, network: Networks? = nil) -> Predicate<Contact> {
+    static func predicate(search: String, network: Network? = nil) -> Predicate<Contact> {
         let hasTypeRaw = network != nil
-        let typeRaw = hasTypeRaw ? network!.rawValue : Networks.bitcoin.rawValue
+        let typeRaw = hasTypeRaw ? network!.rawValue : Network.bitcoin.rawValue
 
         return #Predicate { ordi in
             (search.isEmpty || ordi.label.localizedStandardContains(search) || ordi.addr.localizedStandardContains(search)) && (!hasTypeRaw || ordi.network == typeRaw)

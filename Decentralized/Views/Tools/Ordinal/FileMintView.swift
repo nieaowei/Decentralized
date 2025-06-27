@@ -96,7 +96,7 @@ struct FileMintView: View {
             let fileName = selectedFile.lastPathComponent
             let fileData = try! Data(contentsOf: selectedFile)
 
-            let r = await mintOrd(network: settings.network.toBitcoinNetwork(), utxos: utxos, file: NamedFile(name: fileName, data: fileData), payAddress: wallet.payAddress!.description, toAddr: reciver, feeRate: feeRate, postage: nil)
+            let r = await mintOrd(network: settings.network, utxos: utxos, file: NamedFile(name: fileName, data: fileData), payAddress: wallet.payAddress!.description, toAddr: reciver, feeRate: feeRate, postage: nil)
             switch r {
                 case .success(let success):
                     mintPair = OrdinalMintPair(commitPsbt: success.commitPsbtTx, revealTx: success.revealTx)
@@ -104,7 +104,7 @@ struct FileMintView: View {
                 case .failure(let failure):
                     showError(failure, "Check params")
             }
-//            let r = try! await mint(network: settings.network.toBitcoinNetwork(), utxos: utxos, file: NamedFile(name: "brc20.json", data: jsonData), payAddress: wallet.payAddress!.description, toAddr: reciver, feeRate: feeRate, postage: nil)
+//            let r = try! await mint(network: settings.network, utxos: utxos, file: NamedFile(name: "brc20.json", data: jsonData), payAddress: wallet.payAddress!.description, toAddr: reciver, feeRate: feeRate, postage: nil)
 //            commitPsbt = r.commitPsbtTx
 //            revealTx = r.revealTx
         }

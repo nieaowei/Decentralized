@@ -103,7 +103,7 @@ struct BRC20MintView: View {
             let utxos = wallet.utxos.sorted { l, r in
                 l.txout.value > r.txout.value
             }
-            let r = await mintOrd(network: settings.network.toBitcoinNetwork(), utxos: utxos, file: NamedFile(name: "brc20.json", data: jsonData), payAddress: wallet.payAddress!.description, toAddr: reciver, feeRate: feeRate, postage: nil)
+            let r = await mintOrd(network: settings.network, utxos: utxos, file: NamedFile(name: "brc20.json", data: jsonData), payAddress: wallet.payAddress!.description, toAddr: reciver, feeRate: feeRate, postage: nil)
             switch r {
                 case .success(let success):
                     mintPair = OrdinalMintPair(commitPsbt: success.commitPsbtTx, revealTx: success.revealTx)

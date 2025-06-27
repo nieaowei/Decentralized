@@ -74,7 +74,14 @@
       }
     },
     "Add" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加"
+          }
+        }
+      }
     },
     "Address" : {
       "localizations" : {
@@ -504,7 +511,7 @@
       }
     },
     "ID" : {
-
+      "shouldTranslate" : false
     },
     "ID Path" : {
       "shouldTranslate" : false
@@ -553,7 +560,14 @@
       }
     },
     "Label" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标签"
+          }
+        }
+      }
     },
     "Label or Address" : {
 
@@ -875,7 +889,14 @@
       "shouldTranslate" : false
     },
     "Select Contact" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择"
+          }
+        }
+      }
     },
     "Selecte File" : {
       "localizations" : {
@@ -1121,7 +1142,14 @@
       }
     },
     "Version %@" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本 %@"
+          }
+        }
+      }
     },
     "Vsize" : {
       "extractionState" : "manual",

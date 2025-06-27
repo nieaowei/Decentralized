@@ -417,7 +417,7 @@ struct BuyScreen: View {
         }
 
         let recvAddress = Result {
-            try Address(address: self.recvAddress, network: settings.network.toCustomNetwork())
+            try Address(address: self.recvAddress, network: settings.network)
         }.inspectError { error in
             logger.error("[onBuild] address parse error: \(error)")
             showError(error, "Invalid Recipient Address")

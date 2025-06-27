@@ -7,11 +7,12 @@
 
 import SwiftData
 import SwiftUI
+import DecentralizedFFI
 
 struct ServerSettings: View {
     @Environment(AppSettings.self) var settings: AppSettings
 
-    @State var network: Networks = .bitcoin
+    @State var network: Network = .bitcoin
     @State var serverType: ServerType = .Esplora
     @State var serverUrl: String = "https://mempool.space/api"
     @State var esploraUrl: String = "https://mempool.space/api"
@@ -22,7 +23,7 @@ struct ServerSettings: View {
         Form {
             Section{
                 Picker(selection: $network) {
-                    ForEach([Networks.bitcoin, Networks.testnet, Networks.testnet4, Networks.signet]) { net in
+                    ForEach([Network.bitcoin, Network.testnet, Network.testnet4, Network.signet]) { net in
                         Text(net.rawValue)
                             .tag(net)
                     }
@@ -95,7 +96,7 @@ struct ServerUrlPicker: View {
     @Binding var selection: String
     @Query var serverUrls: [ServerUrl]
 
-    init(_ title: String, selection: Binding<String>, serverType: ServerType, network: Networks) {
+    init(_ title: String, selection: Binding<String>, serverType: ServerType, network: Network) {
         self.title = title
         _selection = selection
         let cur = selection.wrappedValue

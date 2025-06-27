@@ -27,6 +27,7 @@ extension TxIn: @retroactive Identifiable {
 }
 
 extension TxOut {
+    
     func fromHex(hex: String) -> TxOut? {
         newTxoutFromHex(hex: hex)
     }
@@ -49,7 +50,16 @@ extension TxOut {
     }
 }
 
-struct TxOutRow: Identifiable {
+struct TxOutRow: Identifiable, Hashable, Equatable {
+    static func == (lhs: TxOutRow, rhs: TxOutRow) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.id)
+        hasher.combine(inner.serializeHex)
+    }
+    
     let id: UUID = .init()
     let inner: TxOut
 
