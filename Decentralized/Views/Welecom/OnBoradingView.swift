@@ -9,6 +9,7 @@ import SwiftUI
 
 struct OnBoradingView: View {
     @Environment(AppSettings.self) var settings
+    @Environment(\.modelContext) var ctx
     @Environment(\.openSettings) var openSettings
 
     @State var mnemonic: String = ""
@@ -32,9 +33,8 @@ struct OnBoradingView: View {
 
                         Text(verbatim: "Decentralized")
                             .font(.largeTitle)
-                            
                     }
-                    
+
                     VStack(spacing: 10) {
                         Picker("", selection: $mode) {
                             ForEach(WalletMode.allCases, id: \.self) { item in
@@ -48,7 +48,12 @@ struct OnBoradingView: View {
                     Button {
                         do {
                             loading = true
-                            let _ = try WalletService.create(words: mnemonic, mode: mode, network: settings.network)
+                            let (pay, ordi) = try WalletService.create(words: mnemonic, mode: mode, network: settings.network)
+                            let payAddress = Contact(addr: pay.2, label: "PAY", network: settings.network, deletable: false)
+                            let ordiAddress = Contact(addr: ordi.2, label: "ORDI", network: settings.network, deletable: false)
+                            ctx.insert(payAddress)
+                            ctx.insert(ordiAddress)
+                            try ctx.save()
                             isOnboarding = false
 
                         } catch {}

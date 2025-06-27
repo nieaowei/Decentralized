@@ -28,12 +28,16 @@ struct ContactScreen: View {
         VStack {
             Table(of: Contact.self) {
                 TableColumn("Label") { contact in
-                    TextField("Label", text: Binding(get: {
-                        contact.label
-                    }, set: { newName in
-                        contact.label = newName
-                    }))
-                    .textFieldStyle(.roundedBorder)
+                    if contact.deletable{
+                        TextField("Label", text: Binding(get: {
+                            contact.label
+                        }, set: { newName in
+                            contact.label = newName
+                        }))
+                        .textFieldStyle(.roundedBorder)
+                    }else{
+                        Text(verbatim: contact.label)
+                    }
                 }
                 .width(200)
 
@@ -53,10 +57,12 @@ struct ContactScreen: View {
                 ForEach(contacts) { contact in
                     TableRow(contact)
                         .contextMenu {
-                            Button(role: .destructive) {
-                                modelCtx.delete(contact)
+                            if contact.deletable {
+                                Button(role: .destructive) {
+                                    modelCtx.delete(contact)
+                                }
+                                .tint(.red)
                             }
-                            .tint(.red)
                         }
                 }
             }

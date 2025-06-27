@@ -5,6 +5,7 @@
 //  Created by Nekilc on 2024/5/31.
 //
 
+import DecentralizedFFI
 import Foundation
 import SwiftData
 
@@ -24,13 +25,26 @@ class Contact: Identifiable, Hashable {
 
     var lastUsedTs: UInt64
 
-    init(addr: String, label: String = "", minimalNonDust: UInt64 = 256, network: Networks = .bitcoin,) {
+    var deletable: Bool
+
+    init(addr: String, label: String = "", minimalNonDust: UInt64 = 256, network: Networks = .bitcoin, deletable: Bool = true) {
         self.id = UUID()
         self.addr = addr
         self.label = label
         self.network = network.rawValue
         self.lastUsedTs = Date.nowTs()
         self.minimalNonDust = minimalNonDust
+        self.deletable = deletable
+    }
+
+    init(addr: Address, label: String = "", network: Networks = .bitcoin, deletable: Bool = true) {
+        self.id = UUID()
+        self.addr = addr.description
+        self.label = label
+        self.network = network.rawValue
+        self.lastUsedTs = Date.nowTs()
+        self.minimalNonDust = addr.minimalNonDust().toSat()
+        self.deletable = deletable
     }
 
 //    static func fetch
