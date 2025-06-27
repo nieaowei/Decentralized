@@ -8,7 +8,7 @@
 import DecentralizedFFI
 import SwiftUI
 
-struct SignView: View {
+struct TxHexSignScreen: View {
     @Environment(\.showError) var showError
 
     @State var psbtHex: String = ""
@@ -35,7 +35,7 @@ struct SignView: View {
             .padding(.all)
         }
         .navigationDestination(item: $psbt) { psbt in
-            SignScreen(unsignedPsbts: [SignScreen.UnsignedPsbt(psbt: psbt)])
+            TxSignScreen(unsignedPsbts: [TxSignScreen.UnsignedPsbt(psbt: psbt)])
         }
     }
 

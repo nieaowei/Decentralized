@@ -35,12 +35,14 @@ struct HomeDetailView: View {
             case .send(let selected):
                 SendScreen(selectedOutpointIds: selected)
                     .navigationTitle(dest.title)
-            case .sign:
-                SignView()
+            case .hexTxSign:
+                TxHexSignScreen()
                     .navigationTitle(dest.title)
             case .contacts:
                 ContactScreen(settings)
                     .navigationTitle(dest.title)
+            case .txSign(unsignedPsbts: let unsignedPsbts):
+                TxSignScreen(unsignedPsbts: unsignedPsbts)
             }
         case .tools(let dest):
             switch dest {
@@ -76,7 +78,9 @@ struct HomeScreen: View {
     @State var showPop: Bool = false
     @State var showBalancePop: Bool = false
     @State var route: Route = .wallet(.me)
-    @State var routes: [Route] = [.wallet(.me)]
+    @State var routes: [Route] = []
+
+    let timer: Timer.TimerPublisher = Timer.publish(every: 600, on: .main, in: .common)
 
     @State
     @MainActor
@@ -107,6 +111,7 @@ struct HomeScreen: View {
 //        _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
         _syncClient = State(wrappedValue: syncClient)
         isAuth = !settings.enableTouchID
+        _ = timer.connect()
     }
 
     func recurseAuth() async {
@@ -138,6 +143,7 @@ struct HomeScreen: View {
                         }
                 }
                 .onNavigate { navType in
+                    print("Navigate to \(navType)")
                     switch navType {
                     case .push(let route):
                         routes.append(route)
@@ -160,6 +166,9 @@ struct HomeScreen: View {
                 if scenePhase == ScenePhase.active {
                     logger.info("active")
                 }
+            }
+            .onReceive(timer) { _ in
+                wallet.updateStatus(.notStarted)
             }
             .task {
                 do {
@@ -304,12 +313,12 @@ struct WalletStatusToolbar: ToolbarContent {
     var body: some ToolbarContent {
 //        ToolbarItemGroup(placement: .confirmationAction) {
         ToolbarSpacer(.fixed, placement: .automatic)
-        ToolbarItem{
+        ToolbarItem {
             Text("\(wss.fastFee) sats/vB")
                 .padding(.horizontal)
         }
         ToolbarSpacer(.flexible, placement: .automatic)
-        ToolbarItem{
+        ToolbarItem {
             Text("\(wallet.balance.total.formatted)")
                 .padding(.horizontal)
                 .onTapGesture {
@@ -324,8 +333,8 @@ struct WalletStatusToolbar: ToolbarContent {
                 }
         }
         ToolbarSpacer(.flexible, placement: .automatic)
-        ToolbarItem{
-            HStack{
+        ToolbarItem {
+            HStack {
                 WalletSyncStatusView(synced: wallet.syncStatus)
                     .popover(isPresented: $showSyncActions) {
                         Form {

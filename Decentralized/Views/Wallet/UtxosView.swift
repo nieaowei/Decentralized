@@ -61,7 +61,6 @@ struct UtxosView: View {
                 .glassEffect()
             }
             .padding(.all)
-//            .glassEffect()
         }
         .toolbar {
             WalletStatusToolbar()

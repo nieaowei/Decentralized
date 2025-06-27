@@ -8,7 +8,7 @@
 import DecentralizedFFI
 import SwiftUI
 
-struct SignScreen: View {
+struct TxSignScreen: View {
     struct UnsignedPsbt: Hashable {
         let psbt: Psbt
         let walletType: WalletType

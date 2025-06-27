@@ -11,6 +11,7 @@ import SwiftUI
 struct TransactionView: View {
     @Environment(WalletStore.self) var wallet: WalletStore
     @Environment(\.navigate) private var navigate
+    @Environment(\.showError) private var showError
 
     @State var selected: Optional<Txid> = nil
 
@@ -102,9 +103,9 @@ struct TransactionView: View {
         .toolbar {
             WalletStatusToolbar()
         }
-        .navigationDestination(item: $bumpPsbt) { psbt in
-            SignScreen(unsignedPsbts: [SignScreen.UnsignedPsbt(psbt: psbt)], deferBroadcastTxs: [])
-        }
+//        .navigationDestination(item: $bumpPsbt) { psbt in
+//            TxSignScreen(unsignedPsbts: [TxSignScreen.UnsignedPsbt(psbt: psbt)], deferBroadcastTxs: [])
+//        }
         
     }
 
@@ -112,9 +113,17 @@ struct TransactionView: View {
     func onRbf(txid: Txid) {
         print(txid)
         let bf = BumpFeeTxBuilder(txid: txid, feeRate: FeeRate.from(satPerVb: 10).unwrap())
-        if case .success(let psbt) = wallet.finishBump(bf) {
-            bumpPsbt = psbt
+        switch wallet.finishBump(bf){
+            
+        case .success(let psbt):
+            navigate(.push(.wallet(.txSign(unsignedPsbts: [.init(psbt: psbt)]))))
+
+        case .failure(let error):
+            showError(error,"")
         }
+//        if case .success(let psbt) = wallet.finishBump(bf) {
+//            bumpPsbt = psbt
+//        }
     }
 }
 

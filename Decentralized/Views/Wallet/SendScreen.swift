@@ -246,9 +246,9 @@ struct SendScreen: View {
         .toolbar {
             WalletStatusToolbar()
         }
-        .navigationDestination(item: $builtPsbt) { psbt in
-            SignScreen(unsignedPsbts: [.init(psbt: psbt)])
-        }
+//        .navigationDestination(item: $builtPsbt) { psbt in
+//            SignScreen(unsignedPsbts: [.init(psbt: psbt)])
+//        }
         .sheet(isPresented: $showUtxosSelector, content: {
             VStack {
                 UtxoSelector(selected: $selectedOutpointIds, utxos: wallet.utxos)
@@ -369,9 +369,10 @@ struct SendScreen: View {
 
     func onBuild() {
         let _ = build(Recipient(address: wallet.payAddress!.description, value: 0)).inspect { psbt in
-            withAnimation {
-                builtPsbt = psbt
-            }
+//            withAnimation {
+//                builtPsbt = psbt
+                navigate(.push(.wallet(.txSign(unsignedPsbts: [.init(psbt: psbt)]))))
+//            }
         }
     }
 

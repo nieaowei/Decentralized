@@ -47,7 +47,7 @@ struct OrdinalScreen: View {
             WalletStatusToolbar()
         }
         .navigationDestination(item: $mintPair) { psbt in
-            SignScreen(unsignedPsbts: [SignScreen.UnsignedPsbt(psbt: psbt.commitPsbt)], deferBroadcastTxs: [psbt.revealTx])
+            TxSignScreen(unsignedPsbts: [TxSignScreen.UnsignedPsbt(psbt: psbt.commitPsbt)], deferBroadcastTxs: [psbt.revealTx])
         }
     }
 }

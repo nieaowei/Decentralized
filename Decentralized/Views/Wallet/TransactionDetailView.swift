@@ -17,7 +17,7 @@ struct TransactionDetailView: View {
     @Environment(AppSettings.self) var settings: AppSettings
     @Environment(\.modelContext) var ctx
     @Environment(EsploraClientWrap.self) var esploraClient: EsploraClientWrap
-    @Environment(\.navigate) var navigate
+    @Environment(\.navigate) var navigate: NavigateAction
 //    let psbt: Psbt?
     let tx: WalletTransaction
 
@@ -113,11 +113,11 @@ struct TransactionDetailView: View {
                                     Button("Copy Address") {
                                         copyToClipboard(output.formattedScript(network: settings.network))
                                     }
-                                    if output.isMine(wallet) {
-                                        Button("Send") {
-                                            navigate(.goto(.wallet(.send(selected: Set(["\(tx.id):\(index)"])))))
-                                        }
-                                    }
+//                                    if output.isMine(wallet) {
+//                                        NavigationLink("Send") {
+//                                            SendScreen(selectedOutpointIds: Set(["\(tx.id):\(index)"]))
+//                                        }
+//                                    }
                                 }
                         }
                     }

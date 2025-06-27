@@ -46,10 +46,12 @@ enum WalletRoute: Hashable {
 
     case send(selected: Set<String>)
 
-    case sign
+    case hexTxSign
+    
+    case txSign(unsignedPsbts: [TxSignScreen.UnsignedPsbt])
 
     static var allCases: [WalletRoute] {
-        [.me, .utxos, .transactions(.list), .send(selected: .init()), sign, .contacts]
+        [.me, .utxos, .transactions(.list), .send(selected: .init()), hexTxSign, .contacts]
     }
 
     var icon: String {
@@ -58,8 +60,10 @@ enum WalletRoute: Hashable {
         case .utxos: "bitcoinsign"
         case .transactions: "dollarsign"
         case .send: "paperplane"
-        case .sign: "square.and.pencil"
+        case .hexTxSign: "square.and.pencil"
         case .contacts: "person.2"
+        case .txSign:
+            ""
         }
     }
 
@@ -69,8 +73,10 @@ enum WalletRoute: Hashable {
         case .utxos: "Utxos"
         case .transactions: "Transactions"
         case .send: "Send"
-        case .sign: "Sign"
+        case .hexTxSign: "Hex Sign"
         case .contacts: "Contacts"
+        case .txSign:
+            "Transaction Sign"
         }
     }
 }

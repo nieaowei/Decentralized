@@ -82,7 +82,7 @@ struct BuyScreen: View {
     @State
     var totalSat: UInt64 = 0
 
-    @State var psbts: [SignScreen.UnsignedPsbt]?
+    @State var psbts: [TxSignScreen.UnsignedPsbt]?
 
     var buildText: String {
         if isBuildable {
@@ -193,7 +193,7 @@ struct BuyScreen: View {
             await fetchOutPoints()
         }
         .navigationDestination(item: $psbts) { psbts in
-            SignScreen(unsignedPsbts: psbts)
+            TxSignScreen(unsignedPsbts: psbts)
         }
         .sheet(isPresented: $buildLoading) {
             VStack {

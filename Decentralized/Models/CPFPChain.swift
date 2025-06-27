@@ -58,9 +58,6 @@ final class CPFPChain {
     }
 
     static func fetchChain(_ c: EsploraClientWrap, _ startTxid: Txid, _ prevTxid: Txid?) async -> Result<CPFPChain, Error> {
-//        guard case let .success(startTxid) = Txid.from(hex: startTxid) else {
-//            return .failure(TxidParseError.InvalidTxid(txid: startTxid))
-//        }
 
         let startTx = await c.getTxInfo(txid: startTxid)
         guard case let .success(startTx) = startTx else {
