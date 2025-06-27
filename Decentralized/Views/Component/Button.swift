@@ -12,19 +12,25 @@ struct GlassButton: View {
     var action: () -> Void
     var color: Color
 
+    var paddingLength: CGFloat? = nil
     var body: some View {
         Button(action: action) {
             Text(titleKey)
                 .foregroundStyle(color)
-                .padding(.horizontal)
+                .padding(.horizontal, paddingLength)
         }
         .buttonStyle(.glass)
     }
 
     // static 构造器（调用中转 view）
-    static func primary(_ titleKey: LocalizedStringKey, action: @escaping () -> Void) -> some View {
-        GlassButtonPrimaryFactory(titleKey: titleKey, action: action)
+    static func primary(_ titleKey: LocalizedStringKey, paddingLength: CGFloat? = nil, action: @escaping () -> Void) -> some View {
+        GlassButtonPrimaryFactory(titleKey: titleKey, action: action, paddingLength: paddingLength)
             .controlSize(.large)
+    }
+
+    static func secondary(_ titleKey: LocalizedStringKey, paddingLength: CGFloat? = nil, action: @escaping () -> Void) -> some View {
+        GlassButtonPrimaryFactory(titleKey: titleKey, action: action, paddingLength: paddingLength)
+            .controlSize(.regular)
     }
 
     static func close(_ titleKey: LocalizedStringKey, action: @escaping () -> Void) -> some View {
@@ -39,9 +45,10 @@ struct GlassButton: View {
         @Environment(AppSettings.self) var settings
         let titleKey: LocalizedStringKey
         let action: () -> Void
+        let paddingLength: CGFloat?
 
         var body: some View {
-            GlassButton(titleKey: titleKey, action: action, color: settings.accentColor)
+            GlassButton(titleKey: titleKey, action: action, color: settings.accentColor, paddingLength: paddingLength)
         }
     }
 }
