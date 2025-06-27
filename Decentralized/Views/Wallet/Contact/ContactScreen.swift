@@ -21,17 +21,17 @@ struct ContactScreen: View {
     @State private var showAddContact: Bool = false
 
     init(_ settings: AppSettings) {
-        _contacts = Query(filter: Contact.predicate(search: "", network: settings.network))
+        _contacts = Query(filter: Contact.predicate(search: "", network: settings.network), sort: \.lastUsedTs, order: .reverse)
     }
 
     var body: some View {
         VStack {
             Table(of: Contact.self) {
-                TableColumn("Name") { contact in
-                    TextField("Name", text: Binding(get: {
-                        contact.name
+                TableColumn("Label") { contact in
+                    TextField("Label", text: Binding(get: {
+                        contact.label
                     }, set: { newName in
-                        contact.name = newName
+                        contact.label = newName
                     }))
                     .textFieldStyle(.roundedBorder)
                 }
@@ -62,7 +62,7 @@ struct ContactScreen: View {
             }
             .controlSize(.large)
             .onDrop(of: [.commaSeparatedText], isTargeted: nil) { providers in
-                for provider in providers{
+                for provider in providers {
                     handleCSV(provider: provider)
                     return true
                 }
@@ -86,13 +86,13 @@ struct ContactScreen: View {
         .sheet(isPresented: $showAddContact, onDismiss: {}, content: { AddContactView() })
     }
 
-    func handleCSV( provider: NSItemProvider) {
+    func handleCSV(provider: NSItemProvider) {
         if provider.hasItemConformingToTypeIdentifier(UTType.commaSeparatedText.identifier) {
             provider.loadItem(forTypeIdentifier: UTType.commaSeparatedText.identifier, options: nil) { item, _ in
                 if let url = item as? URL {
                     let contacts = try! extractContactFromCsvData(csvData: Data(contentsOf: url), network: settings.network.toCustomNetwork())
                     for contact in contacts {
-                        let c = Contact(addr: contact.address, name: contact.label, network: settings.network)
+                        let c = Contact(addr: contact.address, label: contact.label, network: settings.network)
                         _ = modelCtx.upsert(c)
                     }
                 } else if let data = item as? Data {
@@ -100,7 +100,7 @@ struct ContactScreen: View {
                     if let url = URL(dataRepresentation: data, relativeTo: nil) {
                         let contacts = try! extractContactFromCsvData(csvData: Data(contentsOf: url), network: settings.network.toCustomNetwork())
                         for contact in contacts {
-                            let c = Contact(addr: contact.address, name: contact.label, network: settings.network)
+                            let c = Contact(addr: contact.address, label: contact.label, network: settings.network)
                             _ = modelCtx.upsert(c)
                         }
                     }
@@ -125,7 +125,7 @@ struct AddContactView: View {
         VStack {
             Form {
                 Section {
-                    TextField("Name", text: $name)
+                    TextField("Label", text: $name)
                     TextField("Address", text: $addr)
                 }
                 .sectionActions {
@@ -143,12 +143,12 @@ struct AddContactView: View {
     }
 
     private func onConfirm() {
-        guard case .success = Address.from(address: addr, network: settings.network.toBitcoinNetwork()).inspectError({ error in
+        guard case .success(let address) = Address.from(address: addr, network: settings.network.toBitcoinNetwork()).inspectError({ error in
             addrError = "\(error)"
         }) else {
             return
         }
-        _ = modelCtx.upsert(Contact(addr: addr, name: name, network: settings.network))
+        _ = modelCtx.upsert(Contact(addr: addr, label: name, minimalNonDust: address.minimalNonDust().toSat(), network: settings.network))
 
         dismiss()
     }

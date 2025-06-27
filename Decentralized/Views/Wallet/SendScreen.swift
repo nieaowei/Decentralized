@@ -81,6 +81,7 @@ struct SendScreen: View {
     @State var enableRbf: Bool = true
 
     @State var showUtxosSelector: Bool = false
+    @State var showContactSelector: Bool = false
 
     @State var builtPsbt: Psbt? = nil
 
@@ -150,27 +151,23 @@ struct SendScreen: View {
                     }
                     .truncationMode(.middle)
                 }
-                .safeAreaPadding(.bottom, 80)
 
                 // Output
                 VStack {
                     Table(of: Binding<Recipient>.self) {
                         TableColumn("Address") { $o in
-                            HStack(spacing: 0) {
+                            HStack(spacing: 5) {
                                 Image(systemName: "arrow.up.arrow.down")
-                                ContactPicker() { contact in
-                                    o.address = contact.addr
-                                }
-                                Picker("", selection: $o.address) {
-                                    ForEach(contacts) { contact in
-                                        Text(verbatim: "\(contact.name):\(contact.addr)")
-                                            .tag(contact.addr)
-                                            .truncationMode(.middle)
-                                    }
-                                }
+                                Text(verbatim: o.address)
+                                    .truncationMode(.middle)
+                                    .help(o.address)
+//                                GlassButton.secondary("Select",paddingLength: 0) {
+//                                    showContactSelector = true
+//                                }
                             }
                             .draggable(o)
                         }
+
                         TableColumn("Value") { $o in
                             HStack(spacing: 0) {
                                 TextField("", value: $o.value, format: .number.precision(.fractionLength(8)))
@@ -208,7 +205,8 @@ struct SendScreen: View {
                     .truncationMode(.middle)
                     .contextMenu {
                         Button {
-                            onAddOutput()
+//                            onAddOutput()
+                            showContactSelector = true
                         } label: {
                             Image(systemName: "plus")
                             Text(verbatim: "Add")
@@ -221,8 +219,9 @@ struct SendScreen: View {
                         }
                     }
                 }
-                .safeAreaPadding(.bottom, 80)
             }
+            .safeAreaPadding(.bottom, 80)
+
             VStack {
                 HStack(spacing: 18) {
                     Spacer()
@@ -237,31 +236,11 @@ struct SendScreen: View {
                     GlassButton.primary("Build", action: onBuild)
                 }
                 .padding(.all)
-                .sheet(isPresented: $showUtxosSelector, content: {
-                    VStack {
-                        UtxoSelector(selected: $selectedOutpointIds, utxos: wallet.utxos)
-                        HStack {
-                            GlassButton.primary("OK") {
-                                let added = selectedOutpointIds.reduce(into: [SendUtxo]()) { partialResult, id in
-                                    if let lo = wallet.allUtxos.first(where: { $0.id == id }), !inputs.contains(where: { $0.id == lo.id }) {
-                                        partialResult.append(SendUtxo(lo: lo))
-                                    }
-                                }
-                                withAnimation {
-                                    inputs.append(contentsOf: added)
-                                    showUtxosSelector = false
-                                }
-                            }
-                        }
-                    }
-                    .frame(minHeight: 300)
-                    .padding(.all)
-                })
+                .glassEffect()
                 .onAppear {
                     rate = wss.fastFee
                 }
             }
-            .glassEffect()
             .padding(.all)
         }
         .toolbar {
@@ -269,6 +248,39 @@ struct SendScreen: View {
         }
         .navigationDestination(item: $builtPsbt) { psbt in
             SignScreen(unsignedPsbts: [.init(psbt: psbt)])
+        }
+        .sheet(isPresented: $showUtxosSelector, content: {
+            VStack {
+                UtxoSelector(selected: $selectedOutpointIds, utxos: wallet.utxos)
+                HStack {
+                    GlassButton.primary("OK") {
+                        addInputFromSelectedIds()
+                    }
+                }
+            }
+            .frame(minHeight: 300)
+            .padding(.all)
+        })
+        .sheet(isPresented: $showContactSelector) {
+            ContactPicker { contact in
+                onAddOutputFromContact(contact: contact)
+            }
+            .padding(.all)
+        }
+        .onAppear {
+            addInputFromSelectedIds()
+        }
+    }
+    
+    func addInputFromSelectedIds(){
+        let added = selectedOutpointIds.reduce(into: [SendUtxo]()) { partialResult, id in
+            if let lo = wallet.allUtxos.first(where: { $0.id == id }), !inputs.contains(where: { $0.id == lo.id }) {
+                partialResult.append(SendUtxo(lo: lo))
+            }
+        }
+        withAnimation {
+            inputs.append(contentsOf: added)
+            showUtxosSelector = false
         }
     }
 
@@ -368,18 +380,20 @@ struct SendScreen: View {
             inputs.removeAll { i in
                 i.id == id
             }
+            selectedOutpointIds.remove(id)
         }
     }
 
     func onRemoveAllUtxo() {
         withAnimation {
             inputs.removeAll()
+            selectedOutpointIds.removeAll()
         }
     }
 
-    func onAddOutput() {
+    func onAddOutputFromContact(contact: Contact) {
         withAnimation {
-            outputs.append(Recipient(address: contacts.first?.addr ?? "", value: 0.00000546))
+            outputs.append(Recipient(address: contact.addr, value: contact.minimalNonDust.toBtc()))
         }
     }
 

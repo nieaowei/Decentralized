@@ -10,7 +10,7 @@ import SwiftUI
 struct UtxoSelector: View {
     @Binding var selected: Set<String>
 
-    @State var utxos: [LocalOutput]
+    var utxos: [LocalOutput]
 
     @State private var tableUtxos: [LocalOutput] = []
 
@@ -36,10 +36,11 @@ struct UtxoSelector: View {
             tableUtxos.sort(using: sortOrder)
         }
         .onAppear {
-            self.utxos.removeAll { lo in
+            self.tableUtxos = self.utxos
+            self.tableUtxos.removeAll { lo in
                 selected.contains(lo.id)
             }
-            self.tableUtxos = self.utxos
+            self.tableUtxos = self.tableUtxos.sorted(using: sortOrder)
         }
         .searchable(text: $search, prompt: "TxID Or OutpointID")
         .onChange(of: search) { _, newValue in

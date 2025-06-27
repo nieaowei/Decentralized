@@ -56,6 +56,10 @@ extension UInt64 {
     var amount: Amount {
         Amount.fromSat(satoshi: self)
     }
+    
+    func toBtc() -> Double{
+        self.amount.toBtc()
+    }
 
     func formattedSatoshis() -> String {
         if self == 0 {
