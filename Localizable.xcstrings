@@ -193,9 +193,6 @@
         }
       }
     },
-    "Build %@" : {
-
-    },
     "Buy" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1142,6 +1139,7 @@
       }
     },
     "Version %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {

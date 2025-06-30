@@ -9,7 +9,7 @@ import DecentralizedFFI
 import Foundation
 import SwiftData
 
-func fetchOrdinalTxPairsAsync(esploraClient: EsploraClientWrap, settings: AppSettings, esploraWssTx: EsploraWssTx) async -> Result<[MempoolOrdinal], Error> {
+func fetchOrdinalTxPairsAsync(esploraClient: EsploraClientWrap, settings: StorageSettins, esploraWssTx: EsploraWssTx) async -> Result<[MempoolOrdinal], Error> {
     var datas: [MempoolOrdinal] = []
     guard case let .success(txid) = Txid.from(hex: esploraWssTx.txid) else {
         return .failure(TxidParseError.InvalidTxid(txid: esploraWssTx.txid))

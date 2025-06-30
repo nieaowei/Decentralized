@@ -19,7 +19,7 @@ extension Balance: @retroactive Equatable {
             lhs.total == rhs.total
     }
 
-    public static var Zero: Balance = .init(immature: .Zero, trustedPending: .Zero, untrustedPending: .Zero, confirmed: .Zero, trustedSpendable: .Zero, total: .Zero)
+    public static let Zero: Balance = .init(immature: .Zero, trustedPending: .Zero, untrustedPending: .Zero, confirmed: .Zero, trustedSpendable: .Zero, total: .Zero)
 }
 
 extension CanonicalTx: @retroactive Identifiable {

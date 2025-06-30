@@ -21,7 +21,7 @@ struct SafeSettingsView: View {
             enableTouchID = settings.enableTouchID
         }
         .onChange(of: enableTouchID) { _, newValue in
-            settings.enableTouchID = newValue
+            settings.storage.enableTouchID = newValue
         }
     }
 }

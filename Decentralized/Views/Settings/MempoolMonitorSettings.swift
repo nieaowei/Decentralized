@@ -109,27 +109,27 @@ struct MempoolMonitorSettings: View {
     }
 
     func onApplyRune() {
-        settings.runeUrl = runeUrl
-        settings.runeAuth = runeAuth
-        settings.runeIdPath = runeIdPath
-        settings.runeDivPath = runeDivPath
-        settings.runeNamePath = runeNamePath
-        settings.runeAmountPath = runeAmountPath
-        settings.runefallbackUrl = runeFallbackUrl
-        settings.runefallbackAuth = runeFallbackAuth
-        settings.runefallbackIdPath = runeFallbackIdPath
+        settings.storage.runeUrl = runeUrl
+        settings.storage.runeAuth = runeAuth
+        settings.storage.runeIdPath = runeIdPath
+        settings.storage.runeDivPath = runeDivPath
+        settings.storage.runeNamePath = runeNamePath
+        settings.storage.runeAmountPath = runeAmountPath
+        settings.storage.runefallbackUrl = runeFallbackUrl
+        settings.storage.runefallbackAuth = runeFallbackAuth
+        settings.storage.runefallbackIdPath = runeFallbackIdPath
     }
     
     func onApplyInscription() {
         if !sameAsRune {
-            settings.inscriptionUrl = inscriptionUrl
-            settings.inscriptionAuth = inscriptionAuth
+            settings.storage.inscriptionUrl = inscriptionUrl
+            settings.storage.inscriptionAuth = inscriptionAuth
         }
-        settings.sameAsRune = sameAsRune
-        settings.inscriptionIdPath = inscriptionIdPath
-        settings.inscriptionNumberPath = inscriptionNumberPath
-        settings.inscriptionNamePath = inscriptionNamePath
-        settings.inscriptionAmountPath = inscriptionAmountPath
-        settings.inscriptionDivPath = inscriptionDivPath
+        settings.storage.sameAsRune = sameAsRune
+        settings.storage.inscriptionIdPath = inscriptionIdPath
+        settings.storage.inscriptionNumberPath = inscriptionNumberPath
+        settings.storage.inscriptionNamePath = inscriptionNamePath
+        settings.storage.inscriptionAmountPath = inscriptionAmountPath
+        settings.storage.inscriptionDivPath = inscriptionDivPath
     }
 }

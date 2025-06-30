@@ -68,7 +68,7 @@ struct HomeScreen: View {
 
     @Environment(\.showError) private var showError
 
-    @Environment(EsploraClientWrap.self) private var esploraClient
+    @Environment(Esplora.self) private var esploraClient
 
     @State var syncClient: SyncClient
 //    @State var wss: WssStore
@@ -101,11 +101,11 @@ struct HomeScreen: View {
 
         let syncClient = SyncClient(inner: syncClientInner)
         do {
-            let walletService = try WalletService(network: settings.network, syncClient: .init(inner: syncClientInner))
+            let walletService = try WalletService(network: settings.network, syncClient: syncClientInner)
             _wallet = State(wrappedValue: WalletStore(wallet: walletService))
 
         } catch {
-            settings.isOnBoarding = true
+            settings.storage.isOnBoarding = true
             fatalError("error")
         }
 //        _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
@@ -144,17 +144,19 @@ struct HomeScreen: View {
                 }
                 .onNavigate { navType in
                     print("Navigate to \(navType)")
-                    switch navType {
-                    case .push(let route):
-                        routes.append(route)
-                    case .goto(let route):
-                        self.route = route
-                    case .unwind(let route):
-                        if route == .wallet(.me) {
-                            routes = []
-                        } else {
-                            guard let index = routes.firstIndex(where: { $0 == route }) else { return }
-                            routes = Array(routes.prefix(index + 1))
+                    Task { @MainActor in
+                        switch navType {
+                        case .push(let route):
+                            routes.append(route)
+                        case .goto(let route):
+                            self.route = route
+                        case .unwind(let route):
+                            if route == .wallet(.me) {
+                                routes = []
+                            } else {
+                                guard let index = routes.firstIndex(where: { $0 == route }) else { return }
+                                routes = Array(routes.prefix(index + 1))
+                            }
                         }
                     }
                 }
@@ -168,7 +170,7 @@ struct HomeScreen: View {
                 }
             }
             .onReceive(timer) { _ in
-                wallet.updateStatus(.notStarted)
+                wallet.setStatus(.notStarted)
             }
             .task {
                 do {
@@ -182,12 +184,12 @@ struct HomeScreen: View {
             }
             .task(id: wss.status) {
                 if wss.status == .connected {
-                    wss.subscribe([.mempoolBlock(0)])
-                    wss.subscribe([.address(wallet.payAddress?.description ?? "")])
+                    await wss.subscribe([.mempoolBlock(0)])
+                    await wss.subscribe([.address(wallet.payAddress?.description ?? "")])
                     if wallet.syncStatus == .synced { // Track tx after Syned
                         for tx in wallet.transactions {
                             if !tx.isConfirmed {
-                                wss.subscribe([.transaction(tx.id.description)])
+                                await wss.subscribe([.transaction(tx.id.description)])
                             }
                         }
                     }
@@ -198,7 +200,7 @@ struct HomeScreen: View {
                     if wss.status == .connected {
                         for tx in wallet.transactions {
                             if !tx.isConfirmed {
-                                wss.subscribe([.transaction(tx.id.description)])
+                                await wss.subscribe([.transaction(tx.id.description)])
                             }
                         }
                     }
@@ -217,7 +219,9 @@ struct HomeScreen: View {
                 }
             }
             .onAppear {
-                wss.connect()
+                Task {
+                    await wss.connect()
+                }
             }
             .onChange(of: settings.serverUrl) {
                 logger.info("serverUrl Change")
@@ -232,7 +236,7 @@ struct HomeScreen: View {
             }
             .onChange(of: settings.wssUrl) {
                 logger.info("wssUrl Change")
-                updateWss()
+                Task { await updateWss() }
             }
         }
     }
@@ -250,22 +254,27 @@ struct HomeScreen: View {
         syncClient.inner = syncClientInner
     }
 
-    func updateWss() {
-        wss.updateUrl(settings.wssUrl)
+    func updateWss() async {
+        guard let url = URL(string: settings.wssUrl) else {
+            showError(nil, "Invalid Wss Url")
+            return
+        }
+        await wss.updateUrl(url)
     }
 
     func updateWallet() {
         updateSyncClientInner()
-        wallet = WalletStore(wallet: try! WalletService(network: settings.network, syncClient: syncClient))
+        wallet = WalletStore(wallet: try! WalletService(network: settings.network, syncClient: syncClient.inner))
     }
 
     func handleWssData() {
+        let wss = self.wss
         Task {
-            for await data in wss.asyncStream()! {
+            for await data in await wss.asyncStream()! {
                 switch data {
                 case .mempoolTx(let esploraWssTx):
                     Task {
-                        if case .success(let ordinals) = await fetchOrdinalTxPairsAsync(esploraClient: esploraClient, settings: settings, esploraWssTx: esploraWssTx)
+                        if case .success(let ordinals) = await fetchOrdinalTxPairsAsync(esploraClient: esploraClient.getWrap(), settings: settings.storage, esploraWssTx: esploraWssTx)
                             .inspectError({ error in
                                 logger.error("[fetchOrdinalTxPairs] \(error)")
                             })
@@ -357,7 +366,7 @@ struct WalletStatusToolbar: ToolbarContent {
                             if wss.status == .disconnected {
                                 Button("Reconnect") {
                                     Task {
-                                        wss.connect()
+                                        await wss.connect()
                                     }
                                 }
                             }

@@ -57,7 +57,7 @@ struct BroadcastView: View {
             showError(nil, "Invalid Transaction Hex")
             return
         }
-        try! syncClient.broadcast(tx)
+        _ = try! syncClient.broadcast(tx)
     }
 }
 

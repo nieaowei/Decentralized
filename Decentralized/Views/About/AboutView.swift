@@ -8,24 +8,45 @@
 import SwiftUI
 
 struct AboutView: View {
+    private var appName: String {
+        Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String ??
+            Bundle.main.infoDictionary?["CFBundleName"] as? String ?? "App"
+    }
+
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    }
+
+    private var buildNumber: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+    }
+
+    private var bundleIdentifier: String {
+        Bundle.main.bundleIdentifier ?? "com.example.app"
+    }
+
     var body: some View {
-        HStack {
-            Image("Icon")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 100, height: 100)
-                .clipShape(RoundedRectangle(cornerRadius: 15))
-                .shadow(radius: 10)
-                .padding()
+        VStack {
             VStack {
-                Text(verbatim: "Decentralized")
-                    .font(.largeTitle)
+                Image("Icon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 100)
+                    .clipShape(RoundedRectangle(cornerRadius: 15))
+                    .shadow(radius: 10)
+                Text(verbatim: appName)
+                    .font(.title)
                     .fontDesign(.rounded)
-                Text("Version \(Bundle.main.infoDictionary!["CFBundleShortVersionString"] ?? "")")
-                Text("Build \(Bundle.main.infoDictionary!["CFBundleVersion"] ?? "")")
+            }
+
+            VStack {
+                Form {
+                    LabeledContent("Version", value: appVersion)
+                    LabeledContent("Build", value: buildNumber)
+                }
+                .formStyle(.grouped)
             }
         }
-        .padding(.all)
     }
 }
 

@@ -21,21 +21,21 @@ struct ContactScreen: View {
     @State private var showAddContact: Bool = false
 
     init(_ settings: AppSettings) {
-        _contacts = Query(filter: Contact.predicate(search: "", network: settings.network), sort: \.lastUsedTs, order: .reverse)
+        _contacts = Query(filter: Contact.predicate(search: "", network: settings.storage.network), sort: \.lastUsedTs, order: .reverse)
     }
 
     var body: some View {
         VStack {
             Table(of: Contact.self) {
                 TableColumn("Label") { contact in
-                    if contact.deletable{
+                    if contact.deletable {
                         TextField("Label", text: Binding(get: {
                             contact.label
                         }, set: { newName in
                             contact.label = newName
                         }))
                         .textFieldStyle(.roundedBorder)
-                    }else{
+                    } else {
                         Text(verbatim: contact.label)
                     }
                 }
@@ -94,20 +94,26 @@ struct ContactScreen: View {
 
     func handleCSV(provider: NSItemProvider) {
         if provider.hasItemConformingToTypeIdentifier(UTType.commaSeparatedText.identifier) {
+            let network = settings.network
+//            let ctx = modelCtx
             provider.loadItem(forTypeIdentifier: UTType.commaSeparatedText.identifier, options: nil) { item, _ in
                 if let url = item as? URL {
-                    let contacts = try! extractContactFromCsvData(csvData: Data(contentsOf: url), network: settings.network)
+                    let contacts = try! extractContactFromCsvData(csvData: Data(contentsOf: url), network: network)
                     for contact in contacts {
-                        let c = Contact(addr: contact.address, label: contact.label, network: settings.network)
-                        _ = modelCtx.upsert(c)
+                        let c = Contact(addr: contact.address, label: contact.label, network: network)
+                        DispatchQueue.main.async {
+                            _ = modelCtx.upsert(c)
+                        }
                     }
                 } else if let data = item as? Data {
                     // 某些系统版本会以 Data 包裹 URL
                     if let url = URL(dataRepresentation: data, relativeTo: nil) {
-                        let contacts = try! extractContactFromCsvData(csvData: Data(contentsOf: url), network: settings.network)
+                        let contacts = try! extractContactFromCsvData(csvData: Data(contentsOf: url), network: network)
                         for contact in contacts {
-                            let c = Contact(addr: contact.address, label: contact.label, network: settings.network)
-                            _ = modelCtx.upsert(c)
+                            let c = Contact(addr: contact.address, label: contact.label, network: network)
+                            DispatchQueue.main.async {
+                                _ = modelCtx.upsert(c)
+                            }
                         }
                     }
                 }

@@ -16,7 +16,7 @@ struct NavigateAction {
     }
 }
 
-enum Route: Hashable {
+enum Route: Hashable, Sendable {
     case wallet(WalletRoute)
     case tools(ToolRoute)
 
@@ -39,7 +39,7 @@ enum Route: Hashable {
 //    case detail
 // }
 
-enum WalletRoute: Hashable {
+enum WalletRoute: Hashable, Sendable {
     case me, utxos, contacts
 
     case transactions(TransactionRoutes)
@@ -47,7 +47,7 @@ enum WalletRoute: Hashable {
     case send(selected: Set<String>)
 
     case hexTxSign
-    
+
     case txSign(unsignedPsbts: [TxSignScreen.UnsignedPsbt])
 
     static var allCases: [WalletRoute] {
@@ -81,7 +81,7 @@ enum WalletRoute: Hashable {
     }
 }
 
-enum TransactionRoutes: Hashable {
+enum TransactionRoutes: Hashable, Sendable {
     case list
     case detail(tx: WalletTransaction)
 
@@ -100,7 +100,7 @@ enum TransactionRoutes: Hashable {
 //    }
 }
 
-enum ToolRoute: String, Hashable, CaseIterable {
+enum ToolRoute: String, Hashable, CaseIterable, Sendable {
     case broadcast, ordinal, mempoolMonitor
     // speedUp, cancelTx, monitor
 
@@ -126,7 +126,7 @@ enum ToolRoute: String, Hashable, CaseIterable {
 }
 
 //
-enum SendRoute: Hashable {
+enum SendRoute: Hashable, Sendable {
     case main(selected: Set<String>)
     case detail(tx: WalletTransaction)
 
@@ -135,7 +135,7 @@ enum SendRoute: Hashable {
 //    }
 }
 
-enum NavigationType: Hashable {
+enum NavigationType: Hashable, Sendable {
     case push(Route)
     case goto(Route)
     case unwind(Route)

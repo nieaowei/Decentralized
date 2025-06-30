@@ -8,6 +8,8 @@
 import DecentralizedFFI
 import Foundation
 
+//extension EsploraError: Sendable {}
+
 extension CalculateFeeError {
     var description: String {
         switch self {
@@ -146,7 +148,7 @@ extension SignerError {
     }
 }
 
-//extension WalletCreationError {
+// extension WalletCreationError {
 //    var description: String {
 //        switch self {
 //        case .Descriptor:
@@ -160,4 +162,4 @@ extension SignerError {
 //            return "got: \(String(describing: got)), keychain \(keychain)"
 //        }
 //    }
-//}
+// }

@@ -37,7 +37,7 @@ struct SettingsView: View {
         .scenePadding()
         .onAppear {
             if settings.isFirst {
-                settings.isFirst = false
+                settings.storage.isFirst = false
                 for i in staticServerUrls {
                     ctx.insert(i)
                 }

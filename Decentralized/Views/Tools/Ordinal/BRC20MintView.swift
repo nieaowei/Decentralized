@@ -113,6 +113,7 @@ struct BRC20MintView: View {
                         }
                         
                         let ordi = OrdinalHistory(commitTxId: commitTx.computeTxid(), revealTxId: success.revealTx.computeTxid(), commitPsbtHex: success.commitPsbtTx.serializeHex(), revealTxHex: success.revealTx.serializeHex(), revealPk: success.revealPrivateKey)
+                        modelContext.insert(ordi)
                     }
 
                 case .failure(let failure):

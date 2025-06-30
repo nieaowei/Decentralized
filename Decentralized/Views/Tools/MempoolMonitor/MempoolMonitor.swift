@@ -17,7 +17,7 @@ enum MempoolMonitorTab: Hashable {
 struct MempoolMonitor: View {
     @Environment(\.modelContext) var ctx
     @Environment(WalletStore.self) var wallet
-    @Environment(EsploraClientWrap.self) var esploraClient
+    @Environment(Esplora.self) var esploraClient
 
     let ts: UInt64 = 0
 

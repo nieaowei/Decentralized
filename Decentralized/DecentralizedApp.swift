@@ -45,7 +45,7 @@ struct DecentralizedApp: App {
     @State var settings: AppSettings
     let mainModelContainer: ModelContainer = try! ModelContainer(for: Contact.self, ServerUrl.self, CPFPChain.self, MempoolOrdinal.self, RuneInfo.self, InscriptionCollection.self, OrdinalHistory.self, configurations: ModelConfiguration())
 
-    let esploraClient: EsploraClientWrap
+    let esploraClient: Esplora
     @State var wss: WssStore
 
     @State private var errorWrapper: ErrorWrapper?
@@ -59,7 +59,7 @@ struct DecentralizedApp: App {
         logger.info("App Init \(settings.network.rawValue)")
         logger.info("App Init \(settings.serverUrl)")
 
-        self.esploraClient = EsploraClientWrap(inner: EsploraClient(url: settings.esploraUrl))
+        self.esploraClient = Esplora(esploraClient: EsploraClient(url: settings.esploraUrl))
         self.settings = settings
         _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
         self.mainModelContainer.mainContext.autosaveEnabled = true
@@ -86,7 +86,6 @@ struct DecentralizedApp: App {
 
             } else {
                 HomeScreen(self.settings)
-//                    .tint(self.network.accentColor)
                     .sheet(item: self.$errorWrapper) { errorWrapper in
                         VStack {
                             Text(errorWrapper.guidance)
@@ -109,7 +108,7 @@ struct DecentralizedApp: App {
         .environment(self.settings)
         .environment(self.esploraClient)
         .environment(self.wss)
-        .environment(\.showError) { error, guidance in
+        .onError { error, guidance in
             self.errorWrapper = ErrorWrapper(error: error, guidance: guidance)
         }
         .modelContainer(self.mainModelContainer)
@@ -151,14 +150,16 @@ struct DecentralizedApp: App {
                 .windowResizeBehavior(.disabled)
 //                .tint(self.network.accentColor)
         }
-        .windowResizability(.contentSize)
+        .windowResizability(.contentMinSize)
+        .windowIdealSize(.fitToContent)
+        .defaultSize(width: 300, height: 400)
         .restorationBehavior(.disabled)
         .commandsRemoved()
 
         Settings {
             SettingsView()
                 .windowResizeBehavior(.enabled)
-                .containerBackground(.ultraThinMaterial, for: .window)
+                .containerBackground(.thickMaterial, for: .window)
                 .modelContainer(self.mainModelContainer)
                 .tint(self.network.accentColor)
         }

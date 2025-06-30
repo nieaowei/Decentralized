@@ -27,7 +27,7 @@ extension Double {
 }
 
 extension UInt32 {
-    private static var numberFormatter: NumberFormatter = {
+    private static let numberFormatter: NumberFormatter = {
         let numberFormatter = NumberFormatter()
         numberFormatter.numberStyle = .decimal
 
@@ -40,7 +40,7 @@ extension UInt32 {
 }
 
 extension UInt64 {
-    private static var numberFormatter: NumberFormatter = {
+    private static let numberFormatter: NumberFormatter = {
         let numberFormatter = NumberFormatter()
         numberFormatter.numberStyle = .decimal
 

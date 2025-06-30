@@ -38,7 +38,10 @@ struct NotificationSettings: View {
                 checkTask = tim
             })
             .task(id: checkTask) {
-                await settings.getEnableNotifiaction()
+
+                for await data in settings.asyncStream{
+                    settings.enableNotifiaction = data
+                }
             }
         }
         .formStyle(.grouped)

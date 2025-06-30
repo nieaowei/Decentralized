@@ -123,7 +123,7 @@ final class CPFPChain {
 extension CPFPChain {
     static func fetchOneByTxid(ctx: ModelContext, txid: Txid) -> Result<CPFPChain?, Error> {
         let txid = txid.description
-        return ctx.fetchOne<CPFPChain>(predicate: #Predicate<CPFPChain> { o in
+        return ctx.fetchOne(predicate: #Predicate<CPFPChain> { o in
             o.txid == txid
         })
     }

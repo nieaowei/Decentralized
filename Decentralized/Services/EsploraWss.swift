@@ -10,29 +10,22 @@ import Foundation
 import Observation
 import OSLog
 
-enum EsploraWssData: Equatable {
+enum EsploraWssData: Sendable, Equatable {
     static func == (lhs: EsploraWssData, rhs: EsploraWssData) -> Bool {
-        if case let EsploraWssData.newTx(a) = lhs {
-            if case let .newTx(b) = rhs {
-                return a.id == b.id
-            }
+        switch (lhs, rhs) {
+        case let (.newTx(a), .newTx(b)):
+            return a.id == b.id
+        case let (.txConfirmed(a), .txConfirmed(b)):
+            return a == b
+        case let (.txRemoved(a), .txRemoved(b)):
+            return a.id == b.id
+        case let (.mempoolTx(a), .mempoolTx(b)):
+            return a.id == b.id
+        case let (.block(a), .block(b)):
+            return a.id == b.id
+        default:
+            return false
         }
-        if case let EsploraWssData.txConfirmed(a) = lhs {
-            if case let EsploraWssData.txConfirmed(b) = rhs {
-                return a == b
-            }
-        }
-        if case let EsploraWssData.txRemoved(a) = lhs {
-            if case let EsploraWssData.txRemoved(b) = rhs {
-                return a.id == b.id
-            }
-        }
-        if case let EsploraWssData.mempoolTx(a) = lhs {
-            if case let EsploraWssData.mempoolTx(b) = rhs {
-                return a.id == b.id
-            }
-        }
-        return false
     }
 
     case mempoolTx(EsploraWssTx)
@@ -42,12 +35,12 @@ enum EsploraWssData: Equatable {
     case block(WssBlock)
 }
 
-class EsploraWss {
-    enum Status: String {
+actor EsploraWss {
+    enum Status: String, Sendable {
         case connected, disconnected, connecting
     }
 
-    enum SubscribeData {
+    enum SubscribeData: Sendable {
         case address(String)
         case transaction(String)
         case mempoolBlock(UInt32)
@@ -57,14 +50,15 @@ class EsploraWss {
     private var webSocketTask: URLSessionWebSocketTask
     private var urlSession: URLSession
 
-    var handleFees: ((_ tx: Fees) -> Void)?
-    var handleStatus: ((_ status: Status) -> Void)?
+    // 使用 @Sendable 闭包确保并发安全
+    var onFees: (@Sendable (_ tx: Fees) -> Void)?
+    var onStatus: (@Sendable (_ status: Status) -> Void)?
 
     private let logger: Logger = .init(subsystem: "app.decentralized", category: "wss")
 
     private var reconnectAttempts = 0
     private let maxReconnectAttempts = 5
-    private let reconnectDelay = 2.0 // 初始重连延迟时间
+    private let reconnectDelay = 2.0
     private var isCanceled = false
     var asyncStream: AsyncStream<EsploraWssData>?
 
@@ -76,109 +70,118 @@ class EsploraWss {
         self.webSocketTask = urlSession.webSocketTask(with: url)
     }
 
-    deinit {
-        self.disconnect()
+    func setOnFees(_ onFees: @escaping @Sendable (_ tx: Fees) -> Void) {
+        self.onFees = onFees
     }
 
-    func connect() {
+    func setOnStatus(_ onStatus: @escaping @Sendable (_ status: Status) -> Void) {
+        self.onStatus = onStatus
+    }
+
+    func connect() async {
         id = UUID()
         webSocketTask = urlSession.webSocketTask(with: url)
-        updateStatus(.connecting)
+
+        logger.info("Wss connecting: \(self.url) [\(self.id)]")
+
+        await handleStatus(.connecting)
         webSocketTask.resume()
-        wantStats()
-        logger.info("\(self.url) Started")
+        await wantStats()
 
         asyncStream = AsyncStream { continuation in
-            self.receiveMessage(continuation: continuation)
-
-//            continuation.onTermination = { @Sendable _ in
-//                self.disconnect()
-//            }
+            Task {
+                await self.receiveMessage(continuation: continuation)
+            }
         }
     }
 
-    func updateStatus(_ status: Status) {
-        handleStatus?(status)
+    private func handleStatus(_ status: Status) async {
+        onStatus?(status)
     }
 
-    func reconnect() {
+    private func handleFees(_ fees: Fees) async {
+        onFees?(fees)
+    }
+
+    func reconnect() async {
         if isCanceled {
-            logger.info("\(self.url) Canceled")
             return
         }
 
         guard reconnectAttempts < maxReconnectAttempts else {
             logger.info("The count of attempts has reached the maximum")
-            updateStatus(.disconnected)
+            await handleStatus(.disconnected)
             return
         }
 
-        DispatchQueue.global().asyncAfter(deadline: .now() + reconnectDelay * pow(2.0, Double(reconnectAttempts))) {
+        do {
+            try await Task.sleep(nanoseconds: UInt64(reconnectDelay * pow(2.0, Double(reconnectAttempts)) * 1_000_000_000))
             self.logger.info("Try reconnect to \(self.reconnectAttempts + 1)")
-            self.reconnectAttempts += 1
-            self.connect()
+
+            reconnectAttempts += 1
+            await connect()
+        } catch {
+            logger.error("Sleep interrupted: \(error)")
         }
     }
 
-    func disconnect() {
+    func disconnect() async {
         isCanceled = true
         webSocketTask.cancel(with: .goingAway, reason: nil)
-        updateStatus(.disconnected)
+        await handleStatus(.disconnected)
+        logger.info("Wss disconnected: \(self.url) [\(self.id)]")
+
     }
 
-    func subscribe(datas: [EsploraWss.SubscribeData]) {
+    func subscribe(datas: [EsploraWss.SubscribeData]) async {
         logger.info("Subscribe: \(datas)")
         for data in datas {
             switch data {
             case let .address(string):
-                trackAddress(string)
+                await trackAddress(string)
             case let .transaction(string):
-                trackTransaction(string)
+                await trackTransaction(string)
             case let .mempoolBlock(index):
-                trackMempoolBlock(index)
+                await trackMempoolBlock(index)
             }
         }
     }
 
-    // todo use struct
-    private func trackAddress(_ address: String) {
-        sendMessage("{\"track-address\":\"\(address)\"}")
+    private func trackAddress(_ address: String) async {
+        await sendMessage("{\"track-address\":\"\(address)\"}")
     }
 
-    private func trackTransaction(_ txid: String) {
-        sendMessage("{\"track-tx\":\"\(txid)\"}")
+    private func trackTransaction(_ txid: String) async {
+        await sendMessage("{\"track-tx\":\"\(txid)\"}")
     }
 
-    private func trackMempoolBlock(_ index: UInt32) {
-        sendMessage("{\"track-mempool-block\":\(index)}")
+    private func trackMempoolBlock(_ index: UInt32) async {
+        await sendMessage("{\"track-mempool-block\":\(index)}")
     }
 
-    private func wantStats() {
-        sendMessage("{\"action\":\"want\",\"data\":[\"stats\",\"blocks\"]}")
+    private func wantStats() async {
+        await sendMessage("{\"action\":\"want\",\"data\":[\"stats\",\"blocks\"]}")
     }
 
-    private func sendMessage(_ message: String) {
+    private func sendMessage(_ message: String) async {
         let message = URLSessionWebSocketTask.Message.string(message)
-        webSocketTask.send(message) { error in
-            if let error = error {
-                self.logger.error("Sending message: \(error)")
-                self.updateStatus(.disconnected)
-                self.reconnect()
-            }
+        do {
+            try await webSocketTask.send(message)
+        } catch {
+            logger.error("Sending message: \(error)")
+            await handleStatus(.disconnected)
+            await reconnect()
         }
     }
 
-    private func handleMessage(_ text: String, _ continuation: AsyncStream<EsploraWssData>.Continuation) {
+    private func handleMessage(_ text: String, _ continuation: AsyncStream<EsploraWssData>.Continuation) async {
         do {
             let msg = try Message(text)
 
-//            for tx in msg.transactions {
-//                continuation.yield(.mempoolTx(tx))
-//            }
             if let block = msg.block {
                 continuation.yield(.block(block))
             }
-//
+
             if let txs = msg.projectedBlockTransactions {
                 if let delta = txs.delta {
                     for tx in delta.added {
@@ -199,11 +202,7 @@ class EsploraWss {
                 continuation.yield(.txRemoved(tx))
             }
 
-            if let handle = handleFees {
-                Task {
-                    handle(msg.fees)
-                }
-            }
+            await handleFees(msg.fees)
 
             if !msg.txConfirmed.isEmpty {
                 continuation.yield(.txConfirmed(msg.txConfirmed))
@@ -214,50 +213,49 @@ class EsploraWss {
         }
     }
 
-    private func receiveMessage(continuation: AsyncStream<EsploraWssData>.Continuation) {
-        webSocketTask.receive { [self] result in
-            switch result {
-            case let .failure(error):
-                self.logger.error("Receiving message: \(error)")
-                self.updateStatus(.disconnected)
+    private func receiveMessage(continuation: AsyncStream<EsploraWssData>.Continuation) async {
+        do {
+            let message = try await webSocketTask.receive()
+
+            await handleStatus(.connected)
+            reconnectAttempts = 0
+
+            switch message {
+            case let .string(text):
+                await handleMessage(text, continuation)
+
+            case let .data(data):
+                logger.info("Received binary data: \(data)")
+
+            @unknown default:
                 continuation.finish()
-                self.reconnect()
                 return
-            case let .success(message):
-
-                self.updateStatus(.connected)
-                self.reconnectAttempts = 0
-                switch message {
-                case let .string(text):
-                    self.handleMessage(text, continuation)
-
-                case let .data(data):
-                    self.logger.info("Received binary data: \(data)")
-
-                @unknown default:
-                    continuation.finish()
-                    return
-                }
-                self.receiveMessage(continuation: continuation)
             }
+            await receiveMessage(continuation: continuation)
+
+        } catch {
+            logger.error("Receiving message: \(error)")
+            await handleStatus(.disconnected)
+            continuation.finish()
+            await reconnect()
+            return
         }
     }
 }
 
-struct WssBlock: Codable {
+struct WssBlock: Sendable, Codable {
     let id: String
     let height: UInt64
     let extras: WssBlockExtras
 }
 
-struct WssBlockExtras: Codable {
+struct WssBlockExtras: Sendable, Codable {
     let feeRange: [Double]
 }
 
-struct Message: Codable {
-    var addressTransactions: [EsploraTx] = [] // add
-//    var transactions: [EsploraWssTx] = []
-    var addressRemovedTransactions: [EsploraTx] = [] // rbf
+struct Message: Sendable, Codable {
+    var addressTransactions: [EsploraTx] = []
+    var addressRemovedTransactions: [EsploraTx] = []
     var txConfirmed: String = ""
     var fees: Fees = .init(fastestFee: 0)
     let projectedBlockTransactions: ProjectedBlockTransactions?
@@ -268,7 +266,6 @@ struct Message: Codable {
         case addressRemovedTransactions = "address-removed-transactions"
         case txConfirmed
         case fees
-//        case transactions
         case projectedBlockTransactions = "projected-block-transactions"
         case block
     }
@@ -277,7 +274,6 @@ struct Message: Codable {
 extension Message {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-//        self.transactions = try container.decodeIfPresent([EsploraWssTx].self, forKey: .transactions) ?? []
         self.addressTransactions = try container.decodeIfPresent([EsploraTx].self, forKey: .addressTransactions) ?? []
         self.addressRemovedTransactions = try container.decodeIfPresent([EsploraTx].self, forKey: .addressRemovedTransactions) ?? []
         self.txConfirmed = try container.decodeIfPresent(String.self, forKey: .txConfirmed) ?? ""
@@ -301,14 +297,6 @@ extension Message {
         try self.init(data: Data(contentsOf: url))
     }
 
-//    func with(
-//        addressTransaction: [Tx] = [],
-//        addressRemovedTransactions: [Tx] = [],
-//        txConfirmed: String = ""
-//    ) -> Message {
-//        return Message()
-//    }
-
     func jsonData() throws -> Data {
         return try newJSONEncoder().encode(self)
     }
@@ -318,17 +306,13 @@ extension Message {
     }
 }
 
-enum WantData: String {
+enum WantData: String, Sendable {
     case stats, blocks
 }
 
-// MARK: - Person
-
-struct Fees: Codable {
+struct Fees: Sendable, Codable {
     let fastestFee: UInt64
 }
-
-// MARK: Person convenience initializers and mutators
 
 extension Fees {
     init(data: Data) throws {
@@ -346,12 +330,8 @@ extension Fees {
         try self.init(data: Data(contentsOf: url))
     }
 
-    func with(
-        fastestFee: UInt64? = nil
-    ) -> Fees {
-        return Fees(
-            fastestFee: fastestFee ?? self.fastestFee
-        )
+    func with(fastestFee: UInt64? = nil) -> Fees {
+        return Fees(fastestFee: fastestFee ?? self.fastestFee)
     }
 
     func jsonData() throws -> Data {
@@ -363,12 +343,10 @@ extension Fees {
     }
 }
 
-struct ProjectedBlockTransactions: Codable {
+struct ProjectedBlockTransactions: Sendable, Codable {
     let index, sequence: Int
     let delta: Delta?
 }
-
-// MARK: ProjectedBlockTransactions convenience initializers and mutators
 
 extension ProjectedBlockTransactions {
     init(data: Data) throws {
@@ -407,15 +385,11 @@ extension ProjectedBlockTransactions {
     }
 }
 
-// MARK: - Delta
-
-struct Delta: Codable {
+struct Delta: Sendable, Codable {
     let added: [[Added]]
     let removed: [String]
     let changed: [[Added]]
 }
-
-// MARK: Delta convenience initializers and mutators
 
 extension Delta {
     init(data: Data) throws {
@@ -454,7 +428,7 @@ extension Delta {
     }
 }
 
-enum Added: Codable {
+enum Added: Sendable, Codable {
     case uint(UInt64)
     case double(Double)
     case string(String)
@@ -517,7 +491,6 @@ extension [Added] {
         if self.count >= 7 {
             return EsploraWssTx(txid: self[0].asString()!, flags: self[5].asUint64()!, feeRate: self[4].asDouble() ?? Double(self[4].asUint64()!))
         }
-
         return nil
     }
 }

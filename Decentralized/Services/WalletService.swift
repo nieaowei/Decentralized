@@ -41,7 +41,7 @@ class SyncClient {
     }
 }
 
-enum SyncClientInner {
+enum SyncClientInner: Sendable {
     case esplora(EsploraClient)
     case electrum(ElectrumClient)
 
@@ -108,7 +108,7 @@ enum WalletError: Error {
 
 struct WalletService {
     private var network: Network
-    private let syncClient: SyncClient
+    private var syncClient: SyncClientInner
 
     private var payWallet: Wallet
     private var payConn: Persister
@@ -124,7 +124,7 @@ struct WalletService {
         words: String,
         mode: WalletMode,
         network: Network,
-        syncClient: SyncClient
+        syncClient: SyncClientInner
     ) throws {
         self.network = network
         self.syncClient = syncClient
@@ -133,7 +133,7 @@ struct WalletService {
 
     init(
         network: Network,
-        syncClient: SyncClient
+        syncClient: SyncClientInner
     ) throws {
         self.network = network
         self.syncClient = syncClient
@@ -351,10 +351,24 @@ struct WalletService {
         //        print(inspectedCount, total)
     }
 
-    func sync() async throws {
+    func sync() throws {
         let syncRequest = try payWallet.startSyncWithRevealedSpks().build()
 
         self.logger.info("Syning")
+
+        let update = try syncClient.sync(syncRequest)
+
+        self.logger.info("Update")
+        try self.payWallet.applyUpdate(update: update)
+        self.logger.info("Persist")
+        _ = try self.payWallet.persist(persister: self.payConn)
+    }
+
+    func asyncSync() async throws {
+        let syncRequest = try payWallet.startSyncWithRevealedSpks().build()
+
+        self.logger.info("Syning")
+        debugAsyncThread()
 
         let update = try syncClient.sync(syncRequest)
 
@@ -397,7 +411,7 @@ struct WalletService {
         let ok = Result {
             try self.payWallet.persist(persister: self.payConn)
         }
-        guard case .success(let ok) = ok else {
+        guard case .success(_) = ok else {
             return .failure(ok.err()!)
         }
 

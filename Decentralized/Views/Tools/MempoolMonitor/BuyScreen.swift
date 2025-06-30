@@ -41,7 +41,7 @@ struct BuyScreen: View {
         }
     }
 
-    @Environment(EsploraClientWrap.self) var eslpora
+    @Environment(Esplora.self) var eslpora
     @Environment(WalletStore.self) var wallet
     @Environment(WssStore.self) var wss
     @Environment(AppSettings.self) var settings
@@ -218,6 +218,7 @@ struct BuyScreen: View {
         var fees: [UInt64] = []
         var feeRates: [UInt64] = []
         var total: UInt64 = 0
+
         for (index, o) in ordinals.enumerated() {
             o.inner.isUsed = true
 
@@ -226,6 +227,7 @@ struct BuyScreen: View {
             }
 
             let output = await eslpora
+                .getWrap()
                 .getOutputStatus(txid: txid, index: UInt64(o.inner.vout))
                 .inspectErrorAsync { error in
                     logger.error("getOutputStatus error: \(error)")
@@ -258,7 +260,7 @@ struct BuyScreen: View {
             var tx = txCache[txid]
 
             if tx == nil {
-                let remoteTx = await eslpora.getTxInfo(txid: txid)
+                let remoteTx = await eslpora.getWrap().getTxInfo(txid: txid)
                     .inspectErrorAsync { error in
                         logger.error("getTxInfo error: \(error)")
                     }
@@ -388,7 +390,7 @@ struct BuyScreen: View {
             let txout = newTxoutFromHex(hex: o.inner.txoutHex)
 
             if let txin, let txout {
-                let tx = await eslpora.getTx(txid: txin.previousOutput.txid)
+                let tx = await eslpora.getWrap().getTx(txid: txin.previousOutput.txid)
                     .inspectError { error in
                         logger.error("[onBuild] getTx error: \(error)")
                         showError(error, "Fetch Remote Tx Error")

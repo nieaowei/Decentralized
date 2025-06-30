@@ -5,15 +5,15 @@
 //  Created by Nekilc on 2024/9/2.
 //
 
+import DecentralizedFFI
 import Foundation
 import LocalAuthentication
 import SwiftData
 import SwiftUI
 import UserNotifications
-import DecentralizedFFI
 
 @Model
-class ServerUrl {
+final class ServerUrl {
     @Attribute(.unique)
     var url: String
     var type: String
@@ -30,61 +30,41 @@ enum ServerType: String, CaseIterable, Identifiable, Codable, Equatable {
     case Esplora, Electrum, EsploraWss
 
     var id: String {
-        self.rawValue
+        rawValue
     }
 }
 
-@Observable
-class AppSettings {
-    var enableNotifiaction: Bool = false
-
-    var changed: Bool = false
-
-    var accentColor: Color {
-        self.network.accentColor
-    }
-
-    @ObservationIgnored
+struct StorageSettins {
     @AppStorage("isFirst")
     var isFirst: Bool = true
 
-    @ObservationIgnored
     @AppStorage("enableTouchID")
     var enableTouchID: Bool = false
 
-    @ObservationIgnored
     @AppStorage("network")
     var network: Network = .bitcoin
 
-    @ObservationIgnored
     @AppStorage("severType")
     var serverType: ServerType = .Esplora
 
-    @ObservationIgnored
     @AppStorage("serverUrl")
     var serverUrl: String = "https://mempool.space/api"
 
-    @ObservationIgnored
     @AppStorage("wssUrl")
     var wssUrl: String = "wss://mempool.space/api/v1/ws"
 
-    @ObservationIgnored
     @AppStorage("isOnBoarding")
     var isOnBoarding: Bool = true
 
-    @ObservationIgnored
     @AppStorage("esploraUrl")
     var esploraUrl: String = "https://mempool.space/api"
 
-    @ObservationIgnored
     @AppStorage("enableCpfp")
     var enableCpfp: Bool = false
 
-    @ObservationIgnored
     @AppStorage("runeUrl")
     var runeUrl: String = "https://www.okx.com/api/v5/wallet/utxo/utxo-detail?chainIndex=0&txHash={0}&voutIndex={1}"
 
-    @ObservationIgnored
     @AppStorage("runeAuth")
     var runeAuth: String = """
     {
@@ -96,80 +76,118 @@ class AppSettings {
     }
     """
 
-    @ObservationIgnored
     @AppStorage("runefallbackUrl")
     var runefallbackUrl: String = ""
 
-    @ObservationIgnored
     @AppStorage("runefallbackAuth")
     var runefallbackAuth: String = ""
 
-    @ObservationIgnored
     @AppStorage("runefallbackIdPath")
     var runefallbackIdPath: String = ""
 
-    @ObservationIgnored
     @AppStorage("runeIdPath")
     var runeIdPath: String = "$.data[0].btcAssets[0].nftId"
 
-    @ObservationIgnored
     @AppStorage("runeNamePath")
     var runeNamePath: String = "$.data[0].btcAssets[0].symbol"
 
-    @ObservationIgnored
     @AppStorage("runeDivPath")
     var runeDivPath: String = "$.data[0].btcAssets[0].decimal"
 
-    @ObservationIgnored
     @AppStorage("runeAmountPath")
     var runeAmountPath: String = "$.data[0].btcAssets[0].tokenAmount"
 
-    @ObservationIgnored
     @AppStorage("sameAsRune")
     var sameAsRune: Bool = false
 
-    @ObservationIgnored
     @AppStorage("inscriptionUrl")
     var inscriptionUrl: String = ""
 
-    @ObservationIgnored
     @AppStorage("inscriptionAuth")
     var inscriptionAuth: String = ""
 
-    @ObservationIgnored
     @AppStorage("inscriptionIdPath")
     var inscriptionIdPath: String = ""
 
-    @ObservationIgnored
     @AppStorage("inscriptionNamePath")
     var inscriptionNamePath: String = ""
 
-    @ObservationIgnored
     @AppStorage("inscriptionNumberPath")
     var inscriptionNumberPath: String = ""
-    
+
     // for brc20 etc.
-    @ObservationIgnored
     @AppStorage("inscriptionAmountPath")
     var inscriptionAmountPath: String = ""
 
-    @ObservationIgnored
     @AppStorage("inscriptionDivPath")
     var inscriptionDivPath: String = ""
-
-    init() {
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            self.enableNotifiaction = (settings.authorizationStatus == .authorized)
-        }
-    }
-
-    func getEnableNotifiaction() async {
-        let settings = await UNUserNotificationCenter.current().notificationSettings()
-        self.enableNotifiaction = (settings.authorizationStatus == .authorized)
-    }
 }
 
-var staticServerUrls: [ServerUrl] = {
+@Observable
+class AppSettings {
+    var storage: StorageSettins
+
+    var enableNotifiaction: Bool = false
+
+    var changed: Bool = false
+
+    var network: Network {
+        storage.network
+    }
+
+    var accentColor: Color {
+        network.accentColor
+    }
+
+    var isFirst: Bool { storage.isFirst }
+    var enableTouchID: Bool { storage.enableTouchID }
+    var serverType: ServerType { storage.serverType }
+    var serverUrl: String { storage.serverUrl }
+    var wssUrl: String { storage.wssUrl }
+    var isOnBoarding: Bool { storage.isOnBoarding }
+    var esploraUrl: String { storage.esploraUrl }
+    var enableCpfp: Bool { storage.enableCpfp }
+    var runeUrl: String { storage.runeUrl }
+    var runeAuth: String { storage.runeAuth }
+    var runefallbackUrl: String { storage.runefallbackUrl }
+    var runefallbackAuth: String { storage.runefallbackAuth }
+    var runefallbackIdPath: String { storage.runefallbackIdPath }
+    var runeIdPath: String { storage.runeIdPath }
+    var runeNamePath: String { storage.runeNamePath }
+    var runeDivPath: String { storage.runeDivPath }
+    var runeAmountPath: String { storage.runeAmountPath }
+    var sameAsRune: Bool { storage.sameAsRune }
+    var inscriptionUrl: String { storage.inscriptionUrl }
+    var inscriptionAuth: String { storage.inscriptionAuth }
+    var inscriptionIdPath: String { storage.inscriptionIdPath }
+    var inscriptionNamePath: String { storage.inscriptionNamePath }
+    var inscriptionNumberPath: String { storage.inscriptionNumberPath }
+    var inscriptionAmountPath: String { storage.inscriptionAmountPath }
+    var inscriptionDivPath: String { storage.inscriptionDivPath }
+
+    var asyncStream: AsyncStream<Bool>
+    init() {
+        self.asyncStream = AsyncStream { cont in
+            UNUserNotificationCenter.current().getNotificationSettings { settings in
+                let auth = (settings.authorizationStatus == .authorized)
+                cont.yield(auth)
+            }
+        }
+        self.storage = StorageSettins()
+//        UNUserNotificationCenter.current().getNotificationSettings {  settings in
+//            self.enableNotifiaction = (settings.authorizationStatus == .authorized)
+//        }
+    }
+
+//    @MainActor
+//    func set(_ isAuthorized: Bool) {
+//        self.enableNotifiaction = isAuthorized
+//    }
+//
+//    func getEnableNotifiaction() {}
+}
+
+@MainActor let staticServerUrls: [ServerUrl] = {
     var serverUrls: [ServerUrl] = [
         ServerUrl(url: "https://mempool.space/api", type: .Esplora, network: .bitcoin),
         ServerUrl(url: "https://blockstream.info/api", type: .Esplora, network: .bitcoin),

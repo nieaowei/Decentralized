@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 extension Button {
-    func primary() -> some View {
+    @MainActor func primary() -> some View {
         self.buttonStyle(.glass)
             .controlSize(.large)
     }

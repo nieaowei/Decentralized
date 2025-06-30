@@ -7,23 +7,35 @@
 
 import SwiftUI
 
-struct ShowErrorEnvironmentKey: EnvironmentKey {
-    static var defaultValue: (Error?, String) -> Void = { _, _ in }
+struct ShowErrorEnvironmentKey:@MainActor EnvironmentKey {
+    @MainActor static let defaultValue: ShowErrorAction = .init({ _, _ in })
+}
+
+struct ShowErrorAction {
+    typealias Action = (Error?, String) -> Void
+    let action: Action
+    
+    init(_ action: @escaping Action) {
+        self.action = action
+    }
+    func callAsFunction(_ error: Error?, _ msg: String) {
+        action(error, msg)
+    }
 }
 
 extension EnvironmentValues {
-    var showError: (Error?, String) -> Void {
+    @MainActor var showError: ShowErrorAction {
         get { self[ShowErrorEnvironmentKey.self] }
         set { self[ShowErrorEnvironmentKey.self] = newValue }
     }
 }
 
-struct NavigateEnvironmentKey: EnvironmentKey {
-    static var defaultValue: NavigateAction = .init(action: { _ in })
+struct NavigateEnvironmentKey: @MainActor EnvironmentKey {
+    @MainActor static let defaultValue: NavigateAction = .init(action: { _ in })
 }
 
 extension EnvironmentValues {
-    var navigate: NavigateAction {
+    @MainActor var navigate: NavigateAction {
         get { self[NavigateEnvironmentKey.self] }
         set { self[NavigateEnvironmentKey.self] = newValue }
     }
@@ -32,6 +44,16 @@ extension EnvironmentValues {
 extension View {
     func onNavigate(_ action: @escaping NavigateAction.Action) -> some View {
         environment(\.navigate, NavigateAction(action: action))
+    }
+    
+    func onError(_ action: @escaping ShowErrorAction.Action) -> some View{
+        environment(\.showError, ShowErrorAction(action))
+    }
+}
+
+extension Scene{
+    func onError(_ action: @escaping ShowErrorAction.Action) -> some Scene{
+        environment(\.showError, ShowErrorAction(action))
     }
 }
 

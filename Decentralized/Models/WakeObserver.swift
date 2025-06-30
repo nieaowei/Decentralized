@@ -17,11 +17,12 @@ class WakeObserver {
 
     private var cancellable: AnyCancellable?
 
+    @MainActor
     init() {
         self.cancellable = NotificationCenter.default.publisher(for: NSWorkspace.didWakeNotification)
             .sink { [weak self] _ in
-                Task{
-                    await self?.handleWake()
+                Task {
+                    self?.handleWake()
                 }
             }
     }

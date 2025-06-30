@@ -27,7 +27,6 @@ extension TxIn: @retroactive Identifiable {
 }
 
 extension TxOut {
-    
     func fromHex(hex: String) -> TxOut? {
         newTxoutFromHex(hex: hex)
     }
@@ -54,12 +53,12 @@ struct TxOutRow: Identifiable, Hashable, Equatable {
     static func == (lhs: TxOutRow, rhs: TxOutRow) -> Bool {
         lhs.id == rhs.id
     }
-    
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(self.id)
-        hasher.combine(inner.serializeHex)
+        hasher.combine(self.inner.serializeHex)
     }
-    
+
     let id: UUID = .init()
     let inner: TxOut
 
@@ -71,8 +70,8 @@ struct TxOutRow: Identifiable, Hashable, Equatable {
         return self.inner.value
     }
 
-    func isMine(_ wallet: WalletStore) -> Bool {
-        wallet.isMine(self.inner.scriptPubkey)
+    func isMine(_ wallet: WalletStore)  -> Bool {
+         wallet.isMine(self.inner.scriptPubkey)
     }
 }
 

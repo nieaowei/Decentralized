@@ -14,7 +14,7 @@ struct DevelopmentSettings: View {
     var body: some View {
         Form {
             Section {
-                Toggle("App First", isOn: settings.$isFirst)
+                Toggle("App First", isOn: settings.storage.$isFirst)
                 LabeledContent("ServerUrl Model") {
                     Button("Erase") {
                         try! ctx.delete(model: ServerUrl.self)

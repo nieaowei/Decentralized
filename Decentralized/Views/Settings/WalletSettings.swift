@@ -38,7 +38,7 @@ struct WalletSettings: View {
         do {
             try WalletService.deleteAllWallet()
 //            try ctx.delete(model: Contact.self)
-            settings.isOnBoarding = true
+            settings.storage.isOnBoarding = true
 //            dismissWindow()
         } catch {
             showError(error, "Delete")

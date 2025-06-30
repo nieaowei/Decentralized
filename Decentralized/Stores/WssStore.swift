@@ -1,74 +1,88 @@
-//
-//  Global.swift
-//  Decentralized
-//
-//  Created by Nekilc on 2024/9/3.
-//
-
 import DecentralizedFFI
 import SwiftUI
 
-
 @Observable
-public class WssStore {
+@MainActor
+class WssStore {
     private var wss: EsploraWss
     
-    @MainActor
     var status: EsploraWss.Status = .disconnected
-    
-    @MainActor
     var fastFee: UInt64 = 0
   
-    
     init(url: URL) {
         wss = EsploraWss(url: url)
-        wss.handleStatus = handleStatus
-        wss.handleFees = handleFees
     }
     
-    @MainActor
-    func updateUrl(_ url: String) {
-        wss.disconnect()
+    func updateUrl(_ url: URL) async {
         
-        wss = EsploraWss(url: URL(string: url)!)
-        wss.handleStatus = handleStatus
-        wss.handleFees = handleFees
-        connect()
-    }
-    
-    @MainActor
-    func connect() {
-        if status == .disconnected{
-            wss.connect()
-        }
-    }
-    
-    func asyncStream() -> AsyncStream<EsploraWssData>? {
-        return wss.asyncStream
-    }
-    
-    @MainActor
-    func disconnect() {
-        status = .disconnected
-        wss.disconnect()
-    }
-    
-    func subscribe(_ datas: [EsploraWss.SubscribeData]) {
-        wss.subscribe(datas: datas)
-    }
-    
-    func handleStatus(status: EsploraWss.Status) {
-        DispatchQueue.main.async {
-            self.status = status
-        }
-    }
-    
-    func handleFees(fees: Fees) {
-        DispatchQueue.main.async {
-            if fees.fastestFee != 0 {
-                self.fastFee = fees.fastestFee
+        let currentWss = wss
+        
+        // 先断开当前连接
+        await currentWss.disconnect()
+        
+        // 创建新的WebSocket连接
+        wss = EsploraWss(url: url)
+        
+        // 设置回调
+        await wss.setOnStatus { status in
+            Task { @MainActor in
+                self.handleStatus(status: status)
             }
         }
+        
+        await wss.setOnFees { fees in
+            Task { @MainActor in
+                self.handleFees(fees: fees)
+            }
+        }
+        
+        // 连接新的WebSocket
+        await connect()
     }
     
+    func connect() async {
+        if status == .disconnected {
+            let wss = self.wss
+            
+            // 设置回调
+            await wss.setOnStatus { [weak self] status in
+                Task { @MainActor in
+                    self?.handleStatus(status: status)
+                }
+            }
+            
+            await wss.setOnFees { [weak self] fees in
+                Task { @MainActor in
+                    self?.handleFees(fees: fees)
+                }
+            }
+            
+            await wss.connect()
+        }
+    }
+    
+    func asyncStream() async -> AsyncStream<EsploraWssData>? {
+        return await wss.asyncStream
+    }
+    
+    func disconnect() async {
+        let wss = self.wss
+        status = .disconnected
+        await wss.disconnect()
+    }
+    
+    func subscribe(_ datas: [EsploraWss.SubscribeData]) async {
+        let wss = self.wss
+        await wss.subscribe(datas: datas)
+    }
+    
+    private func handleStatus(status: EsploraWss.Status) {
+        self.status = status
+    }
+    
+    private func handleFees(fees: Fees) {
+        if fees.fastestFee != 0 {
+            fastFee = fees.fastestFee
+        }
+    }
 }

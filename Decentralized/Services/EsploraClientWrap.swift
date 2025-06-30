@@ -9,7 +9,23 @@ import DecentralizedFFI
 import Observation
 
 @Observable
-class EsploraClientWrap {
+class Esplora {
+    private var wrap: EsploraClientWrap
+    
+    init(esploraClient: EsploraClient) {
+        self.wrap = EsploraClientWrap(inner: esploraClient)
+    }
+    
+    func setWrap(_ esploraClient: EsploraClient) {
+        wrap = EsploraClientWrap(inner: esploraClient)
+    }
+    
+    func getWrap() -> EsploraClientWrap {
+        wrap
+    }
+}
+
+struct EsploraClientWrap {
     var inner: EsploraClient
     
     init(inner: EsploraClient) {

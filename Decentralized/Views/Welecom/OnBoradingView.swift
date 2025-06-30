@@ -42,7 +42,7 @@ struct OnBoradingView: View {
                             }
                         }
                         .pickerStyle(.segmented)
-                        MmemonicInputView(mnemonic: $mnemonic)
+                        MnemonicInputView(mnemonic: $mnemonic)
                     }
                     Spacer()
                     Button {

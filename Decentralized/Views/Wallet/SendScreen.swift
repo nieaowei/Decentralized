@@ -17,7 +17,7 @@ struct Recipient: Identifiable, Transferable, Codable {
     var value: Double
     var deleteable: Bool = true
 
-    static var draggableType = UTType(exportedAs: "app.decentralized.Recipient")
+    static let draggableType = UTType(exportedAs: "app.decentralized.Recipient")
 
     public static var transferRepresentation: some TransferRepresentation {
         CodableRepresentation(contentType: draggableType)
@@ -47,7 +47,7 @@ struct SendUtxo: Identifiable, Transferable, Codable {
         self.deleteable = deleteable
     }
 
-    static var draggableType = UTType(exportedAs: "app.decentralized.SendUtxo")
+    static let draggableType = UTType(exportedAs: "app.decentralized.SendUtxo")
 
     public static var transferRepresentation: some TransferRepresentation {
         CodableRepresentation(contentType: draggableType)
@@ -160,9 +160,6 @@ struct SendScreen: View {
                                 Text(verbatim: o.address)
                                     .truncationMode(.middle)
                                     .help(o.address)
-//                                GlassButton.secondary("Select",paddingLength: 0) {
-//                                    showContactSelector = true
-//                                }
                             }
                             .draggable(o)
                         }

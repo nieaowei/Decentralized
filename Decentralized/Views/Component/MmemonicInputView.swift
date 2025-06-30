@@ -10,7 +10,7 @@ import DecentralizedFFI
 import SwiftUI
 
 extension WordCount: @retroactive CaseIterable {
-    public static var allCases: [WordCount] = [.words12, .words24]
+    public static let allCases: [WordCount] = [.words12, .words24]
     public var value: Int {
         switch self {
         case .words12:
@@ -27,8 +27,8 @@ extension WordCount: @retroactive CaseIterable {
     }
 }
 
-struct MmemonicInputView: View {
-    @State var selection = WordCount.words12.value
+struct MnemonicInputView: View {
+    @State var selection = WordCount.words12
 
     @State var words: [String] = .init(repeating: "", count: 24)
 
@@ -46,7 +46,7 @@ struct MmemonicInputView: View {
                     .pickerStyle(.segmented)
 
                     LazyVGrid(columns: [GridItem](repeating: GridItem(), count: 6)) {
-                        ForEach(0 ..< selection, id: \.self) { index in
+                        ForEach(0 ..< selection.value, id: \.self) { index in
                             TextField("", text: $words[index])
                                 .onChange(of: words) {
                                     let words_ = words[index].components(separatedBy: " ")
@@ -56,10 +56,10 @@ struct MmemonicInputView: View {
                                         }
                                     }
                                     if words_.count == 12{
-                                        selection = 12
+                                        selection = .words12
                                     }
                                     if words_.count == 24{
-                                        selection = 24
+                                        selection = .words24
                                     }
                                 }
                         }
@@ -75,5 +75,5 @@ struct MmemonicInputView: View {
 }
 
 #Preview {
-    MmemonicInputView(mnemonic: .constant(""))
+    MnemonicInputView(mnemonic: .constant(""))
 }

@@ -132,7 +132,7 @@ public extension Result {
         return self
     }
 
-    func inspectErrorAsync(_ transform: (Failure) async -> Void) async -> Self {
+    func inspectErrorAsync(_ transform: @Sendable (Failure) async -> Void) async -> Self {
         if case .failure(let error) = self {
             await transform(error)
         }

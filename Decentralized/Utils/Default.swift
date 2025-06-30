@@ -27,16 +27,16 @@ extension Default: Encodable where T: Encodable {
 }
 
 protocol DefaultValue {
-    associatedtype Value: Codable
+    associatedtype Value: Codable, Sendable
     static var defaultValue: Value { get }
 }
 
 extension String: DefaultValue {
-    static var defaultValue = ""
+    static let defaultValue = ""
 }
 
 extension Int: DefaultValue {
-    static var defaultValue = 0
+    static let defaultValue = 0
 }
 
 extension Bool: DefaultValue {

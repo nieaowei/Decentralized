@@ -40,7 +40,7 @@ extension Network: @retroactive Identifiable, @retroactive CaseIterable, @retroa
         }
     }
 
-    public static var allCases: [Network] = [
+    public static let allCases: [Network] = [
         .bitcoin,
         .testnet,
         .testnet4,

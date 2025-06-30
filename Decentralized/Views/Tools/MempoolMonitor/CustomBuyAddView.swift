@@ -9,7 +9,7 @@ import DecentralizedFFI
 import SwiftUI
 
 struct CustomBuyAddView: View {
-    @Environment(EsploraClientWrap.self) var esplora
+    @Environment(Esplora.self) var esplora
     @Environment(AppSettings.self) var settings
     @Environment(\.modelContext) var ctx
     @Environment(\.showError) var showError
@@ -73,20 +73,20 @@ struct CustomBuyAddView: View {
                 return
             }
 
-            guard case .success(let tx) = await esplora.getTxInfo(txid: txid).inspectError({ error in
+            guard case .success(let tx) = await esplora.getWrap().getTxInfo(txid: txid).inspectError({ error in
                 logger.error("Error fetching tx info: \(error)")
                 showError(error, "Error fetching tx info")
             }) else {
                 return
             }
-            guard case .success(let pairs) = await fetchOrdinalTxPairsAsync(esploraClient: esplora, settings: settings, esploraWssTx: EsploraWssTx(txid: tx.txid.description, flags: 0, feeRate: Double(tx.feeRate))).inspectError({ error in
+            guard case .success(let pairs) = await fetchOrdinalTxPairsAsync(esploraClient: esplora.getWrap(), settings: settings.storage, esploraWssTx: EsploraWssTx(txid: tx.txid.description, flags: 0, feeRate: Double(tx.feeRate))).inspectError({ error in
                 logger.error("Error fetching ordinal: \(error)")
                 showError(error, "Error fetching ordinal")
             }) else {
                 return
             }
             for pair in pairs {
-                ctx.upsert(pair)
+                _ = ctx.upsert(pair)
             }
             withAnimation {
                 success = true

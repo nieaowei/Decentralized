@@ -81,12 +81,12 @@ struct ServerSettings: View {
     }
 
     func onApply() {
-        settings.network = network
-        settings.serverUrl = serverUrl
-        settings.serverType = serverType
-        settings.wssUrl = wssUrl
-        settings.esploraUrl = esploraUrl
-        settings.enableCpfp = enableCpfp
+        settings.storage.network = network
+        settings.storage.serverUrl = serverUrl
+        settings.storage.serverType = serverType
+        settings.storage.wssUrl = wssUrl
+        settings.storage.esploraUrl = esploraUrl
+        settings.storage.enableCpfp = enableCpfp
         settings.changed = !settings.changed // ???  the update cannot be triggered without here
     }
 }

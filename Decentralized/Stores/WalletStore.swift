@@ -152,7 +152,7 @@ struct WalletTransaction: Identifiable, Hashable {
 
 @Observable
 class WalletStore {
-    enum SyncStatus: Equatable, CustomStringConvertible {
+    enum SyncStatus: Equatable, CustomStringConvertible, Sendable {
         case error(String)
         case notStarted
         case syncing
@@ -174,29 +174,21 @@ class WalletStore {
     
     var wallet: WalletService
     
-    @MainActor
     var balance: Balance = .Zero
-    @MainActor
     var payAddress: Address?
-    @MainActor
     var ordiAddress: Address?
 
-    @MainActor
     var transactions: [WalletTransaction] = []
     
-    @MainActor
     var utxos: [LocalOutput] = []
-    @MainActor
     var allUtxos: [LocalOutput] = []
     
-    @MainActor
     var syncStatus: SyncStatus = .notStarted
     
+    @MainActor
     init(wallet: WalletService) {
         self.wallet = wallet
-        DispatchQueue.main.async {
-            self.load()
-        }
+        self.load()
     }
     
     func getTxOut(_ op: OutPoint) -> TxOut? {
@@ -216,7 +208,7 @@ class WalletStore {
     }
     
     @MainActor
-    func updateStatus(_ status: SyncStatus) {
+    func setStatus(_ status: SyncStatus) {
         syncStatus = status
     }
     
@@ -224,17 +216,21 @@ class WalletStore {
         wallet.getUtxos()
     }
     
+    @MainActor
     func sync() async throws {
-        if await syncStatus != .syncing {
-            do {
-                await updateStatus(.syncing)
-                try await wallet.sync()
-                await updateStatus(.synced)
-                await load()
-            } catch {
-                await updateStatus(.error(error.localizedDescription))
-                throw error
-            }
+        guard syncStatus != .syncing else {
+            return
+        }
+        
+        do {
+            setStatus(.syncing)
+            try await wallet.asyncSync()
+            setStatus(.synced)
+            load()
+
+        } catch {
+            setStatus(.error(error.localizedDescription))
+            throw error
         }
     }
     
@@ -262,7 +258,7 @@ class WalletStore {
         WalletTransaction(walletService: wallet, inner: CanonicalTx(transaction: tx, chainPosition: ChainPosition.unconfirmed(timestamp: 0)))
     }
     
-    func broadcast(_ tx: DecentralizedFFI.Transaction) async -> Result<Txid, Error> {
+    func broadcast(_ tx: DecentralizedFFI.Transaction) -> Result<Txid, Error> {
         wallet.broadcast(tx)
     }
     

@@ -16,7 +16,7 @@ struct TransactionDetailView: View {
     @Environment(\.showError) var showError
     @Environment(AppSettings.self) var settings: AppSettings
     @Environment(\.modelContext) var ctx
-    @Environment(EsploraClientWrap.self) var esploraClient: EsploraClientWrap
+    @Environment(Esplora.self) var esploraClient: Esplora
     @Environment(\.navigate) var navigate: NavigateAction
 //    let psbt: Psbt?
     let tx: WalletTransaction
@@ -155,6 +155,8 @@ struct TransactionDetailView: View {
 
     func fetchCpfpChain() async {
         // from db
+        logger.info("fetchCpfpChain from db: [\(tx.id)]")
+
         if case let .success(tx) = CPFPChain.fetchOneByTxid(ctx: ctx, txid: tx.txid), let tx {
             if !tx.childs.isEmpty || !tx.parents.isEmpty {
                 withAnimation {
@@ -165,8 +167,8 @@ struct TransactionDetailView: View {
         }
 
         // from network
-
-        let _ = await CPFPChain.fetchChain(esploraClient, tx.txid, nil).map { chain in
+        logger.info("fetchCpfpChain from network: [\(tx.id)]")
+        let _ = await CPFPChain.fetchChain(esploraClient.getWrap(), tx.txid, nil).map { chain in
             if !chain.childs.isEmpty || !chain.parents.isEmpty {
                 withAnimation {
                     cpfpTx = chain

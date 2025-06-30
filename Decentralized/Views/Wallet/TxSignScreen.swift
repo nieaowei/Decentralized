@@ -153,23 +153,23 @@ struct TxSignScreen: View {
     }
 
     func onBroadcast() {
-        Task {
-            loading = true
+        loading = true
 
-            for unsignedPsbt in unsignedPsbts {
-                let id = await wallet.broadcast(unsignedPsbt.psbt.extractTxUncheckedFeeRate())
-                print(id)
-            }
-            if let addedBroadcast = deferBroadcastTxs {
+        for unsignedPsbt in unsignedPsbts {
+            let id = wallet.broadcast(unsignedPsbt.psbt.extractTxUncheckedFeeRate())
+            print(id)
+        }
+        if let addedBroadcast = deferBroadcastTxs {
+            Task {
                 try await Task.sleep(nanoseconds: 3 * 1_000_000_000)
                 for added in addedBroadcast {
-                    let id = await wallet.broadcast(added)
+                    let id = wallet.broadcast(added)
                     print(id)
                 }
             }
-            self.loading = false
-            showSuccess = true
         }
+        loading = false
+        showSuccess = true
     }
 }
 
