@@ -75,7 +75,7 @@ struct TxSignScreen: View {
                             .textSelection(.enabled)
                     ])
                 }
-                TransactionDetailView(tx: wallet.createWalletTx(tx: tx))
+                TransactionDetailView(tx: wallet.createTxDetail(tx: tx))
             }
             .safeAreaPadding(.bottom, 80)
             VStack {

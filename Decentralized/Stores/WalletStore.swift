@@ -9,6 +9,34 @@ import DecentralizedFFI
 import Foundation
 import SwiftUI
 
+extension TxDetails: @retroactive Identifiable, @retroactive Hashable, @retroactive Equatable {
+    public var id: Txid {
+        txid
+    }
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(self.txid)
+    }
+    
+    public static func ==(l: Self, r: Self) -> Bool {
+        return l.txid == r.txid
+    }
+    
+    public var timestamp: UInt64 {
+        switch chainPosition {
+        case .confirmed(let confirmationBlockTime, _):
+            confirmationBlockTime.confirmationTime
+        case .unconfirmed(let timestamp):
+            timestamp ?? Date.nowTs()
+        }
+    }
+    public var isConfirmed: Bool {
+        switch chainPosition {
+        case .confirmed: true
+        case .unconfirmed: false
+        }
+    }
+}
+
 struct WalletTransaction: Identifiable, Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
@@ -49,8 +77,8 @@ struct WalletTransaction: Identifiable, Hashable {
     
     var canRBF: Bool {
         inputs.contains { txin in
-            if let tx = walletService.getTxOut(op: txin.previousOutput), self.isExplicitlyRbf {
-                return walletService.isMine(script: tx.scriptPubkey)
+            if let txOut = walletService.getTxOut(op: txin.previousOutput), self.isExplicitlyRbf {
+                return walletService.isMine(script: txOut.scriptPubkey)
             }
             return false
         }
@@ -126,7 +154,8 @@ struct WalletTransaction: Identifiable, Hashable {
         case .unconfirmed: false
         }
     }
-    
+
+    // todo removed
     var changeAmount: Double {
         let sentAndRecv = walletService.sentAndReceived(inner.transaction)
         let sent = sentAndRecv.sent
@@ -140,11 +169,15 @@ struct WalletTransaction: Identifiable, Hashable {
 
         return plus ? changeBtc : -changeBtc
     }
-    
+
+    // todo removed
+
     var fee: Amount {
         walletService.calculateFee(inner.transaction)
     }
-    
+
+    // todo removed
+
     var feeRate: Double {
         Double(fee.toSat()) / Double(vsize)
     }
@@ -178,7 +211,7 @@ class WalletStore {
     var payAddress: Address?
     var ordiAddress: Address?
 
-    var transactions: [WalletTransaction] = []
+    var transactions: [TxDetails] = []
     
     var utxos: [LocalOutput] = []
     var allUtxos: [LocalOutput] = []
@@ -188,7 +221,7 @@ class WalletStore {
     @MainActor
     init(wallet: WalletService) {
         self.wallet = wallet
-        self.load()
+        load()
     }
     
     func getTxOut(_ op: OutPoint) -> TxOut? {
@@ -200,9 +233,7 @@ class WalletStore {
         balance = wallet.getBalance()
         payAddress = wallet.getPayAddress()
         ordiAddress = wallet.getOrdiAddress()
-        transactions = wallet.getTransactions().map { ctx in
-            WalletTransaction(walletService: wallet, inner: ctx)
-        }
+        transactions = wallet.getTransactionDetails()
         utxos = wallet.getUtxos()
         allUtxos = wallet.getAllUtxos()
     }
@@ -254,8 +285,8 @@ class WalletStore {
         wallet.sign(psbt, walletType: walletType)
     }
     
-    func createWalletTx(tx: DecentralizedFFI.Transaction) -> WalletTransaction {
-        WalletTransaction(walletService: wallet, inner: CanonicalTx(transaction: tx, chainPosition: ChainPosition.unconfirmed(timestamp: 0)))
+    func createTxDetail(tx: DecentralizedFFI.Transaction) -> TxDetails {
+        wallet.createTxDetail(tx)
     }
     
     func broadcast(_ tx: DecentralizedFFI.Transaction) -> Result<Txid, Error> {

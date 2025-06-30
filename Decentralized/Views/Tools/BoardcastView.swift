@@ -15,7 +15,7 @@ struct BroadcastView: View {
 
     @State var sigedHex: String = ""
     @State var showTxid: String? = nil
-    @State var tx: WalletTransaction? = nil
+    @State var tx: TxDetails? = nil
 
     @State var errorMsg: String? = nil
 
@@ -48,7 +48,7 @@ struct BroadcastView: View {
             showError(nil, "Invalid Transaction Hex")
             return
         }
-        self.tx = wallet.createWalletTx(tx: tx)
+        self.tx = wallet.createTxDetail(tx: tx)
         print(tx.id)
     }
 

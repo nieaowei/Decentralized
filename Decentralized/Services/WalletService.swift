@@ -155,6 +155,10 @@ struct WalletService {
     func getTransactions() -> [CanonicalTx] {
         return self.payWallet.transactions()
     }
+    
+    func getTransactionDetails() -> [TxDetails] {
+        return self.payWallet.transactionDetails()
+    }
 
     func getUtxos() -> [LocalOutput] {
         return self.payWallet.listUnspent()
@@ -420,6 +424,10 @@ struct WalletService {
 
     func insertTxOut(op: OutPoint, txout: TxOut) {
         self.payWallet.insertTxout(outpoint: op, txout: txout)
+    }
+    
+    func createTxDetail(_ tx: Transaction) -> TxDetails {
+        return self.payWallet.createTxDetails(tx: tx)
     }
 }
 

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import DecentralizedFFI
 import SwiftUI
 
 struct NavigateAction {
@@ -83,7 +84,7 @@ enum WalletRoute: Hashable, Sendable {
 
 enum TransactionRoutes: Hashable, Sendable {
     case list
-    case detail(tx: WalletTransaction)
+    case detail(tx: TxDetails)
 
     var title: String {
         switch self {

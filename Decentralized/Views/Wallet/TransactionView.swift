@@ -15,31 +15,31 @@ struct TransactionView: View {
 
     @State var selected: Optional<Txid> = nil
 
-    @State private var sortOrder = [KeyPathComparator(\WalletTransaction.timestamp, order: .reverse)]
+    @State private var sortOrder = [KeyPathComparator(\TxDetails.timestamp, order: .reverse)]
 
     @State var bumpPsbt: Psbt? = nil
 
     
     var body: some View {
         VStack {
-            Table(of: WalletTransaction.self, selection: $selected, sortOrder: $sortOrder) {
+            Table(of: TxDetails.self, selection: $selected, sortOrder: $sortOrder) {
                 TableColumn("ID") { tx in
                     HStack {
                         Text(tx.id.description)
                             .truncationMode(.middle)
 
-                        if tx.canRBF {
+                        if tx.canRbf {
                             Image(systemName: "r.circle")
                                 .foregroundColor(.green)
                         }
-                        if tx.canCPFP {
+                        if tx.canCpfp {
                             Image(systemName: "c.circle")
                                 .foregroundColor(.green)
                         }
                     }
                 }
                 TableColumn("Value") { tx in
-                    Text(tx.changeAmount.displayBtc)
+                    Text(tx.balanceDelta.toBtc().displayBtc)
                 }
                 .width(min: 150, ideal: 150)
                 TableColumn("Date", value: \.timestamp) { item in
@@ -60,22 +60,22 @@ struct TransactionView: View {
                                 }
                             }
                             if !tx.isConfirmed {
-                                if tx.canCPFP {
+                                if tx.canCpfp {
                                     // CPFP conditions:
                                     // - Input must be contain one of origin' output
                                     // - FeeRate must be more than origin tx
                                     // - Fee must be more than origin tx
                                     NavigationLink("Child Pay For Parent") {
-                                        SendScreen(isCPFP: true, selectedOutpointIds: tx.cpfpOutputs)
+//                                        SendScreen(isCPFP: true, selectedOutpointIds: tx.cpfpOutputs)
                                     }
                                 }
-                                if tx.canRBF {
+                                if tx.canRbf {
                                     NavigationLink("Cancel") {
                                         // Cancel conditions:
                                         // - Input must be contain one of origin tx
                                         // - FeeRate must be more than origin tx
                                         // - Fee must be more than origin tx
-                                        SendScreen(isRBF: true, selectedOutpointIds: Set(tx.inputs.map { $0.id }))
+                                        SendScreen(isRBF: true, selectedOutpointIds: Set(tx.tx.input().map { $0.id }))
                                     }
                                     // RBF conditions:
                                     // - FeeRate must be more than origin tx
@@ -89,15 +89,16 @@ struct TransactionView: View {
                                 }
                             }
                         }
-                }
+                }//        WalletTransaction(walletService: wallet, inner: CanonicalTx(transaction: tx, chainPosition: ChainPosition.unconfirmed(timestamp: 0)))
+
             }
             .truncationMode(.middle)
-            .onChange(of: sortOrder, initial: true) { _, sortOrder in
-                wallet.transactions.sort(using: sortOrder)
-            }
-            .onChange(of: wallet.transactions) { _, _ in
-                wallet.transactions.sort(using: sortOrder)
-            }
+//            .onChange(of: sortOrder, initial: true) { _, sortOrder in
+//                wallet.transactions.sort(using: sortOrder)
+//            }
+//            .onChange(of: wallet.transactions) { _, _ in
+//                wallet.transactions.sort(using: sortOrder)
+//            }
             
         }
         .toolbar {

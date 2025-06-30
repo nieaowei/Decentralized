@@ -19,7 +19,7 @@ struct TransactionDetailView: View {
     @Environment(Esplora.self) var esploraClient: Esplora
     @Environment(\.navigate) var navigate: NavigateAction
 //    let psbt: Psbt?
-    let tx: WalletTransaction
+    let tx: TxDetails
 
     @State
     @MainActor
@@ -29,7 +29,7 @@ struct TransactionDetailView: View {
     var inputs: [TxOutRow] = []
 
     var outputs: [TxOutRow] {
-        tx.outputs.map { out in
+        tx.tx.output().map { out in
             TxOutRow(inner: out)
         }
     }
@@ -37,22 +37,22 @@ struct TransactionDetailView: View {
     var body: some View {
         VStack {
             GroupedBox([
-                Text("\(tx.changeAmount.displayBtc)")
+                Text(verbatim: tx.balanceDelta.toBtc().displayBtc)
                     .font(.largeTitle)
             ])
             GroupedBox([
                 GroupedLabeledContent("Txid") {
-                    Text(tx.id.description)
+                    Text(verbatim: tx.id.description)
                 },
                 GroupedLabeledContent("Status") {
                     Text(tx.isConfirmed ? "Confirmed" : "Unconfirmed")
                 },
 
                 GroupedLabeledContent("Fee") {
-                    Text("\(tx.fee.toSat()) sats")
+                    Text(verbatim: "\(tx.fee?.toSat() ?? 0) sats")
                 },
                 GroupedLabeledContent("Fee Rate") {
-                    Text("\(tx.feeRate) sats/vB")
+                    Text(verbatim: "\(tx.feeRate ?? 0) sats/vB")
                 }
             ])
 
@@ -107,7 +107,7 @@ struct TransactionDetailView: View {
                                 .foregroundStyle(vout.isMine(wallet) ? settings.network.accentColor : .primary)
                         }
                     } rows: {
-                        ForEach(outputs.enumerated(), id: \.element) { index, output in
+                        ForEach(outputs.enumerated(), id: \.element) { _, output in
                             TableRow(output)
                                 .contextMenu {
                                     Button("Copy Address") {
@@ -127,19 +127,19 @@ struct TransactionDetailView: View {
 
             GroupedBox([
                 GroupedLabeledContent("Vsize") {
-                    Text("\(tx.vsize) kvB")
+                    Text("\(tx.tx.vsize()) kvB")
                 },
                 GroupedLabeledContent("Size") {
-                    Text("\(tx.totalSize) kB")
+                    Text("\(tx.tx.totalSize()) kB")
                 },
                 GroupedLabeledContent("Version") {
-                    Text("\(tx.version)")
+                    Text("\(tx.tx.version())")
                 },
                 GroupedLabeledContent("Weight") {
-                    Text("\(tx.weight) kWu")
+                    Text("\(tx.tx.weight()) kWu")
                 },
                 GroupedLabeledContent("LockTime") {
-                    Text("\(tx.lockTime)")
+                    Text("\(tx.tx.lockTime())")
                 }
             ])
         }
@@ -184,7 +184,7 @@ struct TransactionDetailView: View {
     func fetchOutputs() {
         do {
             var inputs: [TxOutRow] = []
-            for txin in tx.inputs {
+            for txin in tx.tx.input() {
                 // from db
                 if let txout = wallet.getTxOut(txin.previousOutput) {
                     inputs.append(TxOutRow(inner: txout))
