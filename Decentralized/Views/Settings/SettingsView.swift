@@ -13,6 +13,14 @@ struct SettingsView: View {
     @Environment(AppSettings.self) private var settings: AppSettings
     @Environment(\.modelContext) private var ctx
 
+    #if RELEASE
+    @State
+    var enableDevelopment: Bool = false
+    #else
+    @State
+    var enableDevelopment: Bool = true
+    #endif
+
     var body: some View {
         TabView {
             Tab("Server", systemImage: "server.rack") {
@@ -30,26 +38,18 @@ struct SettingsView: View {
             Tab("Safe", systemImage: "lock.shield") {
                 SafeSettingsView()
             }
-            Tab("Development", systemImage: "hammer") {
-                DevelopmentSettings()
+            if enableDevelopment {
+                Tab("Development", systemImage: "hammer") {
+                    DevelopmentSettings()
+                }
             }
         }
         .scenePadding()
-//        .onAppear {
-//            if settings.isAppFirst {
-//                settings.storage.isAppFirst = false
-//                for i in staticServerUrls {
-//                    ctx.insert(i)
-//                }
-//                try! ctx.save()
-//            }
-//        }
+        .onTapGesture(count: 5) {
+            self.enableDevelopment.toggle()
+        }
     }
 }
-
-
-
-
 
 // #Preview {
 //    SettingsView()
