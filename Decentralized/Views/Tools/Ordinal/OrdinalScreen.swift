@@ -24,7 +24,7 @@ struct OrdinalScreen: View {
     @State var mintPair: OrdinalMintPair? = nil
 
     var body: some View {
-        ScrollView {
+        VStack {
             Picker("", selection: $selection) {
                 Text("Text").tag("Text")
                 Text("File").tag("File")

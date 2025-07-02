@@ -127,6 +127,9 @@
         }
       }
     },
+    "App" : {
+
+    },
     "App First" : {
       "shouldTranslate" : false
     },
@@ -373,6 +376,9 @@
           }
         }
       }
+    },
+    "Disabled" : {
+
     },
     "Div Path" : {
       "shouldTranslate" : false

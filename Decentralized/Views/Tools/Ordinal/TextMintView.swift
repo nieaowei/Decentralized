@@ -13,6 +13,7 @@ struct TextMintView: View {
     @Environment(WssStore.self) private var wss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.showError) private var showError
+    @Environment(\.navigate) private var na
 
     @Binding var mintPair: OrdinalMintPair?
 
@@ -79,7 +80,7 @@ struct TextMintView: View {
             switch r {
                 case .success(let success):
                     mintPair = OrdinalMintPair(commitPsbt: success.commitPsbtTx, revealTx: success.revealTx)
-
+                    
                 case .failure(let failure):
                     showError(failure, "Check params")
             }

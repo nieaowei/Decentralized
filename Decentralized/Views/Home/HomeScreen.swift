@@ -9,6 +9,34 @@ import LocalAuthentication
 import SwiftData
 import SwiftUI
 
+@MainActor
+func recurseAuth(onSuccess: (() -> Void)?, onCancel: (() -> Void)?, onError: ((_ err: Error) -> Void)?) async {
+    do {
+        try await LARight().authorize(localizedReason: "Use TouchID to continue")
+        onSuccess?()
+    } catch LAError.userCancel {
+        onCancel?()
+    } catch let err {
+        onError?(err)
+    }
+}
+
+enum AuthError: Error {
+    case userCancel
+    case other(Error)
+}
+
+func auth() async -> Result<Void, AuthError> {
+    do {
+        try await LARight().authorize(localizedReason: "Use TouchID to continue")
+        return .success(())
+    } catch LAError.userCancel {
+        return .failure(.userCancel)
+    } catch let err {
+        return .failure(.other(err))
+    }
+}
+
 struct HomeDetailView: View {
     @Environment(AppSettings.self) private var settings
 
@@ -83,7 +111,6 @@ struct HomeScreen: View {
     let timer: Timer.TimerPublisher = Timer.publish(every: 600, on: .main, in: .common)
 
     @State
-    @MainActor
     var isAuth: Bool = false
 
     var authCtx: LAContext = .init()
@@ -114,21 +141,14 @@ struct HomeScreen: View {
         _ = timer.connect()
     }
 
-    func recurseAuth() async {
-        do {
-            try await LARight().authorize(localizedReason: "Use TouchID to continue")
-            isAuth = true
-        } catch LAError.userCancel {
-            await recurseAuth()
-        } catch {}
-    }
-
     var body: some View {
-        if settings.enableTouchID && !isAuth {
+        if settings.enableTouchID && settings.touchIDApp && !isAuth {
             VStack {}
                 .onAppear {
                     Task {
-                        await recurseAuth()
+                        await recurseAuth {
+                            self.isAuth = true
+                        } onCancel: {} onError: {err in }
                     }
                 }
         } else {
@@ -295,13 +315,19 @@ struct HomeScreen: View {
                         }
                     }
                 case .newTx(let esploraTx):
-                    NotificationManager.sendNotification(title: NSLocalizedString("New Transaction", comment: ""), subtitle: esploraTx.id, body: "")
+                    if settings.enableNotificationNewTx{
+                        NotificationManager.sendNotification(title: NSLocalizedString("New Transaction", comment: ""), subtitle: esploraTx.id, body: "")
+                    }
                     wallet.syncStatus = .notStarted
                 case .txConfirmed(let string):
-                    NotificationManager.sendNotification(title: NSLocalizedString("Transaction Confirmed", comment: ""), subtitle: string, body: "")
+                    if settings.enableNotificationConfirmedTx{
+                        NotificationManager.sendNotification(title: NSLocalizedString("Transaction Confirmed", comment: ""), subtitle: string, body: "")
+                    }
                     wallet.syncStatus = .notStarted
                 case .txRemoved(let esploraTx):
-                    NotificationManager.sendNotification(title: NSLocalizedString("Transaction Removed", comment: ""), subtitle: esploraTx.id, body: "")
+                    if settings.enableNotificationRemovedTx{
+                        NotificationManager.sendNotification(title: NSLocalizedString("Transaction Removed", comment: ""), subtitle: esploraTx.id, body: "")
+                    }
                     wallet.syncStatus = .notStarted
                 case .block(let block):
                     try! MempoolOrdinal.clearConfirmed(ctx: ctx, blockMinFeeRate: block.extras.feeRange.first!)

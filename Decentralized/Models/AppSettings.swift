@@ -35,11 +35,28 @@ enum ServerType: String, CaseIterable, Identifiable, Codable, Equatable {
 }
 
 struct StorageSettins {
+    static let shared = StorageSettins()
+
     @AppStorage("isFirst")
     var isFirst: Bool = true
 
     @AppStorage("enableTouchID")
     var enableTouchID: Bool = false
+
+    @AppStorage("touchID.app")
+    var touchIDApp: Bool = false
+
+    @AppStorage("touchID.sign")
+    var touchIDSign: Bool = false
+
+    @AppStorage("notification.newTx")
+    var enableNotificationNewTx: Bool = false
+
+    @AppStorage("notification.confirmedTx")
+    var enableNotificationConfirmedTx: Bool = false
+
+    @AppStorage("notification.removedTx")
+    var enableNotificationRemovedTx: Bool = false
 
     @AppStorage("network")
     var network: Network = .bitcoin
@@ -125,9 +142,12 @@ struct StorageSettins {
 
 @Observable
 class AppSettings {
-    var storage: StorageSettins
+    @ObservationIgnored
+    var storage: StorageSettins = .shared
 
-    var enableNotifiaction: Bool = false
+//    @AppStorage("enableNotifiaction")
+//    @ObservationIgnored
+    var enableNotification: Bool = false
 
     var changed: Bool = false
 
@@ -140,7 +160,43 @@ class AppSettings {
     }
 
     var isFirst: Bool { storage.isFirst }
-    var enableTouchID: Bool { storage.enableTouchID }
+
+    var enableTouchID: Bool = StorageSettins.shared.enableTouchID {
+        didSet {
+            storage.enableTouchID = enableTouchID
+        }
+    }
+
+    var touchIDApp: Bool = StorageSettins.shared.touchIDApp {
+        didSet {
+            storage.touchIDApp = touchIDApp
+        }
+    }
+
+    var touchIDSign: Bool = StorageSettins.shared.touchIDSign {
+        didSet {
+            storage.touchIDSign = touchIDSign
+        }
+    }
+
+    var enableNotificationNewTx: Bool = StorageSettins.shared.enableNotificationNewTx {
+        didSet {
+            storage.enableNotificationNewTx = enableNotificationNewTx
+        }
+    }
+
+    var enableNotificationConfirmedTx: Bool = StorageSettins.shared.enableNotificationConfirmedTx {
+        didSet {
+            storage.enableNotificationConfirmedTx = enableNotificationConfirmedTx
+        }
+    }
+
+    var enableNotificationRemovedTx: Bool = StorageSettins.shared.enableNotificationRemovedTx {
+        didSet {
+            storage.enableNotificationRemovedTx = enableNotificationRemovedTx
+        }
+    }
+
     var serverType: ServerType { storage.serverType }
     var serverUrl: String { storage.serverUrl }
     var wssUrl: String { storage.wssUrl }
@@ -165,17 +221,16 @@ class AppSettings {
     var inscriptionAmountPath: String { storage.inscriptionAmountPath }
     var inscriptionDivPath: String { storage.inscriptionDivPath }
 
-    var asyncStream: AsyncStream<Bool>
+//    var asyncStream: AsyncStream<Bool>
+
     init() {
-        self.asyncStream = AsyncStream { cont in
-            UNUserNotificationCenter.current().getNotificationSettings { settings in
-                let auth = (settings.authorizationStatus == .authorized)
-                cont.yield(auth)
-            }
-        }
-        self.storage = StorageSettins()
-//        UNUserNotificationCenter.current().getNotificationSettings {  settings in
-//            self.enableNotifiaction = (settings.authorizationStatus == .authorized)
+//        self.asyncStream = AsyncStream { cont in
+//            UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+//                @AppStorage("enableNotifiaction")
+//                var enableNotifiaction: Bool = false
+//                let auth = (settings.authorizationStatus == .authorized)
+//                self?.enableNotifiaction = auth
+//            }
 //        }
     }
 

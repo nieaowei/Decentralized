@@ -24,6 +24,7 @@ struct TxSignScreen: View {
     @Environment(WalletStore.self) private var wallet: WalletStore
     @Environment(WssStore.self) private var wss: WssStore
     @Environment(\.showError) private var showError
+    @Environment(AppSettings.self) private var settings: AppSettings
 
     @Environment(\.dismiss) private var dismiss
 
@@ -130,6 +131,14 @@ struct TxSignScreen: View {
             loading = true
             defer {
                 self.loading = false
+            }
+
+            if settings.enableTouchID && settings.touchIDSign {
+                logger.info("Using Touch ID for signing")
+                guard case .success = await auth() else {
+                    logger.error("Touch ID authentication failed")
+                    return
+                }
             }
 
             let ok = wallet.sign(unsignedPsbts[current].psbt, unsignedPsbts[current].walletType).inspectError { err in

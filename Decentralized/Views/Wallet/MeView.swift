@@ -15,7 +15,7 @@ struct MeView: View {
     var body: some View {
         ScrollView {
             VStack {
-                GroupedBox("PayWallet", items: [
+                GroupedBox("Pay", items: [
                     GroupedLabeledContent("Address") {
                         Text(wallet.payAddress?.description ?? "")
                     },
@@ -27,9 +27,9 @@ struct MeView: View {
                             .onTapGesture {
                                 showQR = wallet.payAddress?.description
                             }
-                    }
+                    },
                 ])
-                GroupedBox("OrdinalsWallet", items: [
+                GroupedBox("Ordinal", items: [
                     GroupedLabeledContent("Address") {
                         Text(verbatim: wallet.ordiAddress?.description ?? "")
                     },
@@ -38,7 +38,7 @@ struct MeView: View {
                             .onTapGesture {
                                 showQR = wallet.ordiAddress?.description
                             }
-                    }
+                    },
                 ])
                 Spacer()
             }

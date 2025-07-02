@@ -16,7 +16,7 @@ struct GlassButton: View {
     var body: some View {
         Button(action: action) {
             Text(titleKey)
-                .foregroundStyle(color)
+//                .foregroundStyle(color)
                 .padding(.horizontal, paddingLength)
         }
         .buttonStyle(.glass)
