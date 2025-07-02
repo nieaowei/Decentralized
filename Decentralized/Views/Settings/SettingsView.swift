@@ -35,15 +35,15 @@ struct SettingsView: View {
             }
         }
         .scenePadding()
-        .onAppear {
-            if settings.isFirst {
-                settings.storage.isFirst = false
-                for i in staticServerUrls {
-                    ctx.insert(i)
-                }
-                try! ctx.save()
-            }
-        }
+//        .onAppear {
+//            if settings.isAppFirst {
+//                settings.storage.isAppFirst = false
+//                for i in staticServerUrls {
+//                    ctx.insert(i)
+//                }
+//                try! ctx.save()
+//            }
+//        }
     }
 }
 

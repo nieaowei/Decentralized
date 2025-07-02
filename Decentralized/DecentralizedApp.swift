@@ -50,7 +50,6 @@ struct DecentralizedApp: App {
 
     @State private var errorWrapper: ErrorWrapper?
 
-//    @State private var accentColor: Color
     @AppStorage("network")
     var network: Network = .bitcoin
 
@@ -63,7 +62,15 @@ struct DecentralizedApp: App {
         self.settings = settings
         _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
         self.mainModelContainer.mainContext.autosaveEnabled = true
-//        self.accentColor = settings.accentColor
+
+        if settings.isAppFirst {
+            logger.info("App First Launch")
+            settings.isAppFirst = false
+            for i in staticServerUrls {
+                self.mainModelContainer.mainContext.insert(i)
+            }
+            try! self.mainModelContainer.mainContext.save()
+        }
     }
 
     var body: some Scene {
@@ -157,7 +164,6 @@ struct DecentralizedApp: App {
         .restorationBehavior(.disabled)
         .commandsRemoved()
 
-        
         Settings {
             SettingsView()
                 .windowResizeBehavior(.enabled)

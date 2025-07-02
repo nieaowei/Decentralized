@@ -37,8 +37,8 @@ enum ServerType: String, CaseIterable, Identifiable, Codable, Equatable {
 struct StorageSettins {
     static let shared = StorageSettins()
 
-    @AppStorage("isFirst")
-    var isFirst: Bool = true
+    @AppStorage("isAppFirst")
+    var isAppFirst: Bool = true
 
     @AppStorage("enableTouchID")
     var enableTouchID: Bool = false
@@ -78,6 +78,9 @@ struct StorageSettins {
 
     @AppStorage("enableCpfp")
     var enableCpfp: Bool = false
+    
+    @AppStorage("enableMempoolMonitor")
+    var enableMempoolMonitor: Bool = false
 
     @AppStorage("runeUrl")
     var runeUrl: String = "https://www.okx.com/api/v5/wallet/utxo/utxo-detail?chainIndex=0&txHash={0}&voutIndex={1}"
@@ -159,7 +162,11 @@ class AppSettings {
         network.accentColor
     }
 
-    var isFirst: Bool { storage.isFirst }
+    var isAppFirst: Bool = StorageSettins.shared.isAppFirst {
+        didSet {
+            storage.isAppFirst = isAppFirst
+        }
+    }
 
     var enableTouchID: Bool = StorageSettins.shared.enableTouchID {
         didSet {
@@ -203,6 +210,8 @@ class AppSettings {
     var isOnBoarding: Bool { storage.isOnBoarding }
     var esploraUrl: String { storage.esploraUrl }
     var enableCpfp: Bool { storage.enableCpfp }
+    
+    var enableMempoolMonitor: Bool { storage.enableMempoolMonitor }
     var runeUrl: String { storage.runeUrl }
     var runeAuth: String { storage.runeAuth }
     var runefallbackUrl: String { storage.runefallbackUrl }
