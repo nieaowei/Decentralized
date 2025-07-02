@@ -62,7 +62,7 @@ struct DecentralizedApp: App {
         self.settings = settings
         _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
         self.mainModelContainer.mainContext.autosaveEnabled = true
-
+        
         if settings.isAppFirst {
             logger.info("App First Launch")
             settings.isAppFirst = false
@@ -130,6 +130,7 @@ struct DecentralizedApp: App {
                 }
             }
         }
+
 
         Window("Welcome", id: "welcom") {
             OnBoradingView()

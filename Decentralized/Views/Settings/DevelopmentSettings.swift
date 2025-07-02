@@ -21,7 +21,7 @@ struct DevelopmentSettings: View {
             }
         )
     }
-    
+
     var body: some View {
         Form {
             Section {
@@ -29,6 +29,22 @@ struct DevelopmentSettings: View {
                 LabeledContent("ServerUrl Model") {
                     Button("Erase") {
                         try! ctx.delete(model: ServerUrl.self)
+                    }
+                }
+                LabeledContent("Export MempoolSettings") {
+                    Button("Export") {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(String(data: try! JSONEncoder().encode(settings.storage), encoding: .utf8)!, forType: .string)
+                    }
+                    Button("Import") {
+                        let pasteboardString = NSPasteboard.general.string(forType: .string)
+                        do {
+                            let settings  = try JSONDecoder().decode(StorageSettins.self, from: pasteboardString!.data(using: .utf8)!)
+
+                        }catch{
+                            print("Import failed: \(error)")
+                        }
+
                     }
                 }
             }

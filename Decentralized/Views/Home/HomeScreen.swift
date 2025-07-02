@@ -135,7 +135,7 @@ struct HomeScreen: View {
             settings.storage.isOnBoarding = true
             fatalError("error")
         }
-//        _wss = State(wrappedValue: .init(url: URL(string: settings.wssUrl)!))
+        
         _syncClient = State(wrappedValue: syncClient)
         isAuth = !settings.enableTouchID
         _ = timer.connect()

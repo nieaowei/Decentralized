@@ -433,6 +433,12 @@
         }
       }
     },
+    "Export" : {
+
+    },
+    "Export MempoolSettings" : {
+
+    },
     "Export Mnemonic" : {
       "localizations" : {
         "zh-Hans" : {
@@ -519,6 +525,9 @@
     },
     "ID Path" : {
       "shouldTranslate" : false
+    },
+    "Import" : {
+
     },
     "Inscription" : {
       "localizations" : {

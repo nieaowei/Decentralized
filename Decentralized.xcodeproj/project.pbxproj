@@ -247,11 +247,13 @@
 			);
 			inputPaths = (
 				"$(SRCROOT)/.git/HEAD",
-				"$(SRCROOT)/.git/refs/tags",
+				"$(SRCROOT)/.git/refs/tags/v2.0.0-beta.3",
 				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
 				"$(SRCROOT)/.git/config",
 				"$(SRCROOT)/.git/index",
-				"",
+				"$(SRCROOT)/.git/packed-refs",
+				"$(SRCROOT)/.git/refs/heads/main",
+				"$(SRCROOT)/.git/objects/pack",
 			);
 			name = "Run Script";
 			outputFileListPaths = (

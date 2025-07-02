@@ -36,7 +36,8 @@ enum ServerType: String, CaseIterable, Identifiable, Codable, Equatable {
 
 struct StorageSettins {
     static let shared = StorageSettins()
-
+    
+    
     @AppStorage("isAppFirst")
     var isAppFirst: Bool = true
 
@@ -78,7 +79,7 @@ struct StorageSettins {
 
     @AppStorage("enableCpfp")
     var enableCpfp: Bool = false
-    
+
     @AppStorage("enableMempoolMonitor")
     var enableMempoolMonitor: Bool = false
 
@@ -210,7 +211,7 @@ class AppSettings {
     var isOnBoarding: Bool { storage.isOnBoarding }
     var esploraUrl: String { storage.esploraUrl }
     var enableCpfp: Bool { storage.enableCpfp }
-    
+
     var enableMempoolMonitor: Bool { storage.enableMempoolMonitor }
     var runeUrl: String { storage.runeUrl }
     var runeAuth: String { storage.runeAuth }
@@ -328,3 +329,126 @@ class AppSettings {
     return serverUrls
 
 }()
+
+
+extension StorageSettins:Encodable {
+    enum CodingKeys: String, CodingKey {
+        case isAppFirst
+        case enableTouchID
+        case touchIDApp
+        case touchIDSign
+        case enableNotificationNewTx
+        case enableNotificationConfirmedTx
+        case enableNotificationRemovedTx
+        case network
+        case serverType
+        case serverUrl
+        case wssUrl
+        case isOnBoarding
+        case esploraUrl
+        case enableCpfp
+        case enableMempoolMonitor
+        case runeUrl
+        case runeAuth
+        case runefallbackUrl
+        case runefallbackAuth
+        case runefallbackIdPath
+        case runeIdPath
+        case runeNamePath
+        case runeDivPath
+        case runeAmountPath
+        case sameAsRune
+        case inscriptionUrl
+        case inscriptionAuth
+        case inscriptionIdPath
+        case inscriptionNamePath
+        case inscriptionNumberPath
+        case inscriptionAmountPath
+        case inscriptionDivPath
+    }
+    
+    
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+//        try container.encode(isAppFirst, forKey: .isAppFirst)
+//        try container.encode(enableTouchID, forKey: .enableTouchID)
+//        try container.encode(touchIDApp, forKey: .touchIDApp)
+//        try container.encode(touchIDSign, forKey: .touchIDSign)
+//        try container.encode(enableNotificationNewTx, forKey: .enableNotificationNewTx)
+//        try container.encode(enableNotificationConfirmedTx, forKey: .enableNotificationConfirmedTx)
+//        try container.encode(enableNotificationRemovedTx, forKey: .enableNotificationRemovedTx)
+//        try container.encode(network, forKey: .network)
+//        try container.encode(serverType, forKey: .serverType)
+//        try container.encode(serverUrl, forKey: .serverUrl)
+//        try container.encode(wssUrl, forKey: .wssUrl)
+//        try container.encode(isOnBoarding, forKey: .isOnBoarding)
+//        try container.encode(esploraUrl, forKey: .esploraUrl)
+//        try container.encode(enableCpfp, forKey: .enableCpfp)
+//        try container.encode(enableMempoolMonitor, forKey: .enableMempoolMonitor)
+        try container.encode(runeUrl, forKey: .runeUrl)
+        try container.encode(runeAuth, forKey: .runeAuth)
+        try container.encode(runefallbackUrl, forKey: .runefallbackUrl)
+        try container.encode(runefallbackAuth, forKey: .runefallbackAuth)
+        try container.encode(runefallbackIdPath, forKey: .runefallbackIdPath)
+        try container.encode(runeIdPath, forKey: .runeIdPath)
+        try container.encode(runeNamePath, forKey: .runeNamePath)
+        try container.encode(runeDivPath, forKey: .runeDivPath)
+        try container.encode(runeAmountPath, forKey: .runeAmountPath)
+        try container.encode(sameAsRune, forKey: .sameAsRune)
+        try container.encode(inscriptionUrl, forKey: .inscriptionUrl)
+        try container.encode(inscriptionAuth, forKey: .inscriptionAuth)
+        try container.encode(inscriptionIdPath, forKey: .inscriptionIdPath)
+        try container.encode(inscriptionNamePath, forKey: .inscriptionNamePath)
+        try container.encode(inscriptionNumberPath, forKey: .inscriptionNumberPath)
+        try container.encode(inscriptionAmountPath, forKey: .inscriptionAmountPath)
+        try container.encode(inscriptionDivPath, forKey: .inscriptionDivPath)
+    }
+
+}
+    
+extension StorageSettins: Decodable {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+//        isAppFirst = try container.decodeIfPresent(Bool.self, forKey: .isAppFirst) ?? isAppFirst
+//        enableTouchID = try container.decodeIfPresent(Bool.self, forKey: .enableTouchID) ?? enableTouchID
+//        touchIDApp = try container.decodeIfPresent(Bool.self, forKey: .touchIDApp) ?? touchIDApp
+//        touchIDSign = try container.decodeIfPresent(Bool.self, forKey: .touchIDSign) ?? touchIDSign
+
+//        enableNotificationNewTx = try container.decodeIfPresent(Bool.self, forKey: .enableNotificationNewTx) ?? enableNotificationNewTx
+//        enableNotificationConfirmedTx = try container.decodeIfPresent(Bool.self, forKey: .enableNotificationConfirmedTx) ?? enableNotificationConfirmedTx
+//        enableNotificationRemovedTx = try container.decodeIfPresent(Bool.self, forKey: .enableNotificationRemovedTx) ?? enableNotificationRemovedTx
+
+//        network = try container.decodeIfPresent(Network.self, forKey: .network) ?? network
+//        serverType = try container.decodeIfPresent(ServerType.self, forKey: .serverType) ?? serverType
+//
+//        serverUrl = try container.decodeIfPresent(String.self, forKey: .serverUrl) ?? serverUrl
+//        wssUrl = try container.decodeIfPresent(String.self, forKey: .wssUrl) ?? wssUrl
+//        isOnBoarding = try container.decodeIfPresent(Bool.self, forKey: .isOnBoarding) ?? isOnBoarding
+//        esploraUrl = try container.decodeIfPresent(String.self, forKey: .esploraUrl) ?? esploraUrl
+
+//        enableCpfp = try container.decodeIfPresent(Bool.self, forKey: .enableCpfp) ?? enableCpfp
+//        enableMempoolMonitor = try container.decodeIfPresent(Bool.self, forKey: .enableMempoolMonitor) ?? enableMempoolMonitor
+
+        runeUrl = try container.decodeIfPresent(String.self, forKey: .runeUrl) ?? runeUrl
+        runeAuth = try container.decodeIfPresent(String.self, forKey: .runeAuth) ?? runeAuth
+        runefallbackUrl = try container.decodeIfPresent(String.self, forKey: .runefallbackUrl) ?? runefallbackUrl
+        runefallbackAuth = try container.decodeIfPresent(String.self, forKey: .runefallbackAuth) ?? runefallbackAuth
+        runefallbackIdPath = try container.decodeIfPresent(String.self, forKey: .runefallbackIdPath) ?? runefallbackIdPath
+
+        runeIdPath = try container.decodeIfPresent(String.self, forKey: .runeIdPath) ?? runeIdPath
+        runeNamePath = try container.decodeIfPresent(String.self, forKey: .runeNamePath) ?? runeNamePath
+        runeDivPath = try container.decodeIfPresent(String.self, forKey: .runeDivPath) ?? runeDivPath
+        runeAmountPath = try container.decodeIfPresent(String.self, forKey: .runeAmountPath) ?? runeAmountPath
+        sameAsRune = try container.decodeIfPresent(Bool.self, forKey: .sameAsRune) ?? sameAsRune
+
+        inscriptionUrl = try container.decodeIfPresent(String.self, forKey: .inscriptionUrl) ?? inscriptionUrl
+        inscriptionAuth = try container.decodeIfPresent(String.self, forKey: .inscriptionAuth) ?? inscriptionAuth
+        inscriptionIdPath = try container.decodeIfPresent(String.self, forKey: .inscriptionIdPath) ?? inscriptionIdPath
+        inscriptionNamePath = try container.decodeIfPresent(String.self, forKey: .inscriptionNamePath) ?? inscriptionNamePath
+        inscriptionNumberPath = try container.decodeIfPresent(String.self, forKey: .inscriptionNumberPath) ?? inscriptionNumberPath
+        inscriptionAmountPath = try container.decodeIfPresent(String.self, forKey: .inscriptionAmountPath) ?? inscriptionAmountPath
+        inscriptionDivPath = try container.decodeIfPresent(String.self, forKey: .inscriptionDivPath) ?? inscriptionDivPath
+    }
+}
